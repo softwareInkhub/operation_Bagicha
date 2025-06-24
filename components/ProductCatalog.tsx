@@ -457,81 +457,58 @@ export default function ProductCatalog() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className={viewMode === 'grid' ? 'card card-hover' : 'card flex flex-row'}
+                className={viewMode === 'grid' ? 'bg-white rounded-2xl shadow-lg p-3 w-full max-w-xs mx-auto flex flex-col items-center relative transition-all duration-200 hover:shadow-2xl' : 'card flex flex-row'}
               >
-                {/* Product Image */}
-                <div className={viewMode === 'grid' ? 'relative h-48' : 'relative w-32 h-32 flex-shrink-0'}>
+                {/* Product Image & Badges */}
+                <div className="relative w-full flex flex-col items-center mb-2 mt-2">
                   <img 
                     src={product.image} 
                     alt={product.name} 
-                    className="w-full h-full object-cover"
+                    className="w-28 h-28 object-cover rounded-xl shadow-sm border border-gray-100 bg-white"
                   />
-                  
                   {/* Badge */}
                   {product.badge && (
-                    <div className={`absolute top-2 left-2 ${product.badgeColor} text-white text-xs font-semibold px-2 py-1 rounded-full`}>
+                    <div className={`absolute top-2 left-2 ${product.badgeColor} text-white text-[10px] font-semibold px-2 py-0.5 rounded-full shadow-md`}> 
                       {product.badge}
                     </div>
                   )}
-                  
+                  {/* Discount Badge */}
+                  {product.originalPrice && product.originalPrice > product.price && (
+                    <div className="absolute top-2 left-2 mt-6 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md">
+                      {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}% OFF
+                    </div>
+                  )}
                   {/* Wishlist Button */}
                   <motion.button
-                    className="absolute top-2 right-2 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-colors"
+                    className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md z-10 flex items-center justify-center hover:bg-gray-100 transition-all"
                     onClick={() => toggleWishlist(product.id)}
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                   >
                     <Heart 
-                      className={`w-4 h-4 ${wishlist.includes(product.id) ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} 
+                      className={`w-5 h-5 ${wishlist.includes(product.id) ? 'text-red-500 fill-current' : 'text-gray-400'}`} 
                     />
                   </motion.button>
-                  
-                  {/* Discount Badge */}
-                  {product.originalPrice && product.originalPrice > product.price && (
-                    <div className="absolute bottom-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
-                      {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}% OFF
-                    </div>
-                  )}
                 </div>
-
                 {/* Product Content */}
-                <div className={viewMode === 'grid' ? 'p-4' : 'p-4 flex-1'}>
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-semibold text-gray-900 text-sm line-clamp-1">
-                      {product.name}
-                    </h3>
-                  </div>
-                  
+                <div className="w-full flex flex-col items-center px-1">
+                  {/* Product Name */}
+                  <div className="text-xs font-semibold text-gray-900 text-center mt-1 mb-0.5 line-clamp-2">{product.name}</div>
                   {/* Rating */}
-                  <div className="flex items-center gap-1 mb-2">
-                    <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                    <span className="text-xs text-gray-600">{product.rating}</span>
-                    <span className="text-xs text-gray-400">({product.reviews})</span>
+                  <div className="flex items-center text-[11px] text-gray-500 mb-1">
+                    <Star className="w-3 h-3 text-yellow-400 fill-current mr-1" />
+                    {product.rating} <span className="ml-1">({product.reviews})</span>
                   </div>
-                  
-                  {/* Features */}
-                  <div className="flex flex-wrap gap-1 mb-3">
-                    {product.features.slice(0, 2).map((feature, idx) => (
-                      <span 
-                        key={idx}
-                        className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full"
-                      >
-                        {feature}
-                      </span>
-                    ))}
-                  </div>
-                  
                   {/* Price */}
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="text-lg font-bold text-green-600">₹{product.price}</span>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-green-600 font-bold text-base">₹{product.price}</span>
                     {product.originalPrice && product.originalPrice > product.price && (
-                      <span className="text-sm text-gray-400 line-through">₹{product.originalPrice}</span>
+                      <span className="text-xs text-gray-400 line-through">₹{product.originalPrice}</span>
                     )}
                   </div>
-                  
                   {/* Add to Cart Button */}
                   <motion.button
-                    className="w-full bg-green-500 hover:bg-green-600 text-white text-sm font-semibold py-2 rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
+                    className="w-full bg-green-500 hover:bg-green-600 text-white text-xs font-semibold py-2 rounded-xl flex items-center justify-center gap-2 mt-auto transition-all duration-200"
                     onClick={() => handleAddToCart(product)}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}

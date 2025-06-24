@@ -4,6 +4,14 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MessageCircle, X, Send, HelpCircle, Phone, Mail, MessageSquare } from 'lucide-react'
 
+// Define the ChatMessage type
+type ChatMessage = {
+  id: number
+  type: 'bot' | 'user'
+  message: string
+  timestamp: Date
+}
+
 const quickQuestions = [
   "How do I care for succulents?",
   "What's the best soil for indoor plants?",
@@ -37,10 +45,10 @@ export default function FloatingHelpButton() {
   const [isOpen, setIsOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<'chat' | 'faq' | 'support'>('chat')
   const [message, setMessage] = useState('')
-  const [chatMessages, setChatMessages] = useState([
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     {
       id: 1,
-      type: 'bot' as const,
+      type: 'bot',
       message: "Hi! I'm your gardening assistant. How can I help you today? 🌱",
       timestamp: new Date()
     }
@@ -49,9 +57,9 @@ export default function FloatingHelpButton() {
   const handleSendMessage = () => {
     if (!message.trim()) return
 
-    const userMessage = {
+    const userMessage: ChatMessage = {
       id: chatMessages.length + 1,
-      type: 'user' as const,
+      type: 'user',
       message: message,
       timestamp: new Date()
     }
@@ -61,9 +69,9 @@ export default function FloatingHelpButton() {
 
     // Simulate bot response
     setTimeout(() => {
-      const botResponse = {
+      const botResponse: ChatMessage = {
         id: chatMessages.length + 2,
-        type: 'bot' as const,
+        type: 'bot',
         message: "Thanks for your question! Our gardening experts will get back to you soon. In the meantime, check out our care guides for helpful tips! 📚",
         timestamp: new Date()
       }
@@ -72,9 +80,9 @@ export default function FloatingHelpButton() {
   }
 
   const handleQuickQuestion = (question: string) => {
-    const userMessage = {
+    const userMessage: ChatMessage = {
       id: chatMessages.length + 1,
-      type: 'user' as const,
+      type: 'user',
       message: question,
       timestamp: new Date()
     }
@@ -84,9 +92,9 @@ export default function FloatingHelpButton() {
 
     // Simulate bot response
     setTimeout(() => {
-      const botResponse = {
+      const botResponse: ChatMessage = {
         id: chatMessages.length + 2,
-        type: 'bot' as const,
+        type: 'bot',
         message: "Great question! Let me help you with that. Our team will provide a detailed response shortly. 🌿",
         timestamp: new Date()
       }

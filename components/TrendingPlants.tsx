@@ -142,81 +142,51 @@ export default function TrendingPlants() {
           </button>
         </motion.div>
 
-        <div className="flex space-x-4 overflow-x-auto pb-4 scrollbar-none snap-x snap-mandatory">
+        <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 md:gap-5 pb-4 scrollbar-none w-full">
           {trendingPlants.map((plant, index) => (
             <motion.div
               key={plant.id}
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="min-w-[200px] snap-start bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 group"
-              whileHover={{ y: -5 }}
+              className="relative bg-white rounded-2xl shadow-xl border border-gray-100 p-3 flex flex-col items-center min-w-[140px] max-w-[160px] md:min-w-[170px] md:max-w-[200px] mx-auto snap-start transition-all duration-200 hover:shadow-2xl hover:scale-105"
+              whileHover={{ scale: 1.07 }}
+              whileTap={{ scale: 0.97 }}
             >
-              {/* Image Container */}
-              <div className="relative">
-                <img 
-                  src={plant.image} 
-                  alt={plant.name} 
-                  className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                
-                {/* Badge */}
-                <div className={`absolute top-2 left-2 ${plant.badgeColor} text-white text-xs font-semibold px-2 py-1 rounded-full`}>
-                  {plant.badge}
-                </div>
-                
-                {/* Wishlist Button */}
-                <motion.button
-                  className="absolute top-2 right-2 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-colors"
-                  onClick={() => toggleWishlist(plant.id)}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                >
-                  <Heart 
-                    className={`w-4 h-4 ${wishlist.includes(plant.id) ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} 
-                  />
-                </motion.button>
-                
-                {/* Discount Badge */}
+              {/* Badges */}
+              <div className="absolute top-3 left-3 flex flex-col gap-1 z-10">
+                <span className={`${plant.badgeColor} text-white text-[11px] px-2 py-0.5 rounded-full font-semibold shadow`}>{plant.badge}</span>
                 {plant.originalPrice > plant.price && (
-                  <div className="absolute bottom-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
-                    {Math.round(((plant.originalPrice - plant.price) / plant.originalPrice) * 100)}% OFF
-                  </div>
+                  <span className="bg-red-500 text-white text-[11px] px-2 py-0.5 rounded-full font-semibold shadow">{Math.round(((plant.originalPrice - plant.price) / plant.originalPrice) * 100)}% OFF</span>
                 )}
               </div>
-
-              {/* Content */}
-              <div className="p-3">
-                <h3 className="font-semibold text-gray-900 text-sm mb-1 line-clamp-1">
-                  {plant.name}
-                </h3>
-                
-                {/* Rating */}
-                <div className="flex items-center gap-1 mb-2">
-                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                  <span className="text-xs text-gray-600">{plant.rating}</span>
-                  <span className="text-xs text-gray-400">({plant.reviews})</span>
-                </div>
-                
-                {/* Price */}
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-lg font-bold text-green-600">₹{plant.price}</span>
-                  {plant.originalPrice > plant.price && (
-                    <span className="text-sm text-gray-400 line-through">₹{plant.originalPrice}</span>
-                  )}
-                </div>
-                
-                {/* Add to Cart Button */}
-                <motion.button
-                  className="w-full bg-green-500 hover:bg-green-600 text-white text-sm font-semibold py-2 rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
-                  onClick={() => handleAddToCart(plant)}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <ShoppingCart className="w-4 h-4" />
-                  Add to Cart
-                </motion.button>
+              {/* Heart Icon */}
+              <button className="absolute top-3 right-3 bg-white rounded-full p-1 shadow hover:scale-110 transition z-10">
+                <Heart className={`w-4 h-4 ${wishlist.includes(plant.id) ? 'text-red-500 fill-current' : 'text-gray-400'}`} />
+              </button>
+              {/* Product Image */}
+              <div className="w-20 h-20 rounded-xl bg-gray-50 flex items-center justify-center shadow-md -mt-8 mb-2 border border-gray-100 overflow-hidden">
+                <img src={plant.image} alt={plant.name} className="object-contain w-16 h-16" />
               </div>
+              {/* Product Name */}
+              <div className="text-xs font-semibold text-gray-900 text-center mb-1 tracking-wide line-clamp-2">{plant.name}</div>
+              {/* Rating */}
+              <div className="flex items-center text-[11px] text-gray-500 mb-1">
+                <Star className="w-3 h-3 text-yellow-400 fill-current mr-1" />
+                {plant.rating} <span className="ml-1 text-gray-400">({plant.reviews})</span>
+              </div>
+              {/* Price */}
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-green-600 font-bold text-base">₹{plant.price}</span>
+                {plant.originalPrice > plant.price && (
+                  <span className="text-xs text-gray-400 line-through">₹{plant.originalPrice}</span>
+                )}
+              </div>
+              {/* Add to Cart Button */}
+              <button className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white text-xs font-semibold py-2 rounded-2xl shadow flex items-center justify-center gap-2 transition-all duration-200 mt-auto"
+                onClick={() => handleAddToCart(plant)}>
+                <ShoppingCart className="w-4 h-4" /> Add to Cart
+              </button>
             </motion.div>
           ))}
         </div>
