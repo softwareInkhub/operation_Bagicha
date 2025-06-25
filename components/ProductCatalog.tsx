@@ -1,12 +1,9 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  ShoppingCart, Star, Heart, Filter, Search, Grid, List, 
-  ChevronDown, X, SlidersHorizontal, SortAsc, SortDesc 
-} from 'lucide-react'
-import { useCart } from '../context/CartContext'
+import { useState } from 'react'
+import { motion } from 'framer-motion'
+import ProductModal from './ProductModal'
+import WishlistButton from './WishlistButton'
 
 interface Product {
   id: number
@@ -135,414 +132,266 @@ const products: Product[] = [
     organic: true,
     features: ['Heirloom', 'High Yield', 'Disease Resistant'],
     description: 'Organic heirloom tomato seeds for home gardening.'
+  },
+  {
+    id: 7,
+    name: 'Bamboo Plant',
+    category: 'Lucky Plants',
+    subcategory: 'Indoor',
+    price: 349,
+    originalPrice: 499,
+    rating: 4.6,
+    reviews: 110,
+    image: 'https://images.unsplash.com/photo-1501004318641-b39e6451bec6?w=300&h=300&fit=crop',
+    badge: 'Lucky',
+    badgeColor: 'bg-yellow-400',
+    inStock: true,
+    fastDelivery: true,
+    organic: true,
+    features: ['Easy Care', 'Symbolic', 'Air Purifying'],
+    description: 'Lucky bamboo for prosperity and good fortune.'
+  },
+  {
+    id: 8,
+    name: 'Aloe Vera',
+    category: 'Medicinal Plants',
+    subcategory: 'Succulent',
+    price: 199,
+    originalPrice: 299,
+    rating: 4.7,
+    reviews: 140,
+    image: 'https://images.unsplash.com/photo-1501004318641-b39e6451bec6?w=300&h=300&fit=crop',
+    badge: 'Medicinal',
+    badgeColor: 'bg-lime-500',
+    inStock: true,
+    fastDelivery: true,
+    organic: true,
+    features: ['Healing', 'Low Maintenance', 'Air Purifying'],
+    description: 'Aloe Vera for skin care and healing.'
+  },
+  {
+    id: 9,
+    name: 'Areca Palm',
+    category: 'Air Purifying',
+    subcategory: 'Indoor',
+    price: 799,
+    originalPrice: 1099,
+    rating: 4.6,
+    reviews: 180,
+    image: 'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?w=300&h=300&fit=crop',
+    badge: 'Air Purifier',
+    badgeColor: 'bg-cyan-500',
+    inStock: true,
+    fastDelivery: true,
+    organic: true,
+    features: ['Air Purifying', 'Pet Safe', 'Low Light'],
+    description: 'Areca Palm for clean indoor air.'
+  },
+  {
+    id: 10,
+    name: 'Jade Plant',
+    category: 'Succulents',
+    subcategory: 'Indoor',
+    price: 399,
+    originalPrice: 599,
+    rating: 4.5,
+    reviews: 145,
+    image: 'https://images.unsplash.com/photo-1501004318641-b39e6451bec6?w=300&h=300&fit=crop',
+    badge: 'Lucky',
+    badgeColor: 'bg-yellow-400',
+    inStock: true,
+    fastDelivery: true,
+    organic: true,
+    features: ['Low Maintenance', 'Symbolic', 'Air Purifying'],
+    description: 'Jade Plant for good luck and prosperity.'
+  },
+  {
+    id: 11,
+    name: 'Spider Plant',
+    category: 'Pet Friendly',
+    subcategory: 'Indoor',
+    price: 299,
+    originalPrice: 399,
+    rating: 4.4,
+    reviews: 120,
+    image: 'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?w=300&h=300&fit=crop',
+    badge: 'Pet Friendly',
+    badgeColor: 'bg-pink-400',
+    inStock: true,
+    fastDelivery: true,
+    organic: true,
+    features: ['Safe for Pets', 'Air Purifying', 'Easy Care'],
+    description: 'Spider Plant is safe for pets and purifies air.'
+  },
+  {
+    id: 12,
+    name: 'Rubber Plant',
+    category: 'Statement Plants',
+    subcategory: 'Indoor',
+    price: 599,
+    originalPrice: 899,
+    rating: 4.7,
+    reviews: 175,
+    image: 'https://images.unsplash.com/photo-1501004318641-b39e6451bec6?w=300&h=300&fit=crop',
+    badge: 'Statement',
+    badgeColor: 'bg-indigo-500',
+    inStock: true,
+    fastDelivery: true,
+    organic: true,
+    features: ['Large Leaves', 'Air Purifying', 'Modern Look'],
+    description: 'Rubber Plant for a bold, modern statement.'
+  },
+  {
+    id: 13,
+    name: 'Calathea',
+    category: 'Decorative Plants',
+    subcategory: 'Indoor',
+    price: 499,
+    originalPrice: 699,
+    rating: 4.6,
+    reviews: 130,
+    image: 'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?w=300&h=300&fit=crop',
+    badge: 'Decorative',
+    badgeColor: 'bg-fuchsia-500',
+    inStock: true,
+    fastDelivery: true,
+    organic: true,
+    features: ['Patterned Leaves', 'Air Purifying', 'Pet Safe'],
+    description: 'Calathea with beautiful patterned leaves.'
   }
 ]
-
-const categories = ['All', 'Indoor Plants', 'Tools', 'Soil & Fertilizer', 'Pots & Planters', 'Seeds']
-const subcategories = ['Tropical', 'Succulent', 'Cutting', 'Potting Mix', 'Ceramic', 'Vegetables']
-const priceRanges = [
-  { label: 'Under ₹100', min: 0, max: 100 },
-  { label: '₹100 - ₹500', min: 100, max: 500 },
-  { label: '₹500 - ₹1000', min: 500, max: 1000 },
-  { label: 'Above ₹1000', min: 1000, max: Infinity }
-]
-
-type SortOption = 'name-asc' | 'name-desc' | 'price-asc' | 'price-desc' | 'rating-desc' | 'newest'
 
 export default function ProductCatalog() {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('All')
-  const [selectedSubcategory, setSelectedSubcategory] = useState('All')
-  const [selectedPriceRange, setSelectedPriceRange] = useState<number | null>(null)
-  const [sortBy, setSortBy] = useState<SortOption>('newest')
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-  const [showFilters, setShowFilters] = useState(false)
-  const [wishlist, setWishlist] = useState<number[]>([])
-  const [showToast, setShowToast] = useState(false)
-  const [toastMessage, setToastMessage] = useState('')
-  const [filters, setFilters] = useState({
-    inStock: false,
-    fastDelivery: false,
-    organic: false
-  })
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  const { addToCart } = useCart()
+  // Group products by category
+  const groupedProducts: { [category: string]: Product[] } = {};
+  products.forEach(product => {
+    if (!groupedProducts[product.category]) groupedProducts[product.category] = [];
+    groupedProducts[product.category].push(product);
+  });
 
-  // Filter and sort products
-  const filteredProducts = useMemo(() => {
-    let filtered = products.filter(product => {
-      // Search filter
-      const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           product.description.toLowerCase().includes(searchQuery.toLowerCase())
-      
-      // Category filter
-      const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory
-      
-      // Subcategory filter
-      const matchesSubcategory = selectedSubcategory === 'All' || product.subcategory === selectedSubcategory
-      
-      // Price range filter
-      const priceRange = priceRanges[selectedPriceRange!]
-      const matchesPrice = !selectedPriceRange || (product.price >= priceRange.min && product.price <= priceRange.max)
-      
-      // Additional filters
-      const matchesStock = !filters.inStock || product.inStock
-      const matchesDelivery = !filters.fastDelivery || product.fastDelivery
-      const matchesOrganic = !filters.organic || product.organic
-      
-      return matchesSearch && matchesCategory && matchesSubcategory && matchesPrice && 
-             matchesStock && matchesDelivery && matchesOrganic
-    })
+  // Prepare cards for two-row slider
+  const cardEntries = Object.entries(groupedProducts);
+  const cardsPerRow = Math.ceil(cardEntries.length / 2);
+  const rows = [
+    cardEntries.slice(0, cardsPerRow),
+    cardEntries.slice(cardsPerRow)
+  ];
 
-    // Sort products
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case 'name-asc':
-          return a.name.localeCompare(b.name)
-        case 'name-desc':
-          return b.name.localeCompare(a.name)
-        case 'price-asc':
-          return a.price - b.price
-        case 'price-desc':
-          return b.price - a.price
-        case 'rating-desc':
-          return b.rating - a.rating
-        case 'newest':
-          return b.id - a.id
-        default:
-          return 0
-      }
-    })
+  const handleCardClick = (category: string) => {
+    setSelectedCategory(category);
+    setModalOpen(true);
+  };
 
-    return filtered
-  }, [searchQuery, selectedCategory, selectedSubcategory, selectedPriceRange, sortBy, filters])
+  const getCategoryIcon = (category: string) => {
+    const icons: { [key: string]: string } = {
+      'Tools': '🛠️',
+      'Soil & Fertilizer': '🪨',
+      'Pots & Planters': '🏺',
+      'Seeds': '🌾',
+      'Lucky Plants': '🍀',
+      'Medicinal Plants': '💊',
+      'Air Purifying': '🌿',
+      'Succulents': '🌵',
+      'Pet Friendly': '🐾',
+      'Statement Plants': '🌳',
+      'Decorative Plants': '🎨'
+    };
+    return icons[category] || '🌱';
+  };
 
-  const toggleWishlist = (id: number) => {
-    setWishlist(prev => 
-      prev.includes(id) 
-        ? prev.filter(item => item !== id)
-        : [...prev, id]
-    )
-  }
-
-  const handleAddToCart = (product: Product) => {
-    addToCart({
+  const getModalItems = () => {
+    if (!selectedCategory) return [];
+    return groupedProducts[selectedCategory].slice(0, 4).map(product => ({
       name: product.name,
       image: product.image,
       price: product.price,
-      qty: 1
-    })
-    
-    setToastMessage(`${product.name} added to cart!`)
-    setShowToast(true)
-    
-    setTimeout(() => {
-      setShowToast(false)
-    }, 3000)
-  }
-
-  const clearFilters = () => {
-    setSelectedCategory('All')
-    setSelectedSubcategory('All')
-    setSelectedPriceRange(null)
-    setFilters({ inStock: false, fastDelivery: false, organic: false })
-  }
+      rating: product.rating,
+      reviews: product.reviews,
+      description: product.features.join(', '),
+      wishlistButton: <WishlistButton product={product} />
+    }));
+  };
 
   return (
     <motion.section 
       className="py-6 bg-white"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.7, ease: 'easeOut' }}
+      viewport={{ once: true, amount: 0.2 }}
     >
-      {/* Toast Notification */}
-      <AnimatePresence>
-        {showToast && (
-          <motion.div
-            initial={{ opacity: 0, y: -50, scale: 0.8 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -50, scale: 0.8 }}
-            className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-green-500 text-white px-6 py-3 rounded-full shadow-lg flex items-center gap-2"
-          >
-            <ShoppingCart className="w-4 h-4" />
-            <span className="font-medium">{toastMessage}</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       <div className="px-4">
-        {/* Header */}
         <motion.div 
           className="flex items-center justify-between mb-6"
           initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
+          whileInView={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
+          viewport={{ once: true, amount: 0.2 }}
         >
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Product Catalog</h2>
             <p className="text-gray-600 mt-1">Discover our complete collection of gardening essentials</p>
           </div>
-          <div className="flex items-center gap-2">
-            <motion.button
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-              onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              {viewMode === 'grid' ? <List className="w-5 h-5" /> : <Grid className="w-5 h-5" />}
-            </motion.button>
-            <motion.button
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-              onClick={() => setShowFilters(!showFilters)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Filter className="w-5 h-5" />
-            </motion.button>
-          </div>
         </motion.div>
-
-        {/* Search and Sort */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search products..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="input-search"
-            />
-          </div>
-          <div className="relative">
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as SortOption)}
-              className="input-field pr-10"
-            >
-              <option value="newest">Newest First</option>
-              <option value="name-asc">Name A-Z</option>
-              <option value="name-desc">Name Z-A</option>
-              <option value="price-asc">Price Low to High</option>
-              <option value="price-desc">Price High to Low</option>
-              <option value="rating-desc">Highest Rated</option>
-            </select>
-            <SortAsc className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-          </div>
-        </div>
-
-        {/* Filters */}
-        <AnimatePresence>
-          {showFilters && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-900">Filters</h3>
-                <button
-                  onClick={clearFilters}
-                  className="text-sm text-green-600 hover:text-green-700"
-                >
-                  Clear All
-                </button>
-              </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* Category Filter */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                  <select
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="input-field"
+        
+        <div className="flex flex-col gap-4">
+          {rows.map((row, rowIdx) => (
+            <div key={rowIdx} className="flex overflow-x-auto snap-x snap-mandatory gap-3 md:gap-5 pb-2 scrollbar-none w-full">
+              {row.map(([category, items], idx) => {
+                const images = [
+                  ...items.slice(0, 4),
+                  ...Array(4 - items.length).fill({ image: '/placeholder.png', name: 'Placeholder', id: `ph-${category}-${idx}` })
+                ].slice(0, 4);
+                return (
+                  <motion.div
+                    key={category}
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: idx * 0.08, ease: 'easeOut' }}
+                    viewport={{ once: true, amount: 0.2 }}
+                    className="bg-white shadow-lg border border-gray-100 rounded-2xl p-4 flex flex-col items-center min-w-[140px] max-w-[160px] mx-auto snap-start cursor-pointer"
+                    whileHover={{ scale: 1.07 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => handleCardClick(category)}
                   >
-                    {categories.map(category => (
-                      <option key={category} value={category}>{category}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Subcategory Filter */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Subcategory</label>
-                  <select
-                    value={selectedSubcategory}
-                    onChange={(e) => setSelectedSubcategory(e.target.value)}
-                    className="input-field"
-                  >
-                    <option value="All">All</option>
-                    {subcategories.map(subcategory => (
-                      <option key={subcategory} value={subcategory}>{subcategory}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Price Range Filter */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Price Range</label>
-                  <select
-                    value={selectedPriceRange || ''}
-                    onChange={(e) => setSelectedPriceRange(e.target.value ? Number(e.target.value) : null)}
-                    className="input-field"
-                  >
-                    <option value="">All Prices</option>
-                    {priceRanges.map((range, index) => (
-                      <option key={index} value={index}>{range.label}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Additional Filters */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Additional</label>
-                  <div className="space-y-2">
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={filters.inStock}
-                        onChange={(e) => setFilters(prev => ({ ...prev, inStock: e.target.checked }))}
-                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
-                      />
-                      <span className="ml-2 text-sm text-gray-700">In Stock</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={filters.fastDelivery}
-                        onChange={(e) => setFilters(prev => ({ ...prev, fastDelivery: e.target.checked }))}
-                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
-                      />
-                      <span className="ml-2 text-sm text-gray-700">Fast Delivery</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={filters.organic}
-                        onChange={(e) => setFilters(prev => ({ ...prev, organic: e.target.checked }))}
-                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
-                      />
-                      <span className="ml-2 text-sm text-gray-700">Organic</span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Results Count */}
-        <div className="flex items-center justify-between mb-4">
-          <p className="text-sm text-gray-600">
-            Showing {filteredProducts.length} of {products.length} products
-          </p>
-          {Object.values(filters).some(Boolean) && (
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Active filters:</span>
-              {filters.inStock && <span className="badge badge-success">In Stock</span>}
-              {filters.fastDelivery && <span className="badge badge-accent">Fast Delivery</span>}
-              {filters.organic && <span className="badge badge-primary">Organic</span>}
-            </div>
-          )}
-        </div>
-
-        {/* Products Grid/List */}
-        <div className={viewMode === 'grid' ? 'grid-responsive' : 'space-y-4'}>
-          <AnimatePresence>
-            {filteredProducts.map((product, index) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className={viewMode === 'grid' ? 'bg-white rounded-2xl shadow-lg p-3 w-full max-w-xs mx-auto flex flex-col items-center relative transition-all duration-200 hover:shadow-2xl' : 'card flex flex-row'}
-              >
-                {/* Product Image & Badges */}
-                <div className="relative w-full flex flex-col items-center mb-2 mt-2">
-                  <img 
-                    src={product.image} 
-                    alt={product.name} 
-                    className="w-28 h-28 object-cover rounded-xl shadow-sm border border-gray-100 bg-white"
-                  />
-                  {/* Badge */}
-                  {product.badge && (
-                    <div className={`absolute top-2 left-2 ${product.badgeColor} text-white text-[10px] font-semibold px-2 py-0.5 rounded-full shadow-md`}> 
-                      {product.badge}
+                    {/* 2x2 image grid */}
+                    <div className="grid grid-cols-2 grid-rows-2 gap-1 w-full mb-2">
+                      {images.map((product, iidx) => (
+                        <img
+                          key={product.id || iidx}
+                          src={product.image}
+                          alt={product.image === '/placeholder.png' ? 'Placeholder' : product.name}
+                          className="w-10 h-10 md:w-12 md:h-12 object-contain rounded bg-gray-50 border border-gray-100 mx-auto"
+                        />
+                      ))}
                     </div>
-                  )}
-                  {/* Discount Badge */}
-                  {product.originalPrice && product.originalPrice > product.price && (
-                    <div className="absolute top-2 left-2 mt-6 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md">
-                      {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}% OFF
+                    {/* +X more badge */}
+                    <div className="text-[11px] md:text-xs text-green-600 font-semibold mb-0.5 bg-green-50 px-2 py-0.5 rounded-full shadow-sm">
+                      +{items.length} more
                     </div>
-                  )}
-                  {/* Wishlist Button */}
-                  <motion.button
-                    className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md z-10 flex items-center justify-center hover:bg-gray-100 transition-all"
-                    onClick={() => toggleWishlist(product.id)}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                  >
-                    <Heart 
-                      className={`w-5 h-5 ${wishlist.includes(product.id) ? 'text-red-500 fill-current' : 'text-gray-400'}`} 
-                    />
-                  </motion.button>
-                </div>
-                {/* Product Content */}
-                <div className="w-full flex flex-col items-center px-1">
-                  {/* Product Name */}
-                  <div className="text-xs font-semibold text-gray-900 text-center mt-1 mb-0.5 line-clamp-2">{product.name}</div>
-                  {/* Rating */}
-                  <div className="flex items-center text-[11px] text-gray-500 mb-1">
-                    <Star className="w-3 h-3 text-yellow-400 fill-current mr-1" />
-                    {product.rating} <span className="ml-1">({product.reviews})</span>
-                  </div>
-                  {/* Price */}
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-green-600 font-bold text-base">₹{product.price}</span>
-                    {product.originalPrice && product.originalPrice > product.price && (
-                      <span className="text-xs text-gray-400 line-through">₹{product.originalPrice}</span>
-                    )}
-                  </div>
-                  {/* Add to Cart Button */}
-                  <motion.button
-                    className="w-full bg-green-500 hover:bg-green-600 text-white text-xs font-semibold py-2 rounded-xl flex items-center justify-center gap-2 mt-auto transition-all duration-200"
-                    onClick={() => handleAddToCart(product)}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <ShoppingCart className="w-4 h-4" />
-                    Add to Cart
-                  </motion.button>
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
-
-        {/* No Results */}
-        {filteredProducts.length === 0 && (
-          <motion.div 
-            className="text-center py-12"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Search className="w-8 h-8 text-gray-400" />
+                    {/* Category name */}
+                    <div className="text-xs md:text-sm font-bold text-gray-800 text-center leading-tight mt-0.5">
+                      {category}
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No products found</h3>
-            <p className="text-gray-600 mb-4">Try adjusting your search or filter criteria</p>
-            <button
-              onClick={clearFilters}
-              className="btn-outline"
-            >
-              Clear Filters
-            </button>
-          </motion.div>
-        )}
+          ))}
+        </div>
       </div>
+
+      {/* Product Modal */}
+      <ProductModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={selectedCategory || ''}
+        icon={selectedCategory ? getCategoryIcon(selectedCategory) : '🌱'}
+        items={getModalItems()}
+      />
     </motion.section>
   )
 } 

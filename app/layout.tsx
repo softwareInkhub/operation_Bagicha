@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { CartProvider } from '../context/CartContext'
+import { WishlistProvider } from '../context/WishlistContext'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -65,9 +66,11 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <CartProvider>
-        <div className="min-h-screen bg-gray-50">
-          {children}
-        </div>
+          <WishlistProvider>
+            <div className="min-h-screen bg-gray-50">
+              {children}
+            </div>
+          </WishlistProvider>
         </CartProvider>
       </body>
     </html>

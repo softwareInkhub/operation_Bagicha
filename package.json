@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "powershell -Command \"$ip = (ipconfig | findstr 'IPv4' | Select-String -Pattern '\\d+\\.\\d+\\.\\d+\\.\\d+' | ForEach-Object { $_.Matches[0].Value })[0]; Write-Host 'Your IP Address:' $ip; next dev -H 0.0.0.0\"",
     "dev:ip": "powershell -Command \"$ip = (ipconfig | findstr 'IPv4' | Select-String -Pattern '\\d+\\.\\d+\\.\\d+\\.\\d+' | ForEach-Object { $_.Matches[0].Value })[0]; Write-Host 'Your IP Address:' $ip; next dev -H 0.0.0.0\"",
     "build": "next build",
     "start": "next start",

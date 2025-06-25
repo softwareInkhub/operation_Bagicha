@@ -6,16 +6,21 @@ import {
   User, Heart, Menu, X, Bell, 
   ChevronDown, Package, Truck, Shield, Clock, Star, Mic 
 } from 'lucide-react'
+import Link from 'next/link'
 import SearchModal from './SearchModal'
 import { CartContext } from '../context/CartContext'
+import { useWishlist } from '../context/WishlistContext'
+import { useCart } from '../context/CartContext'
 
 export default function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [wishlistCount, setWishlistCount] = useState(7)
+  const [isWishlistDrawerOpen, setIsWishlistDrawerOpen] = useState(false)
   const [notifications, setNotifications] = useState(2)
   const [isScrolled, setIsScrolled] = useState(false)
   const { cartCount } = useContext(CartContext)
+  const { wishlistCount, wishlist, removeFromWishlist } = useWishlist()
+  const { addToCart } = useCart()
   const [searchFocused, setSearchFocused] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const suggestions = [
@@ -147,6 +152,9 @@ export default function Header() {
 
                 {/* Wishlist */}
                 <motion.button
+                  onClick={() => {
+                    document.getElementById('wishlist')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
                   className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -187,6 +195,13 @@ export default function Header() {
                   {/* Dropdown Menu */}
                   <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                     <div className="p-2">
+                      <Link href="/auth/login" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                        Sign In
+                      </Link>
+                      <Link href="/auth/signup" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                        Create Account
+                      </Link>
+                      <hr className="my-2" />
                       <a href="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
                         My Profile
                       </a>
@@ -277,63 +292,362 @@ export default function Header() {
             </div>
           </div>
 
-          {/* Mobile Menu */}
-          <AnimatePresence>
-            {isMobileMenuOpen && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                className="md:hidden border-t border-gray-100"
-              >
-                <div className="py-4 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700">Account</span>
-                    <User className="w-5 h-5 text-gray-400" />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700">Wishlist</span>
-                    <div className="flex items-center gap-2">
-                      <Heart className="w-5 h-5 text-gray-400" />
-                      {wishlistCount > 0 && (
-                        <span className="w-5 h-5 bg-pink-500 text-white text-xs rounded-full flex items-center justify-center">
-                          {wishlistCount}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700">Notifications</span>
-                    <div className="flex items-center gap-2">
-                      <Bell className="w-5 h-5 text-gray-400" />
-                      {notifications > 0 && (
-                        <span className="w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                          {notifications}
-                        </span>
-        )}
-      </div>
-                  </div>
-                  <hr className="border-gray-100" />
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    {features.map((feature) => (
-                      <div key={feature.text} className="flex items-center gap-2">
-                        <feature.icon className="w-4 h-4 text-green-600" />
-                        <div>
-                          <div className="font-normal text-base font-semibold text-gray-700">{feature.text}</div>
-                          <div className="text-gray-500">{feature.subtext}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* Mobile Menu - Removed the inline expanding menu */}
         </div>
       </motion.header>
 
       {/* Search Modal */}
       <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+
+      {/* Mobile Menu Overlay - New Implementation */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm md:hidden"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              className="absolute right-0 top-0 h-full w-80 max-w-[85vw] bg-white shadow-2xl"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex flex-col h-full">
+                {/* Header */}
+                <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-green-50 to-emerald-50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center">
+                      <span className="text-white font-bold text-xl">🌱</span>
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-semibold text-gray-900">Menu</h2>
+                      <p className="text-xs text-gray-600">Bagicha Garden</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="w-8 h-8 rounded-full bg-white shadow-sm hover:bg-gray-50 flex items-center justify-center transition-colors"
+                  >
+                    <X className="w-5 h-5 text-gray-600" />
+                  </button>
+                </div>
+
+                {/* Menu Content */}
+                <div className="flex-1 overflow-y-auto">
+                  {/* User Section */}
+                  <div className="p-4 border-b border-gray-100">
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                      <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                        <User className="w-6 h-6 text-green-600" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-900">Welcome!</h3>
+                        <p className="text-sm text-gray-600">Sign in to your account</p>
+                      </div>
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      <Link
+                        href="/auth/login"
+                        className="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors text-center"
+                      >
+                        Sign In
+                      </Link>
+                      <Link
+                        href="/auth/signup"
+                        className="flex-1 bg-white border border-green-600 text-green-600 hover:bg-green-50 text-sm font-medium py-2 px-3 rounded-lg transition-colors text-center"
+                      >
+                        Sign Up
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* Quick Actions */}
+                  <div className="p-4 space-y-2">
+                    <h4 className="text-sm font-semibold text-gray-700 mb-3">Quick Actions</h4>
+                    
+                    {/* Wishlist */}
+                    <motion.button
+                      onClick={() => {
+                        setIsWishlistDrawerOpen(true);
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center">
+                          <Heart className="w-5 h-5 text-pink-600" />
+                        </div>
+                        <div className="text-left">
+                          <span className="font-medium text-gray-900">Wishlist</span>
+                          <p className="text-xs text-gray-500">Your saved items</p>
+                        </div>
+                      </div>
+                      {wishlistCount > 0 && (
+                        <span className="w-6 h-6 bg-pink-500 text-white text-xs rounded-full flex items-center justify-center">
+                          {wishlistCount}
+                        </span>
+                      )}
+                    </motion.button>
+
+                    {/* Notifications */}
+                    <motion.button
+                      className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                          <Bell className="w-5 h-5 text-red-600" />
+                        </div>
+                        <div className="text-left">
+                          <span className="font-medium text-gray-900">Notifications</span>
+                          <p className="text-xs text-gray-500">Stay updated</p>
+                        </div>
+                      </div>
+                      {notifications > 0 && (
+                        <span className="w-6 h-6 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                          {notifications}
+                        </span>
+                      )}
+                    </motion.button>
+
+                    {/* Cart */}
+                    {cartCount > 0 && (
+                      <motion.button
+                        className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                              <path d="M3 3h2l.4 2M7 13h10l4-8H5.4" />
+                              <circle cx="7" cy="21" r="1" />
+                              <circle cx="20" cy="21" r="1" />
+                            </svg>
+                          </div>
+                          <div className="text-left">
+                            <span className="font-medium text-gray-900">Cart</span>
+                            <p className="text-xs text-gray-500">Your items</p>
+                          </div>
+                        </div>
+                        <span className="w-6 h-6 bg-green-500 text-white text-xs rounded-full flex items-center justify-center">
+                          {cartCount}
+                        </span>
+                      </motion.button>
+                    )}
+                  </div>
+
+                  {/* Categories */}
+                  <div className="p-4 border-t border-gray-100">
+                    <h4 className="text-sm font-semibold text-gray-700 mb-3">Categories</h4>
+                    <div className="space-y-2">
+                      {[
+                        { name: 'Indoor Plants', icon: '🪴', color: 'bg-blue-100', iconColor: 'text-blue-600' },
+                        { name: 'Flowering Plants', icon: '🌸', color: 'bg-pink-100', iconColor: 'text-pink-600' },
+                        { name: 'Pots & Gamlas', icon: '🏺', color: 'bg-orange-100', iconColor: 'text-orange-600' },
+                        { name: 'Seeds', icon: '🌾', color: 'bg-yellow-100', iconColor: 'text-yellow-600' },
+                        { name: 'Fertilizers', icon: '🧪', color: 'bg-purple-100', iconColor: 'text-purple-600' },
+                        { name: 'Tools', icon: '🛠️', color: 'bg-gray-100', iconColor: 'text-gray-600' }
+                      ].map((category, index) => (
+                        <motion.button
+                          key={category.name}
+                          className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => {
+                            setIsMobileMenuOpen(false);
+                            const section = document.getElementById(category.name.toLowerCase().replace(/\s+/g, '-').replace('&', 'and'));
+                            if (section) {
+                              section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }
+                          }}
+                        >
+                          <div className={`w-10 h-10 ${category.color} rounded-lg flex items-center justify-center text-lg`}>
+                            {category.icon}
+                          </div>
+                          <span className="font-medium text-gray-900">{category.name}</span>
+                        </motion.button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Features */}
+                  <div className="p-4 border-t border-gray-100">
+                    <h4 className="text-sm font-semibold text-gray-700 mb-3">Why Choose Us</h4>
+                    <div className="space-y-3">
+                      {features.map((feature) => (
+                        <div key={feature.text} className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                            <feature.icon className="w-4 h-4 text-green-600" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="font-medium text-sm text-gray-900">{feature.text}</div>
+                            <div className="text-xs text-gray-500">{feature.subtext}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Contact Info */}
+                  <div className="p-4 border-t border-gray-100">
+                    <h4 className="text-sm font-semibold text-gray-700 mb-3">Contact Us</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <span>📞</span>
+                        <span>+91 98765 43210</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <span>✉️</span>
+                        <span>support@bagicha.com</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="p-4 border-t border-gray-100">
+                  <button
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-medium py-3 rounded-lg transition-all duration-300"
+                  >
+                    Close Menu
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Mobile Wishlist Drawer */}
+      <AnimatePresence>
+        {isWishlistDrawerOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black bg-opacity-50 md:hidden"
+            onClick={() => setIsWishlistDrawerOpen(false)}
+          >
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              className="absolute right-0 top-0 h-full w-80 max-w-[85vw] bg-white shadow-2xl"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex flex-col h-full">
+                {/* Header */}
+                <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                  <div className="flex items-center gap-2">
+                    <Heart className="w-6 h-6 text-red-500" />
+                    <h2 className="text-lg font-semibold text-gray-900">My Wishlist</h2>
+                    {wishlistCount > 0 && (
+                      <span className="w-6 h-6 bg-pink-500 text-white text-xs rounded-full flex items-center justify-center">
+                        {wishlistCount}
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setIsWishlistDrawerOpen(false)}
+                    className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                  >
+                    <X className="w-5 h-5 text-gray-600" />
+                  </button>
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 overflow-y-auto p-4">
+                  {wishlist.length === 0 ? (
+                    <div className="text-center py-12">
+                      <Heart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">Your wishlist is empty</h3>
+                      <p className="text-gray-600 mb-4">Start adding your favorite plants and gardening items!</p>
+                      <button
+                        onClick={() => {
+                          setIsWishlistDrawerOpen(false);
+                          document.getElementById('trending-plants')?.scrollIntoView({ behavior: 'smooth' });
+                        }}
+                        className="bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-3 rounded-lg transition-colors"
+                      >
+                        Explore Products
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {wishlist.map((product) => (
+                        <motion.div
+                          key={product.id}
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+                        >
+                          <img
+                            src={product.image}
+                            alt={product.name}
+                            className="w-16 h-16 object-cover rounded-lg"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-medium text-gray-900 text-sm truncate">
+                              {product.name}
+                            </h3>
+                            <p className="text-green-600 font-semibold text-sm">
+                              ₹{product.price}
+                            </p>
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            <button
+                              onClick={() => addToCart({ ...product, qty: 1 })}
+                              className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1 rounded-lg transition-colors"
+                            >
+                              Add to Cart
+                            </button>
+                            <button
+                              onClick={() => removeFromWishlist(product.id)}
+                              className="text-red-600 hover:text-red-700 text-xs px-3 py-1 rounded-lg hover:bg-red-50 transition-colors"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer */}
+                {wishlist.length > 0 && (
+                  <div className="p-4 border-t border-gray-200">
+                    <button
+                      onClick={() => {
+                        wishlist.forEach(product => addToCart({ ...product, qty: 1 }));
+                      }}
+                      className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path d="M3 3h2l.4 2M7 13h10l4-8H5.4" />
+                        <circle cx="7" cy="21" r="1" />
+                        <circle cx="20" cy="21" r="1" />
+                      </svg>
+                      Add All to Cart
+                    </button>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   )
 } 

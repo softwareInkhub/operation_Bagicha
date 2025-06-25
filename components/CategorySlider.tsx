@@ -1,20 +1,35 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 
-const categories = [
-  { name: 'All', icon: '🌱' },
-  { name: 'Indoor Plants', icon: '🪴' },
-  { name: 'Flowering Plants', icon: '🌸' },
-  { name: 'Pots & Gamlas', icon: '🏺' },
-  { name: 'Seeds', icon: '🌾' },
-  { name: 'Fertilizers', icon: '🧪' },
-  { name: 'Tools', icon: '🛠️' },
-  { name: 'Offers', icon: '🎁' },
+interface Category {
+  name: string;
+  icon: string;
+  sectionId: string;
+}
+
+const categories: Category[] = [
+  { name: 'All', icon: '🌱', sectionId: 'top' },
+  { name: 'Indoor Plants', icon: '🪴', sectionId: 'trending-plants' },
+  { name: 'Flowering Plants', icon: '🌸', sectionId: 'bestseller-section' },
+  { name: 'Pots & Gamlas', icon: '🏺', sectionId: 'product-catalog' },
+  { name: 'Seeds', icon: '🌾', sectionId: 'product-catalog' },
+  { name: 'Fertilizers', icon: '🧪', sectionId: 'fertilizer-section' },
+  { name: 'Tools', icon: '🛠️', sectionId: 'tools-and-accessories' },
+  { name: 'Offers', icon: '🎁', sectionId: 'offers-section' },
+  { name: 'Wishlist', icon: '❤️', sectionId: 'wishlist' },
 ]
 
 export default function CategorySlider() {
   const [active, setActive] = useState('All')
-  
+
+  const handleCategoryClick = (cat: Category) => {
+    setActive(cat.name)
+    const section = document.getElementById(cat.sectionId)
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
+
   return (
     <div className="overflow-x-auto flex gap-2 px-3 py-0 my-0 leading-none h-auto min-h-0 bg-white border-b scrollbar-none snap-x snap-mandatory">
       {categories.map((cat, idx) => (
@@ -23,7 +38,7 @@ export default function CategorySlider() {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: idx * 0.05 }}
-          onClick={() => setActive(cat.name)}
+          onClick={() => handleCategoryClick(cat)}
           className={`w-18 flex flex-col items-center justify-center px-2 py-1 snap-start transition-all duration-300 hover:scale-105 focus:outline-none ${
             active === cat.name 
               ? 'font-semibold text-green-600' 

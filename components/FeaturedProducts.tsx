@@ -3,6 +3,9 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Plus, Star, Heart } from 'lucide-react'
+import { useCart } from '../context/CartContext'
+import { useWishlist } from '../context/WishlistContext'
+import WishlistButton from './WishlistButton'
 
 const products = [
   {
@@ -74,14 +77,15 @@ const products = [
 ]
 
 export default function FeaturedProducts() {
-  const [favorites, setFavorites] = useState<number[]>([])
+  const { addToCart } = useCart()
 
-  const toggleFavorite = (productId: number) => {
-    setFavorites(prev => 
-      prev.includes(productId) 
-        ? prev.filter(id => id !== productId)
-        : [...prev, productId]
-    )
+  const handleAddToCart = (product: typeof products[0]) => {
+    addToCart({
+      name: product.name,
+      image: product.image,
+      price: product.price,
+      qty: 1
+    })
   }
 
   return (
@@ -104,19 +108,12 @@ export default function FeaturedProducts() {
               className="group"
             >
               <div className="card p-4 relative">
-                {/* Favorite Button */}
-                <button
-                  onClick={() => toggleFavorite(product.id)}
-                  className="absolute top-3 right-3 z-10 p-1 rounded-full bg-white shadow-md hover:shadow-lg transition-all duration-200"
-                >
-                  <Heart 
-                    className={`w-4 h-4 ${
-                      favorites.includes(product.id) 
-                        ? 'text-red-500 fill-current' 
-                        : 'text-gray-400'
-                    }`} 
-                  />
-                </button>
+                {/* Wishlist Button */}
+                <WishlistButton 
+                  product={product} 
+                  className="absolute top-3 right-3"
+                  size="sm"
+                />
 
                 {/* Discount Badge */}
                 {product.discount > 0 && (
@@ -160,7 +157,10 @@ export default function FeaturedProducts() {
                   </div>
 
                   {/* Add to Cart Button */}
-                  <button className="w-full bg-primary-500 hover:bg-primary-600 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2">
+                  <button
+                    onClick={() => handleAddToCart(product)}
+                    className="w-full bg-primary-500 hover:bg-primary-600 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2"
+                  >
                     <Plus className="w-4 h-4" />
                     <span>Add to Cart</span>
                   </button>

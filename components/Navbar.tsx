@@ -1,6 +1,7 @@
 import SearchBar from './SearchBar'
 import CategorySlider from './CategorySlider'
 import { motion } from 'framer-motion'
+import Link from 'next/link'
 
 export default function Navbar() {
   return (
@@ -19,16 +20,18 @@ export default function Navbar() {
           <SearchBar />
         </div>
         {/* Profile icon */}
-        <motion.button 
-          className="ml-2 p-2 rounded-full bg-gray-100 hover:bg-green-50 transition-all duration-300"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <circle cx="12" cy="8" r="4" />
-            <path d="M16 20v-1a4 4 0 0 0-8 0v1" />
-          </svg>
-        </motion.button>
+        <Link href="/auth/login">
+          <motion.button 
+            className="ml-2 p-2 rounded-full bg-gray-100 hover:bg-green-50 transition-all duration-300"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <circle cx="12" cy="8" r="4" />
+              <path d="M16 20v-1a4 4 0 0 0-8 0v1" />
+            </svg>
+          </motion.button>
+        </Link>
       </div>
       {/* Category Slider below search bar */}
       <CategorySlider />

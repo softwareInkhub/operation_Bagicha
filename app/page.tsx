@@ -16,10 +16,13 @@ import FloatingHelpButton from '../components/FloatingHelpButton'
 import BottomNavigation from '../components/BottomNavigation'
 import { Gift, Sparkles } from 'lucide-react'
 import StickyFooter from '../components/StickyFooter'
+import VideoTutorials from '../components/VideoTutorials'
+import FertilizerSection from '../components/FertilizerSection'
+import Link from 'next/link'
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50" id="top">
       {/* Header */}
       <Header />
 
@@ -45,6 +48,7 @@ export default function Home() {
 
         {/* Gift a Plant Campaign Banner */}
         <motion.div
+          id="offers-section"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.25 }}
@@ -66,14 +70,16 @@ export default function Home() {
                 </div>
                 <h2 className="text-2xl font-bold mb-2">Gift a Plant, Spread Joy! 🌱</h2>
                 <p className="text-orange-100 mb-4">Perfect gifts for plant lovers. Free gift wrapping + care guide included!</p>
-                <motion.button
-                  className="bg-white text-orange-600 px-6 py-3 rounded-xl font-semibold flex items-center gap-2 hover:bg-orange-50 transition-colors"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Gift className="w-5 h-5" />
-                  Shop Gift Plants
-                </motion.button>
+                <Link href="/auth/login">
+                  <motion.button
+                    className="bg-white text-orange-600 px-6 py-3 rounded-xl font-semibold flex items-center gap-2 hover:bg-orange-50 transition-colors"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Gift className="w-5 h-5" />
+                    Shop Gift Plants
+                  </motion.button>
+                </Link>
               </div>
               <div className="hidden md:block">
                 <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center">
@@ -86,15 +92,17 @@ export default function Home() {
 
         {/* Bestseller Section */}
         <motion.div
+          id="bestseller-section"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.3 }}
         >
-        <BestsellerSection />
+          <BestsellerSection />
         </motion.div>
 
         {/* Trending Plants */}
         <motion.div
+          id="trending-plants"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
@@ -104,6 +112,7 @@ export default function Home() {
 
         {/* New Arrivals */}
         <motion.div
+          id="new-arrivals"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.5 }}
@@ -113,6 +122,7 @@ export default function Home() {
 
         {/* Plant Care Tips */}
         <motion.div
+          id="plant-care-tips"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.6 }}
@@ -122,6 +132,7 @@ export default function Home() {
 
         {/* Tools & Accessories */}
         <motion.div
+          id="tools-and-accessories"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.7 }}
@@ -129,8 +140,12 @@ export default function Home() {
           <ToolsAndAccessories />
         </motion.div>
 
+        {/* Fertilizer Section */}
+        <FertilizerSection />
+
         {/* Customer Reviews */}
         <motion.div
+          id="customer-reviews"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.8 }}
@@ -140,6 +155,7 @@ export default function Home() {
 
         {/* Gardening Blogs */}
         <motion.div
+          id="gardening-blogs"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.9 }}
@@ -149,12 +165,16 @@ export default function Home() {
 
         {/* Product Catalog */}
         <motion.div
+          id="product-catalog"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 1.0 }}
         >
           <ProductCatalog />
         </motion.div>
+
+        {/* Video Tutorials */}
+        <VideoTutorials />
       </main>
 
       {/* Floating Help Button */}
