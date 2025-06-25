@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import ProductModal from './ProductModal'
+import ProductDetails from './ProductDetails'
 import WishlistButton from './WishlistButton'
 
 const tools = [
@@ -155,6 +156,7 @@ const tools = [
 export default function ToolsAndAccessories() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
+  const [selectedProduct, setSelectedProduct] = useState<any>(null)
 
   // Group tools by category
   const groupedTools: { [category: string]: typeof tools } = {}
@@ -176,6 +178,15 @@ export default function ToolsAndAccessories() {
     setModalOpen(true)
   }
 
+  const handleProductClick = (product: any) => {
+    setSelectedProduct(product)
+    setModalOpen(false)
+  }
+
+  const closeProductDetails = () => {
+    setSelectedProduct(null)
+  }
+
   const getCategoryIcon = (category: string) => {
     const icons: { [key: string]: string } = {
       'Cutting Tools': '✂️',
@@ -191,94 +202,95 @@ export default function ToolsAndAccessories() {
 
   const getModalItems = () => {
     if (!selectedCategory) return []
-    return groupedTools[selectedCategory].slice(0, 4).map(tool => ({
-      name: tool.name,
-      image: tool.image,
-      price: tool.price,
-      rating: tool.rating,
-      reviews: tool.reviews,
-      description: tool.features.join(', '),
-      wishlistButton: <WishlistButton product={tool} />
+    const categoryTools = groupedTools[selectedCategory] || []
+    return categoryTools.map((tool, index) => ({
+      ...tool,
+      wishlistButton: <WishlistButton product={{ 
+        id: tool.id, 
+        name: tool.name, 
+        price: tool.price, 
+        image: tool.image 
+      }} />
     }))
   }
 
   return (
     <motion.section 
-      className="py-6 bg-white"
-      initial={{ opacity: 0, y: 40 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.7, ease: 'easeOut' }}
-      viewport={{ once: true, amount: 0.2 }}
+      className="mt-0 pt-0 mb-6"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
     >
-      <div className="px-4">
-        <motion.div 
-          className="flex items-center justify-between mb-6"
-          initial={{ opacity: 0, x: -20 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          viewport={{ once: true, amount: 0.2 }}
-        >
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">Tools & Accessories</h2>
-            <p className="text-gray-600 mt-1">Professional gardening tools for every need</p>
-          </div>
-        </motion.div>
-        
-        <div className="flex flex-col gap-4">
-          {rows.map((row, rowIdx) => (
-            <div key={rowIdx} className="flex overflow-x-auto snap-x snap-mandatory gap-3 md:gap-5 pb-2 scrollbar-none w-full">
-              {row.map(([category, items], idx) => {
-                const images = [
-                  ...items.slice(0, 4),
-                  ...Array(4 - items.length).fill({ image: '/placeholder.png', name: 'Placeholder', id: `ph-${category}-${idx}` })
-                ].slice(0, 4)
-                return (
-                  <motion.div
-                    key={category}
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: idx * 0.08, ease: 'easeOut' }}
-                    viewport={{ once: true, amount: 0.2 }}
-                    className="bg-white shadow-lg border border-gray-100 rounded-2xl p-4 flex flex-col items-center min-w-[140px] max-w-[160px] mx-auto snap-start cursor-pointer"
-                    whileHover={{ scale: 1.07 }}
-                    whileTap={{ scale: 0.97 }}
-                    onClick={() => handleCardClick(category)}
-                  >
-                    {/* 2x2 image grid */}
-                    <div className="grid grid-cols-2 grid-rows-2 gap-1 w-full mb-2">
-                      {images.map((product, iidx) => (
-                        <img
-                          key={product.id || iidx}
-                          src={product.image}
-                          alt={product.image === '/placeholder.png' ? 'Placeholder' : product.name}
-                          className="w-10 h-10 md:w-12 md:h-12 object-contain rounded bg-gray-50 border border-gray-100 mx-auto"
-                        />
-                      ))}
-                    </div>
-                    {/* +X more badge */}
-                    <div className="text-[11px] md:text-xs text-green-600 font-semibold mb-0.5 bg-green-50 px-2 py-0.5 rounded-full shadow-sm">
-                      +{items.length} more
-                    </div>
-                    {/* Category name */}
-                    <div className="text-xs md:text-sm font-bold text-gray-800 text-center leading-tight mt-0.5">
-                      {category}
-                    </div>
-                  </motion.div>
-                )
-              })}
+      <motion.h2 
+        className="text-lg font-semibold text-gray-900 px-4 pt-4 pb-2"
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        🛠️ Tools & Accessories
+      </motion.h2>
+      
+      {/* Two-row slider */}
+      <div className="space-y-4">
+        {rows.map((row, rowIndex) => (
+          <div key={rowIndex} className="relative flex items-center">
+            <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 md:gap-5 px-2 md:px-10 scrollbar-none w-full">
+              {row.map(([category, categoryTools], index) => (
+                <motion.div
+                  key={category}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: (rowIndex * 0.1) + (index * 0.1) }}
+                  className="bg-white shadow-lg border border-gray-100 rounded-xl p-2 md:p-3 flex flex-col items-center hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer min-w-[120px] max-w-[140px] md:min-w-[140px] md:max-w-[160px] mx-auto snap-start"
+                  onClick={() => handleCardClick(category)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  {/* 2x2 image grid */}
+                  <div className="grid grid-cols-2 grid-rows-2 gap-1 w-full mb-2">
+                    {categoryTools.slice(0, 4).map((tool, idx) => (
+                      <img
+                        key={tool.id}
+                        src={tool.image}
+                        alt={tool.name}
+                        className="w-8 h-8 md:w-10 md:h-10 object-cover rounded bg-gray-50 border border-gray-100 mx-auto"
+                      />
+                    ))}
+                  </div>
+                  {/* +X more badge */}
+                  <div className="text-[10px] md:text-xs text-green-600 font-semibold mb-0.5 bg-green-50 px-1.5 py-0.5 rounded-full shadow-sm">+{categoryTools.length} more</div>
+                  {/* Category name */}
+                  <div className="text-[10px] md:text-xs font-bold text-gray-800 text-center leading-tight mt-0.5">{category}</div>
+                </motion.div>
+              ))}
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
-
+      
       {/* Product Modal */}
-      <ProductModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        title={selectedCategory || ''}
-        icon={selectedCategory ? getCategoryIcon(selectedCategory) : '🛠️'}
-        items={getModalItems()}
-      />
+      {modalOpen && !selectedProduct && (
+        <ProductModal
+          isOpen={modalOpen}
+          onClose={() => {
+            setModalOpen(false)
+            setSelectedProduct(null)
+          }}
+          title={selectedCategory || ''}
+          icon={selectedCategory ? getCategoryIcon(selectedCategory) : '🛠️'}
+          items={getModalItems()}
+          onProductClick={handleProductClick}
+        />
+      )}
+
+      {/* Product Details Modal */}
+      {selectedProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
+          <div className="bg-white rounded-xl shadow-lg p-4 max-w-md w-full relative my-8 max-h-[90vh] max-w-[95vw] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <ProductDetails product={selectedProduct} onClose={closeProductDetails} />
+          </div>
+        </div>
+      )}
     </motion.section>
   )
 } 

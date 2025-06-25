@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import ProductModal from './ProductModal'
 import WishlistButton from './WishlistButton'
+import ProductDetails from './ProductDetails'
 
 const bestsellers = [
   { title: 'Indoor Plants', icon: '🪴', items: [
@@ -45,6 +46,7 @@ const bestsellers = [
 export default function BestsellerSection() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
+  const [selectedProduct, setSelectedProduct] = useState(null)
 
   const handleCardClick = (category: string) => {
     setSelectedCategory(category);
@@ -64,6 +66,15 @@ export default function BestsellerSection() {
       }} />
     })) : [];
   };
+
+  const handleProductClick = (product: any) => {
+    setSelectedProduct(product)
+    setModalOpen(false)
+  }
+
+  const closeProductDetails = () => {
+    setSelectedProduct(null)
+  }
 
   return (
     <motion.section 
@@ -89,9 +100,9 @@ export default function BestsellerSection() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="bg-white shadow-lg border border-gray-100 rounded-2xl p-2 md:p-4 flex flex-col items-center hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer min-w-[140px] max-w-[160px] md:min-w-[170px] md:max-w-[200px] mx-auto snap-start"
+              className="bg-white shadow-lg border border-gray-100 rounded-xl p-2 md:p-3 flex flex-col items-center hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer min-w-[120px] max-w-[140px] md:min-w-[140px] md:max-w-[160px] mx-auto snap-start"
               onClick={() => handleCardClick(item.title)}
-              whileHover={{ scale: 1.07 }}
+              whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.97 }}
             >
               {/* 2x2 image grid */}
@@ -101,27 +112,42 @@ export default function BestsellerSection() {
                     key={prod.name}
                     src={prod.image}
                     alt={prod.name}
-                    className="w-10 h-10 md:w-12 md:h-12 object-contain rounded bg-gray-50 border border-gray-100 mx-auto"
+                    className="w-8 h-8 md:w-10 md:h-10 object-contain rounded bg-gray-50 border border-gray-100 mx-auto"
                   />
                 ))}
               </div>
               {/* +X more badge */}
-              <div className="text-[11px] md:text-xs text-green-600 font-semibold mb-0.5 bg-green-50 px-2 py-0.5 rounded-full shadow-sm">+{item.items.length} more</div>
+              <div className="text-[10px] md:text-xs text-green-600 font-semibold mb-0.5 bg-green-50 px-1.5 py-0.5 rounded-full shadow-sm">+{item.items.length} more</div>
               {/* Category name */}
-              <div className="text-xs md:text-sm font-bold text-gray-800 text-center leading-tight mt-0.5">{item.title}</div>
+              <div className="text-[10px] md:text-xs font-bold text-gray-800 text-center leading-tight mt-0.5">{item.title}</div>
             </motion.div>
           ))}
         </div>
       </div>
       
       {/* Product Modal */}
-      <ProductModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        title={selectedCategory || ''}
-        icon={selectedCategory ? bestsellers.find(b => b.title === selectedCategory)?.icon || '🌟' : '🌟'}
-        items={getModalItems()}
-      />
+      {modalOpen && !selectedProduct && (
+        <ProductModal
+          isOpen={modalOpen}
+          onClose={() => {
+            setModalOpen(false)
+            setSelectedProduct(null)
+          }}
+          title={selectedCategory || ''}
+          icon={selectedCategory ? bestsellers.find(b => b.title === selectedCategory)?.icon || '🌟' : '🌟'}
+          items={getModalItems()}
+          onProductClick={handleProductClick}
+        />
+      )}
+
+      {/* Product Details Modal */}
+      {selectedProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
+          <div className="bg-white rounded-xl shadow-lg p-4 max-w-md w-full relative my-8 max-h-[90vh] max-w-[95vw] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <ProductDetails product={selectedProduct} onClose={closeProductDetails} />
+          </div>
+        </div>
+      )}
     </motion.section>
   )
 } 

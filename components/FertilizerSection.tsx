@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import ProductModal from './ProductModal';
+import ProductDetails from './ProductDetails';
 import WishlistButton from './WishlistButton';
 
 const fertilizers = [
@@ -151,8 +152,9 @@ const fertilizers = [
 ];
 
 export default function FertilizerSection() {
-  const [modalOpen, setModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
   // Group by badge for slider rows
   const grouped = fertilizers.reduce((acc, fert) => {
@@ -168,26 +170,41 @@ export default function FertilizerSection() {
     cardEntries.slice(cardsPerRow)
   ];
 
-  const handleCardClick = (badge: string) => {
-    setSelectedCategory(badge);
+  const handleCardClick = (category: string) => {
+    setSelectedCategory(category);
     setModalOpen(true);
+  };
+
+  const handleProductClick = (product: any) => {
+    setSelectedProduct(product);
+    setModalOpen(false);
+  };
+
+  const closeProductDetails = () => {
+    setSelectedProduct(null);
   };
 
   const getModalItems = () => {
     if (!selectedCategory) return [];
-    return grouped[selectedCategory].slice(0, 4).map(fert => ({
-      name: fert.name,
-      image: fert.image,
-      price: fert.price,
-      rating: fert.rating,
-      reviews: fert.reviews,
-      description: fert.features.join(', '),
-      wishlistButton: <WishlistButton product={fert} />
+    const categoryItems = grouped[selectedCategory] || [];
+    return categoryItems.map((item, index) => ({
+      ...item,
+      wishlistButton: <WishlistButton product={{ 
+        id: item.id, 
+        name: item.name, 
+        price: item.price, 
+        image: item.image 
+      }} />
     }));
   };
 
   return (
-    <section className="py-8" id="fertilizer-section">
+    <motion.section 
+      className="mt-0 pt-0 mb-6"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
+    >
       <div className="px-4">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold text-gray-900">Fertilizers</h2>
@@ -202,30 +219,30 @@ export default function FertilizerSection() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: rowIdx * 0.1 }}
-                  className="min-w-[160px] max-w-[180px] bg-white rounded-xl shadow-md flex-shrink-0 flex flex-col cursor-pointer relative"
+                  className="min-w-[140px] max-w-[160px] bg-white rounded-lg shadow-md flex-shrink-0 flex flex-col cursor-pointer relative"
                   onClick={() => handleCardClick(badge)}
-                  whileHover={{ scale: 1.04 }}
+                  whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <img src={items[0].image} alt={items[0].name} className="w-full h-24 object-cover rounded-t-xl" />
-                  <div className="absolute top-1 left-1 bg-green-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                  <img src={items[0].image} alt={items[0].name} className="w-full h-20 object-cover rounded-t-lg" />
+                  <div className="absolute top-1 left-1 bg-green-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
                     {badge}
                   </div>
                   <div className="absolute top-1 right-1">
                     <WishlistButton product={items[0]} size="sm" />
                   </div>
-                  <div className="p-3 flex flex-col flex-1">
-                    <h3 className="font-semibold text-gray-900 text-sm mb-1 line-clamp-2">{items[0].name}</h3>
-                    <div className="flex items-center gap-1 text-xs text-gray-600 mb-1">
+                  <div className="p-2 flex flex-col flex-1">
+                    <h3 className="font-semibold text-gray-900 text-xs mb-1 line-clamp-2">{items[0].name}</h3>
+                    <div className="flex items-center gap-1 text-[10px] text-gray-600 mb-1">
                       <span>★ {items[0].rating}</span>
                       <span>({items[0].reviews})</span>
                     </div>
-                    <p className="text-xs text-gray-700 mb-2 line-clamp-2">{items[0].features.join(', ')}</p>
-                    <span className="text-base font-bold text-green-600 mb-1">₹{items[0].price}</span>
+                    <p className="text-[10px] text-gray-700 mb-2 line-clamp-2">{items[0].features.join(', ')}</p>
+                    <span className="text-sm font-bold text-green-600 mb-1">₹{items[0].price}</span>
                     {items[0].originalPrice > items[0].price && (
-                      <span className="text-xs text-gray-400 line-through mb-1">₹{items[0].originalPrice}</span>
+                      <span className="text-[10px] text-gray-400 line-through mb-1">₹{items[0].originalPrice}</span>
                     )}
-                    <button className="mt-auto bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors text-center">
+                    <button className="mt-auto bg-green-600 hover:bg-green-700 text-white text-[10px] font-semibold px-2 py-1 rounded-lg transition-colors text-center">
                       Add to Cart
                     </button>
                   </div>
@@ -235,14 +252,29 @@ export default function FertilizerSection() {
           ))}
         </div>
         {/* Modal for grouped items */}
-        <ProductModal
-          isOpen={modalOpen}
-          onClose={() => setModalOpen(false)}
-          title={selectedCategory || ''}
-          icon="🧪"
-          items={getModalItems()}
-        />
+        {modalOpen && !selectedProduct && (
+          <ProductModal
+            isOpen={modalOpen}
+            onClose={() => {
+              setModalOpen(false);
+              setSelectedProduct(null);
+            }}
+            title={selectedCategory || ''}
+            icon="🪨"
+            items={getModalItems()}
+            onProductClick={handleProductClick}
+          />
+        )}
+
+        {/* Product Details Modal */}
+        {selectedProduct && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
+            <div className="bg-white rounded-xl shadow-lg p-4 max-w-md w-full relative my-8 max-h-[90vh] max-w-[95vw] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <ProductDetails product={selectedProduct} onClose={closeProductDetails} />
+            </div>
+          </div>
+        )}
       </div>
-    </section>
+    </motion.section>
   );
 } 

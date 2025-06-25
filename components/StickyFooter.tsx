@@ -16,27 +16,26 @@ export default function StickyFooter() {
   const nav = [
     { name: 'Home', icon: Home, badge: null },
     { name: 'Wishlist', icon: Heart, badge: wishlistCount },
-    ...(cartCount > 0 ? [{ name: 'Cart', icon: ShoppingCart, badge: cartCount }] : []),
     { name: 'Profile', icon: User, badge: null },
   ]
   
   useEffect(() => {
+    let lastScrollY = window.scrollY;
     const onScroll = () => {
-      const currentScrollY = window.scrollY
-      
-      // Show footer when scrolling down, hide when scrolling up
+      const currentScrollY = window.scrollY;
+      // Show footer only when scrolling down (not up), and only if scrolled more than 100px
       if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        setShow(true)
+        setShow(true);
+        window.dispatchEvent(new CustomEvent('footer-visibility', { detail: { visible: true } }));
       } else if (currentScrollY < lastScrollY) {
-        setShow(false)
+        setShow(false);
+        window.dispatchEvent(new CustomEvent('footer-visibility', { detail: { visible: false } }));
       }
-      
-      setLastScrollY(currentScrollY)
-    }
-    
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [lastScrollY])
+      lastScrollY = currentScrollY;
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
   
   return (
     <>

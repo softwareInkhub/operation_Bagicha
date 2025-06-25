@@ -22,9 +22,10 @@ interface ProductModalProps {
   title: string
   icon: string
   items: ProductItem[]
+  onProductClick?: (product: ProductItem) => void
 }
 
-export default function ProductModal({ isOpen, onClose, title, icon, items }: ProductModalProps) {
+export default function ProductModal({ isOpen, onClose, title, icon, items, onProductClick }: ProductModalProps) {
   const { cart, addToCart, removeFromCart } = useCart()
   const [showDrawer, setShowDrawer] = useState(false)
 
@@ -98,11 +99,12 @@ export default function ProductModal({ isOpen, onClose, title, icon, items }: Pr
                 {items.map((item, idx) => (
                   <motion.div 
                     key={item.name} 
-                    className="flex flex-col items-center bg-gray-50 rounded-lg p-3 shadow-sm hover:shadow-md transition-all duration-200 relative"
+                    className="flex flex-col items-center bg-gray-50 rounded-lg p-3 shadow-sm hover:shadow-md transition-all duration-200 relative cursor-pointer"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.1 }}
                     whileHover={{ scale: 1.02 }}
+                    onClick={() => onProductClick && onProductClick(item)}
                   >
                     {item.wishlistButton}
                     <img src={item.image} alt={item.name} className="w-14 h-14 object-cover rounded mb-2" />
