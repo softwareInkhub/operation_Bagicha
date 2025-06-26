@@ -7,6 +7,7 @@ import { useCart } from '../context/CartContext'
 import { useWishlist } from '../context/WishlistContext'
 import WishlistButton from './WishlistButton'
 import ProductDetails from './ProductDetails'
+import { useRouter } from 'next/navigation'
 
 interface NewProduct {
   id: number
@@ -110,6 +111,7 @@ export default function NewArrivals() {
   const [selectedProduct, setSelectedProduct] = useState<NewProduct | null>(null)
   const [showCartSuccess, setShowCartSuccess] = useState<string | null>(null)
   const [showDrawer, setShowDrawer] = useState(false)
+  const router = useRouter()
 
   const handleAddToCart = (product: NewProduct) => {
     addToCart({
@@ -158,7 +160,7 @@ export default function NewArrivals() {
     return `Added ${days} days ago`
   }
 
-  const isAnyModalOpen = !!showDrawer || !!showModal || !!selectedProduct || !!showCartSuccess;
+  const isAnyModalOpen = !!showDrawer || !!showModal || !!selectedProduct;
 
   return (
     <>
@@ -326,7 +328,7 @@ export default function NewArrivals() {
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: 100, scale: 0.8 }}
             transition={{ duration: 0.3, type: "spring" }}
-            className="fixed bottom-4 right-4 mb-40 flex items-center gap-2 bg-green-100 text-green-900 rounded-lg px-4 py-3 shadow-lg z-[60] cursor-pointer transition-all duration-300 border border-green-200"
+            className="fixed bottom-20 right-24 flex items-center gap-2 bg-green-100 text-green-900 rounded-lg px-4 py-3 shadow-lg z-[60] cursor-pointer transition-all duration-300 border border-green-200"
             onClick={() => setShowDrawer(true)}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -429,6 +431,7 @@ export default function NewArrivals() {
                     className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl transition-all duration-200"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
+                    onClick={() => router.push('/checkout')}
                   >
                     Proceed to Checkout
                   </motion.button>
