@@ -104,10 +104,12 @@ const newProducts: NewProduct[] = [
 ]
 
 export default function NewArrivals() {
-  const { addToCart } = useCart()
+  const { cart, addToCart, removeFromCart } = useCart()
   const { isInWishlist } = useWishlist()
   const [showModal, setShowModal] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<NewProduct | null>(null)
+  const [showCartSuccess, setShowCartSuccess] = useState<string | null>(null)
+  const [showDrawer, setShowDrawer] = useState(false)
 
   const handleAddToCart = (product: NewProduct) => {
     addToCart({
@@ -116,7 +118,23 @@ export default function NewArrivals() {
       price: product.price,
       qty: 1
     })
+    setShowCartSuccess(product.name)
+    setTimeout(() => setShowCartSuccess(null), 2000)
   }
+
+  const handleQty = (name: string, delta: number) => {
+    const item = cart.find(i => i.name === name)
+    if (item) {
+      const newQty = Math.max(1, item.qty + delta)
+      if (newQty === 1) {
+        removeFromCart(name)
+      } else {
+        addToCart({ ...item, qty: newQty })
+      }
+    }
+  }
+
+  const total = cart.reduce((sum, i) => sum + i.price * i.qty, 0)
 
   const handleProductClick = (product: NewProduct) => {
     setSelectedProduct(product)
@@ -139,6 +157,8 @@ export default function NewArrivals() {
     if (days === 2) return 'Added yesterday'
     return `Added ${days} days ago`
   }
+
+  const isAnyModalOpen = !!showDrawer || !!showModal || !!selectedProduct || !!showCartSuccess;
 
   return (
     <>
@@ -281,12 +301,143 @@ export default function NewArrivals() {
 
       {/* Product Details Modal */}
       {selectedProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
-          <div className="bg-white rounded-xl shadow-lg p-4 max-w-md w-full relative my-8 max-h-[90vh] max-w-[95vw] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <ProductDetails product={selectedProduct} onClose={closeProductDetails} />
-          </div>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-40 p-4 pt-20">
+          <ProductDetails product={selectedProduct} onClose={closeProductDetails} />
         </div>
       )}
+
+      {/* Cart Success Message */}
+      {showCartSuccess && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className="fixed top-20 left-1/2 transform -translate-x-1/2 z-[70] bg-green-100 text-green-800 px-4 py-2 rounded-lg text-sm font-semibold shadow-lg border border-green-200"
+        >
+          ✓ Added "{showCartSuccess}" to cart!
+        </motion.div>
+      )}
+
+      {/* Add to Cart Toast */}
+      <AnimatePresence>
+        {cart.length > 0 && !isAnyModalOpen && (
+          <motion.div
+            initial={{ opacity: 0, x: 100, scale: 0.8 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 100, scale: 0.8 }}
+            transition={{ duration: 0.3, type: "spring" }}
+            className="fixed bottom-4 right-4 mb-40 flex items-center gap-2 bg-green-100 text-green-900 rounded-lg px-4 py-3 shadow-lg z-[60] cursor-pointer transition-all duration-300 border border-green-200"
+            onClick={() => setShowDrawer(true)}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <ShoppingCart className="w-5 h-5" />
+            <span className="font-semibold">View Cart ({cart.reduce((sum, i) => sum + i.qty, 0)})</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Cart Drawer */}
+      <AnimatePresence>
+        {showDrawer && (
+          <motion.div
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            className="fixed left-0 right-0 bottom-0 z-[70] bg-white rounded-t-2xl shadow-2xl border-t border-gray-200 max-h-[70vh] overflow-y-auto"
+          >
+            <div className="flex flex-col p-4">
+              <div className="flex items-center justify-between mb-4">
+                <span className="font-bold text-lg text-gray-900">Your Cart</span>
+                <motion.button 
+                  className="text-gray-400 hover:text-gray-700 text-2xl p-1 rounded-full hover:bg-gray-100"
+                  onClick={() => setShowDrawer(false)}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  ×
+                </motion.button>
+              </div>
+              {cart.length === 0 ? (
+                <div className="text-center text-gray-500 py-8">
+                  <ShoppingCart className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                  Your cart is empty.
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {cart.map((item, index) => (
+                    <motion.div 
+                      key={item.name} 
+                      className="flex justify-between items-center p-3 border-b border-gray-100 rounded-lg hover:bg-gray-50"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <img src={item.image} alt={item.name} className="w-12 h-12 rounded-lg object-cover" />
+                        <div>
+                          <span className="text-sm font-medium text-gray-800">{item.name}</span>
+                          <div className="text-sm text-green-600 font-semibold">₹{item.price}</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <motion.button 
+                          className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-lg font-bold hover:bg-gray-200"
+                          onClick={() => handleQty(item.name, -1)}
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          -
+                        </motion.button>
+                        <span className="text-base font-semibold text-gray-800 min-w-[20px] text-center">{item.qty}</span>
+                        <motion.button 
+                          className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-lg font-bold hover:bg-gray-200"
+                          onClick={() => handleQty(item.name, 1)}
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          +
+                        </motion.button>
+                        <span className="ml-2 text-green-700 font-semibold">₹{item.price * item.qty}</span>
+                        <motion.button 
+                          className="ml-2 text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-red-50"
+                          onClick={() => removeFromCart(item.name)}
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          title="Remove"
+                        >
+                          <X className="w-4 h-4" />
+                        </motion.button>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+              {cart.length > 0 && (
+                <motion.div 
+                  className="mt-6 border-t pt-4 flex flex-col gap-3"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  <div className="flex justify-between items-center text-lg font-bold">
+                    <span>Total</span>
+                    <span>₹{total}</span>
+                  </div>
+                  <motion.button 
+                    className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl transition-all duration-200"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    Proceed to Checkout
+                  </motion.button>
+                </motion.div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   )
 } 
