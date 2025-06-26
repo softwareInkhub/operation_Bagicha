@@ -10,7 +10,6 @@ import Link from 'next/link'
 import SearchModal from './SearchModal'
 import { CartContext } from '../context/CartContext'
 import { useWishlist } from '../context/WishlistContext'
-import { useCart } from '../context/CartContext'
 
 export default function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
@@ -18,9 +17,8 @@ export default function Header() {
   const [isWishlistDrawerOpen, setIsWishlistDrawerOpen] = useState(false)
   const [notifications, setNotifications] = useState(2)
   const [isScrolled, setIsScrolled] = useState(false)
-  const { cartCount } = useContext(CartContext)
+  const { cartCount, addToCart } = useContext(CartContext)
   const { wishlistCount, wishlist, removeFromWishlist } = useWishlist()
-  const { addToCart } = useCart()
   const [searchFocused, setSearchFocused] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const suggestions = [
@@ -32,6 +30,7 @@ export default function Header() {
     'Try "Plant Care Tips"',
   ]
   const [suggestionIndex, setSuggestionIndex] = useState(0)
+  const [showCartSuccess, setShowCartSuccess] = useState<string | null>(null)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -56,6 +55,22 @@ export default function Header() {
     { icon: Shield, text: 'Secure Payment', subtext: '100% Safe' },
     { icon: Clock, text: '24/7 Support', subtext: 'Always Here' }
   ]
+
+  const handleAddToCart = (product: any) => {
+    addToCart({ ...product, qty: 1 });
+    
+    // Show success message
+    setShowCartSuccess(product.name);
+    setTimeout(() => setShowCartSuccess(null), 2000);
+  };
+
+  const handleAddAllToCart = () => {
+    wishlist.forEach(product => addToCart({ ...product, qty: 1 }));
+    
+    // Show success message
+    setShowCartSuccess('All items');
+    setTimeout(() => setShowCartSuccess(null), 2000);
+  };
 
   return (
     <>
@@ -607,7 +622,7 @@ export default function Header() {
                           </div>
                           <div className="flex flex-col gap-2">
                             <button
-                              onClick={() => addToCart({ ...product, qty: 1 })}
+                              onClick={() => handleAddToCart(product)}
                               className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1 rounded-lg transition-colors"
                             >
                               Add to Cart
@@ -629,9 +644,7 @@ export default function Header() {
                 {wishlist.length > 0 && (
                   <div className="p-4 border-t border-gray-200">
                     <button
-                      onClick={() => {
-                        wishlist.forEach(product => addToCart({ ...product, qty: 1 }));
-                      }}
+                      onClick={handleAddAllToCart}
                       className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -648,6 +661,18 @@ export default function Header() {
           </motion.div>
         )}
       </AnimatePresence>
+      
+      {/* Cart Success Message */}
+      {showCartSuccess && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className="fixed top-20 left-1/2 transform -translate-x-1/2 z-[70] bg-green-100 text-green-800 px-4 py-2 rounded-lg text-sm font-semibold shadow-lg border border-green-200"
+        >
+          ✓ Added "{showCartSuccess}" to cart!
+        </motion.div>
+      )}
     </>
   )
 } 

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import ProductModal from './ProductModal';
 import ProductDetails from './ProductDetails';
 import WishlistButton from './WishlistButton';
+import { useCart } from '../context/CartContext';
 
 const fertilizers = [
   {
@@ -152,9 +153,11 @@ const fertilizers = [
 ];
 
 export default function FertilizerSection() {
+  const { addToCart } = useCart();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [showCartSuccess, setShowCartSuccess] = useState<string | null>(null);
 
   // Group by badge for slider rows
   const grouped = fertilizers.reduce((acc, fert) => {
@@ -182,6 +185,20 @@ export default function FertilizerSection() {
 
   const closeProductDetails = () => {
     setSelectedProduct(null);
+  };
+
+  const handleAddToCart = (product: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    addToCart({
+      name: product.name,
+      image: product.image,
+      price: product.price,
+      qty: 1
+    });
+    
+    // Show success message
+    setShowCartSuccess(product.name);
+    setTimeout(() => setShowCartSuccess(null), 2000);
   };
 
   const getModalItems = () => {
@@ -242,7 +259,10 @@ export default function FertilizerSection() {
                     {items[0].originalPrice > items[0].price && (
                       <span className="text-[10px] text-gray-400 line-through mb-1">₹{items[0].originalPrice}</span>
                     )}
-                    <button className="mt-auto bg-green-600 hover:bg-green-700 text-white text-[10px] font-semibold px-2 py-1 rounded-lg transition-colors text-center">
+                    <button 
+                      className="mt-auto bg-green-600 hover:bg-green-700 text-white text-[10px] font-semibold px-2 py-1 rounded-lg transition-colors text-center"
+                      onClick={(e) => handleAddToCart(items[0], e)}
+                    >
                       Add to Cart
                     </button>
                   </div>
@@ -268,11 +288,21 @@ export default function FertilizerSection() {
 
         {/* Product Details Modal */}
         {selectedProduct && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
-            <div className="bg-white rounded-xl shadow-lg p-4 max-w-md w-full relative my-8 max-h-[90vh] max-w-[95vw] overflow-y-auto" onClick={e => e.stopPropagation()}>
-              <ProductDetails product={selectedProduct} onClose={closeProductDetails} />
-            </div>
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-40 p-4 pt-20">
+            <ProductDetails product={selectedProduct} onClose={closeProductDetails} />
           </div>
+        )}
+
+        {/* Cart Success Message */}
+        {showCartSuccess && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-20 left-1/2 transform -translate-x-1/2 z-[70] bg-green-100 text-green-800 px-4 py-2 rounded-lg text-sm font-semibold shadow-lg border border-green-200"
+          >
+            ✓ Added "{showCartSuccess}" to cart!
+          </motion.div>
         )}
       </div>
     </motion.section>

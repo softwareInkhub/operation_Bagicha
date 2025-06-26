@@ -5,12 +5,13 @@ import { CartContext } from '../context/CartContext'
 import { useWishlist } from '../context/WishlistContext'
 
 export default function StickyFooter() {
-  const { cartCount } = useContext(CartContext)
+  const { cartCount, addToCart } = useContext(CartContext)
   const { wishlist, wishlistCount, removeFromWishlist } = useWishlist()
   const [show, setShow] = useState(false)
   const [active, setActive] = useState('Home')
   const [lastScrollY, setLastScrollY] = useState(0)
   const [isWishlistDrawerOpen, setIsWishlistDrawerOpen] = useState(false)
+  const [showCartSuccess, setShowCartSuccess] = useState<string | null>(null)
   
   // Remove search icon, add search bar
   const nav = [
@@ -36,6 +37,19 @@ export default function StickyFooter() {
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+  
+  const handleAddToCart = (product: any) => {
+    addToCart({
+      name: product.name,
+      image: product.image,
+      price: product.price,
+      qty: 1
+    });
+    
+    // Show success message
+    setShowCartSuccess(product.name);
+    setTimeout(() => setShowCartSuccess(null), 2000);
+  };
   
   return (
     <>
@@ -165,9 +179,7 @@ export default function StickyFooter() {
                         </div>
                         <div className="flex flex-col gap-2">
                           <button
-                            onClick={() => {
-                              // Add to cart logic here
-                            }}
+                            onClick={() => handleAddToCart(product)}
                             className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1 rounded-lg transition-colors"
                           >
                             Add to Cart
@@ -188,6 +200,18 @@ export default function StickyFooter() {
           </motion.div>
         )}
       </AnimatePresence>
+      
+      {/* Cart Success Message */}
+      {showCartSuccess && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className="fixed top-20 left-1/2 transform -translate-x-1/2 z-[70] bg-green-100 text-green-800 px-4 py-2 rounded-lg text-sm font-semibold shadow-lg border border-green-200"
+        >
+          ✓ Added "{showCartSuccess}" to cart!
+        </motion.div>
+      )}
     </>
   )
 } 

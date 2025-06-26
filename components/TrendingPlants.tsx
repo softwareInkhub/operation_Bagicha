@@ -300,10 +300,8 @@ export default function TrendingPlants() {
 
       {/* Product Details Modal */}
       {selectedProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
-          <div className="bg-white rounded-xl shadow-lg p-4 max-w-md w-full relative my-8 max-h-[90vh] max-w-[95vw] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <ProductDetails product={selectedProduct} onClose={closeProductDetails} />
-          </div>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-40 p-4 pt-20">
+          <ProductDetails product={selectedProduct} onClose={closeProductDetails} />
         </div>
       )}
     </motion.section>

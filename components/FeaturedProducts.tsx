@@ -78,6 +78,7 @@ const products = [
 
 export default function FeaturedProducts() {
   const { addToCart } = useCart()
+  const [showCartSuccess, setShowCartSuccess] = useState<string | null>(null)
 
   const handleAddToCart = (product: typeof products[0]) => {
     addToCart({
@@ -86,6 +87,10 @@ export default function FeaturedProducts() {
       price: product.price,
       qty: 1
     })
+    
+    // Show success message
+    setShowCartSuccess(product.name)
+    setTimeout(() => setShowCartSuccess(null), 2000)
   }
 
   return (
@@ -170,6 +175,18 @@ export default function FeaturedProducts() {
           ))}
         </div>
       </div>
+      
+      {/* Cart Success Message */}
+      {showCartSuccess && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className="fixed top-20 left-1/2 transform -translate-x-1/2 z-[70] bg-green-100 text-green-800 px-4 py-2 rounded-lg text-sm font-semibold shadow-lg border border-green-200"
+        >
+          ✓ Added "{showCartSuccess}" to cart!
+        </motion.div>
+      )}
     </section>
   )
 } 

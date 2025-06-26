@@ -5,10 +5,28 @@ import { Heart, Trash2, ShoppingCart, X } from 'lucide-react';
 import { useWishlist } from '../context/WishlistContext';
 import { useCart } from '../context/CartContext';
 import WishlistButton from './WishlistButton';
+import { useState } from 'react';
 
 export default function WishlistSection() {
   const { wishlist, removeFromWishlist, clearWishlist } = useWishlist();
   const { addToCart } = useCart();
+  const [showCartSuccess, setShowCartSuccess] = useState<string | null>(null);
+
+  const handleAddToCart = (product: any) => {
+    addToCart({ ...product, qty: 1 });
+    
+    // Show success message
+    setShowCartSuccess(product.name);
+    setTimeout(() => setShowCartSuccess(null), 2000);
+  };
+
+  const handleAddAllToCart = () => {
+    wishlist.forEach(product => addToCart({ ...product, qty: 1 }));
+    
+    // Show success message
+    setShowCartSuccess('All items');
+    setTimeout(() => setShowCartSuccess(null), 2000);
+  };
 
   if (wishlist.length === 0) {
     return (
@@ -90,7 +108,7 @@ export default function WishlistSection() {
                   </button>
                 </div>
                 <button
-                  onClick={() => addToCart({ ...product, qty: 1 })}
+                  onClick={() => handleAddToCart(product)}
                   className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
                 >
                   <ShoppingCart className="w-4 h-4" />
@@ -103,9 +121,7 @@ export default function WishlistSection() {
         
         <div className="mt-6 text-center">
           <button
-            onClick={() => {
-              wishlist.forEach(product => addToCart({ ...product, qty: 1 }));
-            }}
+            onClick={handleAddAllToCart}
             className="bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-3 rounded-lg transition-colors flex items-center gap-2 mx-auto"
           >
             <ShoppingCart className="w-5 h-5" />
@@ -113,6 +129,18 @@ export default function WishlistSection() {
           </button>
         </div>
       </div>
+      
+      {/* Cart Success Message */}
+      {showCartSuccess && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className="fixed top-20 left-1/2 transform -translate-x-1/2 z-[70] bg-green-100 text-green-800 px-4 py-2 rounded-lg text-sm font-semibold shadow-lg border border-green-200"
+        >
+          ✓ Added "{showCartSuccess}" to cart!
+        </motion.div>
+      )}
     </section>
   );
 } 

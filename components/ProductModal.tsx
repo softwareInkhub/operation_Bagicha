@@ -28,6 +28,7 @@ interface ProductModalProps {
 export default function ProductModal({ isOpen, onClose, title, icon, items, onProductClick }: ProductModalProps) {
   const { cart, addToCart, removeFromCart } = useCart()
   const [showDrawer, setShowDrawer] = useState(false)
+  const [showCartSuccess, setShowCartSuccess] = useState<string | null>(null)
 
   const handleAddToCart = (name: string, image: string, price: number) => {
     addToCart({
@@ -36,6 +37,10 @@ export default function ProductModal({ isOpen, onClose, title, icon, items, onPr
       price,
       qty: 1
     })
+    
+    // Show success message
+    setShowCartSuccess(name)
+    setTimeout(() => setShowCartSuccess(null), 2000)
   }
   
   const handleRemoveFromCart = (name: string) => {
@@ -143,7 +148,7 @@ export default function ProductModal({ isOpen, onClose, title, icon, items, onPr
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: 100, scale: 0.8 }}
             transition={{ duration: 0.3, type: "spring" }}
-            className="fixed bottom-4 right-4 flex items-center gap-2 bg-green-100 text-green-900 rounded-lg px-4 py-3 shadow-lg z-50 cursor-pointer transition-all duration-300 border border-green-200"
+            className="fixed bottom-4 right-4 flex items-center gap-2 bg-green-100 text-green-900 rounded-lg px-4 py-3 shadow-lg z-[60] cursor-pointer transition-all duration-300 border border-green-200"
             onClick={() => setShowDrawer(true)}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -162,7 +167,7 @@ export default function ProductModal({ isOpen, onClose, title, icon, items, onPr
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="fixed left-0 right-0 bottom-0 z-50 bg-white rounded-t-2xl shadow-2xl border-t border-gray-200 max-h-[70vh] overflow-y-auto"
+            className="fixed left-0 right-0 bottom-0 z-[70] bg-white rounded-t-2xl shadow-2xl border-t border-gray-200 max-h-[70vh] overflow-y-auto"
           >
             <div className="flex flex-col p-4">
               <div className="flex items-center justify-between mb-4">
@@ -257,6 +262,18 @@ export default function ProductModal({ isOpen, onClose, title, icon, items, onPr
           </motion.div>
         )}
       </AnimatePresence>
+      
+      {/* Cart Success Message */}
+      {showCartSuccess && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className="fixed top-20 left-1/2 transform -translate-x-1/2 z-[70] bg-green-100 text-green-800 px-4 py-2 rounded-lg text-sm font-semibold shadow-lg border border-green-200"
+        >
+          ✓ Added "{showCartSuccess}" to cart!
+        </motion.div>
+      )}
     </>
   )
 } 
