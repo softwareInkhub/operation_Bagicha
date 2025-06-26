@@ -140,25 +140,6 @@ export default function ProductModal({ isOpen, onClose, title, icon, items, onPr
         )}
       </AnimatePresence>
       
-      {/* Add to Cart Toast */}
-      <AnimatePresence>
-        {cart.length > 0 && !showDrawer && (
-          <motion.div
-            initial={{ opacity: 0, x: 100, scale: 0.8 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: 100, scale: 0.8 }}
-            transition={{ duration: 0.3, type: "spring" }}
-            className="fixed bottom-4 right-4 flex items-center gap-2 bg-green-100 text-green-900 rounded-lg px-4 py-3 shadow-lg z-[60] cursor-pointer transition-all duration-300 border border-green-200"
-            onClick={() => setShowDrawer(true)}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <ShoppingCart className="w-5 h-5" />
-            <span className="font-semibold">View Cart ({cart.reduce((sum, i) => sum + i.qty, 0)})</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      
       {/* Cart Drawer */}
       <AnimatePresence>
         {showDrawer && (
