@@ -1,75 +1,94 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { 
   FiTrendingUp, 
   FiDollarSign, 
-  FiShoppingBag, 
-  FiUsers,
-  FiBarChart,
-  FiPieChart,
+  FiShoppingCart, 
+  FiUsers, 
+  FiPackage,
   FiCalendar,
-  FiRefreshCw
+  FiArrowUp,
+  FiArrowDown,
+  FiRefreshCw,
+  FiDownload,
+  FiFilter,
+  FiEye,
+  FiBarChart2,
+  FiPieChart
 } from 'react-icons/fi'
-import { getOrders, getProducts } from '@/lib/firebase'
+import {
+  getRevenueAnalytics,
+  getCustomerAnalytics,
+  getProductAnalytics,
+  subscribeToAnalytics,
+  getOrders,
+  getCustomers
+} from '@/lib/firebase'
 
 interface AnalyticsData {
-  revenue: {
-    daily: Array<{ date: string, amount: number }>
-    weekly: Array<{ week: string, amount: number }>
-    monthly: Array<{ month: string, amount: number }>
-  }
-  orders: {
-    daily: Array<{ date: string, count: number }>
-    statusBreakdown: Array<{ status: string, count: number }>
-  }
-  products: {
-    topSelling: Array<{ name: string, quantity: number, revenue: number }>
-    categoryBreakdown: Array<{ category: string, count: number, revenue: number }>
-  }
-  customers: {
-    new: number
-    returning: number
-    topSpenders: Array<{ phone: string, name: string, totalSpent: number }>
-  }
+  totalRevenue: number
+  totalOrders: number
+  averageOrderValue: number
+  revenueByPeriod: Array<{ period: string; revenue: number }>
+  revenueByCategory: Array<{ category: string; revenue: number }>
+  topProducts: Array<{ name: string; revenue: number }>
 }
 
-export default function Analytics() {
-  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
+interface CustomerAnalytics {
+  totalCustomers: number
+  segments: {
+    new: number
+    active: number
+    inactive: number
+    churned: number
+  }
+  averageLifetimeValue: number
+  geographicDistribution: Array<{ location: string; count: number }>
+  topCustomers: Array<{ id: string; name: string; phone: string; totalSpent: number; totalOrders: number }>
+}
+
+interface ProductAnalytics {
+  totalProducts: number
+  topSellingProducts: Array<{ name: string; sold: number; revenue: number }>
+  topRevenueProducts: Array<{ name: string; revenue: number }>
+  categoryPerformance: Array<{ category: string; sold: number; revenue: number }>
+  lowStockAlerts: Array<{ name: string; inventory: number }>
+}
+
+export default function AnalyticsDashboard() {
+  const [revenueData, setRevenueData] = useState<AnalyticsData | null>(null)
+  const [customerData, setCustomerData] = useState<CustomerAnalytics | null>(null)
+  const [productData, setProductData] = useState<ProductAnalytics | null>(null)
+  const [realTimeData, setRealTimeData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [timeRange, setTimeRange] = useState('30d') // 7d, 30d, 90d
+  const [period, setPeriod] = useState('month')
+  const [activeTab, setActiveTab] = useState('overview')
 
   useEffect(() => {
-    loadAnalytics()
-  }, [timeRange])
+    loadAnalyticsData()
+    
+    // Subscribe to real-time updates
+    const unsubscribe = subscribeToAnalytics((data) => {
+      setRealTimeData(data)
+    })
 
-  const loadAnalytics = async () => {
+    return () => unsubscribe()
+  }, [period])
+
+  const loadAnalyticsData = async () => {
     try {
-      const [orders, products] = await Promise.all([
-        getOrders(),
-        getProducts()
+      setLoading(true)
+      const [revenue, customer, product] = await Promise.all([
+        getRevenueAnalytics(period),
+        getCustomerAnalytics(),
+        getProductAnalytics()
       ])
-
-      // Filter orders based on time range
-      const now = new Date()
-      const daysBack = parseInt(timeRange.replace('d', ''))
-      const startDate = new Date(now.getTime() - (daysBack * 24 * 60 * 60 * 1000))
-
-      const filteredOrders = orders.filter((order: any) => {
-        const orderDate = order.createdAt?.toDate() || new Date(order.createdAt || Date.now())
-        return orderDate >= startDate
-      })
-
-      // Calculate analytics
-      const analyticsData: AnalyticsData = {
-        revenue: calculateRevenue(filteredOrders),
-        orders: calculateOrderMetrics(filteredOrders),
-        products: calculateProductMetrics(filteredOrders),
-        customers: calculateCustomerMetrics(filteredOrders)
-      }
-
-      setAnalytics(analyticsData)
+      
+      setRevenueData(revenue)
+      setCustomerData(customer)
+      setProductData(product)
     } catch (error) {
       console.error('Error loading analytics:', error)
     } finally {
@@ -77,135 +96,34 @@ export default function Analytics() {
     }
   }
 
-  const calculateRevenue = (orders: any[]) => {
-    const daily = new Map<string, number>()
-    const weekly = new Map<string, number>()
-    const monthly = new Map<string, number>()
-
-    orders.forEach((order: any) => {
-      const date = order.createdAt?.toDate() || new Date(order.createdAt || Date.now())
-      const revenue = order.total || 0
-
-      // Daily
-      const dayKey = date.toISOString().split('T')[0]
-      daily.set(dayKey, (daily.get(dayKey) || 0) + revenue)
-
-      // Weekly (start of week)
-      const weekStart = new Date(date)
-      weekStart.setDate(date.getDate() - date.getDay())
-      const weekKey = weekStart.toISOString().split('T')[0]
-      weekly.set(weekKey, (weekly.get(weekKey) || 0) + revenue)
-
-      // Monthly
-      const monthKey = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`
-      monthly.set(monthKey, (monthly.get(monthKey) || 0) + revenue)
-    })
-
-    return {
-      daily: Array.from(daily.entries()).map(([date, amount]) => ({ date, amount })),
-      weekly: Array.from(weekly.entries()).map(([week, amount]) => ({ week, amount })),
-      monthly: Array.from(monthly.entries()).map(([month, amount]) => ({ month, amount }))
+  const exportData = () => {
+    const data = {
+      revenue: revenueData,
+      customers: customerData,
+      products: productData,
+      exportedAt: new Date().toISOString()
     }
-  }
-
-  const calculateOrderMetrics = (orders: any[]) => {
-    const daily = new Map<string, number>()
-    const statusBreakdown = new Map<string, number>()
-
-    orders.forEach((order: any) => {
-      const date = order.createdAt?.toDate() || new Date(order.createdAt || Date.now())
-      const dayKey = date.toISOString().split('T')[0]
-      daily.set(dayKey, (daily.get(dayKey) || 0) + 1)
-
-      const status = order.status || 'pending'
-      statusBreakdown.set(status, (statusBreakdown.get(status) || 0) + 1)
-    })
-
-    return {
-      daily: Array.from(daily.entries()).map(([date, count]) => ({ date, count })),
-      statusBreakdown: Array.from(statusBreakdown.entries()).map(([status, count]) => ({ status, count }))
-    }
-  }
-
-  const calculateProductMetrics = (orders: any[]) => {
-    const productSales = new Map<string, { quantity: number, revenue: number }>()
-    const categorySales = new Map<string, { count: number, revenue: number }>()
-
-    orders.forEach((order: any) => {
-      order.items?.forEach((item: any) => {
-        // Product sales
-        const existing = productSales.get(item.name) || { quantity: 0, revenue: 0 }
-        productSales.set(item.name, {
-          quantity: existing.quantity + (item.qty || 0),
-          revenue: existing.revenue + ((item.price || 0) * (item.qty || 0))
-        })
-
-        // Category sales (would need category info from product)
-        const category = 'Other' // Simplified for now
-        const categoryExisting = categorySales.get(category) || { count: 0, revenue: 0 }
-        categorySales.set(category, {
-          count: categoryExisting.count + (item.qty || 0),
-          revenue: categoryExisting.revenue + ((item.price || 0) * (item.qty || 0))
-        })
-      })
-    })
-
-    const topSelling = Array.from(productSales.entries())
-      .map(([name, data]) => ({ name, ...data }))
-      .sort((a, b) => b.quantity - a.quantity)
-      .slice(0, 10)
-
-    const categoryBreakdown = Array.from(categorySales.entries())
-      .map(([category, data]) => ({ category, ...data }))
-
-    return { topSelling, categoryBreakdown }
-  }
-
-  const calculateCustomerMetrics = (orders: any[]) => {
-    const customerOrders = new Map<string, { orders: number, totalSpent: number, name: string }>()
-
-    orders.forEach((order: any) => {
-      const phone = order.customerPhone
-      const existing = customerOrders.get(phone) || { orders: 0, totalSpent: 0, name: order.address?.fullName || 'Unknown' }
-      customerOrders.set(phone, {
-        orders: existing.orders + 1,
-        totalSpent: existing.totalSpent + (order.total || 0),
-        name: existing.name
-      })
-    })
-
-    const customers = Array.from(customerOrders.entries())
-    const newCustomers = customers.filter(([_, data]) => data.orders === 1).length
-    const returningCustomers = customers.filter(([_, data]) => data.orders > 1).length
     
-    const topSpenders = customers
-      .map(([phone, data]) => ({ phone, name: data.name, totalSpent: data.totalSpent }))
-      .sort((a, b) => b.totalSpent - a.totalSpent)
-      .slice(0, 5)
-
-    return {
-      new: newCustomers,
-      returning: returningCustomers,
-      topSpenders
-    }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `analytics-${new Date().toISOString().split('T')[0]}.json`
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
-  const getSummaryStats = () => {
-    if (!analytics) return { totalRevenue: 0, totalOrders: 0, averageOrderValue: 0, growth: 0 }
-
-    const totalRevenue = analytics.revenue.daily.reduce((sum, day) => sum + day.amount, 0)
-    const totalOrders = analytics.orders.daily.reduce((sum, day) => sum + day.count, 0)
-    const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0
-
-    return {
-      totalRevenue,
-      totalOrders,
-      averageOrderValue,
-      growth: 15 // Simplified growth calculation
-    }
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0
+    }).format(amount)
   }
 
-  const stats = getSummaryStats()
+  const formatPercentage = (value: number, total: number) => {
+    return ((value / total) * 100).toFixed(1)
+  }
 
   if (loading) {
     return (
@@ -220,224 +138,443 @@ export default function Analytics() {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Analytics</h1>
-          <p className="text-gray-600 mt-1">Business insights and performance metrics</p>
+          <div className="flex items-center space-x-3 mb-1">
+            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+              <FiBarChart2 className="text-blue-600" size={20} />
+            </div>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
+          </div>
+          <p className="text-gray-600">Comprehensive business insights and performance metrics</p>
         </div>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-3 sm:space-y-0">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-3">
           <select
-            value={timeRange}
-            onChange={(e) => setTimeRange(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none min-w-[140px]"
+            value={period}
+            onChange={(e) => setPeriod(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
           >
-            <option value="7d">Last 7 days</option>
-            <option value="30d">Last 30 days</option>
-            <option value="90d">Last 90 days</option>
+            <option value="day">Last 30 Days</option>
+            <option value="week">Last 12 Weeks</option>
+            <option value="month">Last 12 Months</option>
+            <option value="year">Last 5 Years</option>
           </select>
-          <button
-            onClick={loadAnalytics}
-            className="flex items-center justify-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors w-full sm:w-auto"
-          >
-            <FiRefreshCw size={20} />
-            <span>Refresh</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Summary Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        {[
-          {
-            title: 'Total Revenue',
-            value: `₹${stats.totalRevenue.toLocaleString()}`,
-            change: `+${stats.growth}%`,
-            icon: FiDollarSign,
-            color: 'bg-green-500'
-          },
-          {
-            title: 'Total Orders',
-            value: stats.totalOrders,
-            change: '+12%',
-            icon: FiShoppingBag,
-            color: 'bg-blue-500'
-          },
-          {
-            title: 'Avg Order Value',
-            value: `₹${Math.round(stats.averageOrderValue).toLocaleString()}`,
-            change: '+8%',
-            icon: FiTrendingUp,
-            color: 'bg-purple-500'
-          },
-          {
-            title: 'Customers',
-            value: (analytics?.customers.new || 0) + (analytics?.customers.returning || 0),
-            change: '+5%',
-            icon: FiUsers,
-            color: 'bg-orange-500'
-          }
-        ].map((stat, index) => (
-          <motion.div
-            key={stat.title}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-gray-200"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-600 truncate">{stat.title}</p>
-                <p className="text-xl md:text-2xl font-bold text-gray-900 mt-1">{stat.value}</p>
-                <p className="text-sm text-green-600 font-medium mt-1">{stat.change} vs last period</p>
-              </div>
-              <div className={`w-10 h-10 md:w-12 md:h-12 rounded-lg ${stat.color} flex items-center justify-center flex-shrink-0 ml-3`}>
-                <stat.icon className="text-white" size={20} />
-              </div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Charts and Details */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {/* Revenue Chart */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
-        >
-                     <div className="flex items-center justify-between mb-6">
-             <h3 className="text-lg font-semibold text-gray-900">Revenue Trend</h3>
-             <FiBarChart className="text-gray-400" size={20} />
-           </div>
-           <div className="h-64 flex items-center justify-center text-gray-500">
-             <div className="text-center">
-               <FiBarChart className="mx-auto h-12 w-12 text-gray-300 mb-2" />
-               <p>Revenue chart would be rendered here</p>
-               <p className="text-sm text-gray-400">Integrate with charting library</p>
-             </div>
-           </div>
-        </motion.div>
-
-        {/* Order Status Breakdown */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-900">Order Status</h3>
-            <FiPieChart className="text-gray-400" size={20} />
-          </div>
-          <div className="space-y-3">
-            {analytics?.orders.statusBreakdown.map((status, index) => (
-              <div key={status.status} className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className={`w-3 h-3 rounded-full ${
-                    status.status === 'pending' ? 'bg-yellow-500' :
-                    status.status === 'processing' ? 'bg-blue-500' :
-                    status.status === 'shipped' ? 'bg-purple-500' :
-                    status.status === 'delivered' ? 'bg-green-500' :
-                    'bg-red-500'
-                  }`} />
-                  <span className="text-sm text-gray-600 capitalize">{status.status}</span>
-                </div>
-                <span className="font-semibold text-gray-900">{status.count}</span>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Top Products and Customers */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {/* Top Selling Products */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
-        >
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">Top Selling Products</h3>
-          <div className="space-y-4">
-            {analytics?.products.topSelling.slice(0, 5).map((product, index) => (
-              <div key={product.name} className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                    <span className="text-sm font-medium text-green-600">#{index + 1}</span>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">{product.name}</p>
-                    <p className="text-sm text-gray-600">{product.quantity} sold</p>
-                  </div>
-                </div>
-                <span className="font-semibold text-gray-900">₹{product.revenue.toLocaleString()}</span>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Top Customers */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
-          className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
-        >
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">Top Customers</h3>
-          <div className="space-y-4">
-            {analytics?.customers.topSpenders.map((customer, index) => (
-              <div key={customer.phone} className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <span className="text-sm font-medium text-blue-600">#{index + 1}</span>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">{customer.name}</p>
-                    <p className="text-sm text-gray-600">{customer.phone}</p>
-                  </div>
-                </div>
-                <span className="font-semibold text-gray-900">₹{customer.totalSpent.toLocaleString()}</span>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Customer Insights */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.8 }}
-        className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
-      >
-        <h3 className="text-lg font-semibold text-gray-900 mb-6">Customer Insights</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-              <FiUsers className="text-green-600" size={24} />
-            </div>
-            <p className="text-2xl font-bold text-gray-900">{analytics?.customers.new || 0}</p>
-            <p className="text-sm text-gray-600">New Customers</p>
-          </div>
-          <div className="text-center">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-              <FiUsers className="text-blue-600" size={24} />
-            </div>
-            <p className="text-2xl font-bold text-gray-900">{analytics?.customers.returning || 0}</p>
-            <p className="text-sm text-gray-600">Returning Customers</p>
-          </div>
-          <div className="text-center">
-            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
-              <FiTrendingUp className="text-purple-600" size={24} />
-            </div>
-            <p className="text-2xl font-bold text-gray-900">
-              {analytics ? Math.round((analytics.customers.returning / (analytics.customers.new + analytics.customers.returning)) * 100) : 0}%
-            </p>
-            <p className="text-sm text-gray-600">Retention Rate</p>
+          <div className="flex space-x-2">
+            <button
+              onClick={loadAnalyticsData}
+              className="flex items-center space-x-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors"
+            >
+              <FiRefreshCw size={16} />
+              <span className="hidden sm:inline">Refresh</span>
+            </button>
+            <button
+              onClick={exportData}
+              className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            >
+              <FiDownload size={16} />
+              <span className="hidden sm:inline">Export</span>
+            </button>
           </div>
         </div>
-      </motion.div>
+      </div>
+
+      {/* Real-time Alerts */}
+      {realTimeData && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-green-500 to-blue-600 rounded-xl p-4 text-white"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                <FiTrendingUp size={20} />
+              </div>
+              <div>
+                <h3 className="font-semibold">Live Analytics</h3>
+                <p className="text-green-100 text-sm">Real-time business metrics</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-bold">{formatCurrency(realTimeData.totalRevenue)}</p>
+              <p className="text-green-100 text-sm">{realTimeData.totalOrders} orders</p>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Navigation Tabs */}
+      <div className="border-b border-gray-200">
+        <nav className="flex space-x-8 overflow-x-auto">
+          {[
+            { id: 'overview', label: 'Overview', icon: FiBarChart2 },
+            { id: 'revenue', label: 'Revenue', icon: FiDollarSign },
+            { id: 'customers', label: 'Customers', icon: FiUsers },
+            { id: 'products', label: 'Products', icon: FiPackage }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
+                activeTab === tab.id
+                  ? 'border-green-500 text-green-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <tab.icon size={16} />
+              <span>{tab.label}</span>
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      {/* Overview Tab */}
+      {activeTab === 'overview' && revenueData && customerData && productData && (
+        <div className="space-y-6">
+          {/* Key Metrics */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Total Revenue</p>
+                  <p className="text-2xl font-bold text-gray-900">{formatCurrency(revenueData.totalRevenue)}</p>
+                </div>
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                  <FiDollarSign className="text-green-600" size={24} />
+                </div>
+              </div>
+              <div className="mt-4 flex items-center space-x-2">
+                <FiArrowUp className="text-green-500" size={16} />
+                <span className="text-sm text-green-600">+12.5% vs last period</span>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Total Orders</p>
+                  <p className="text-2xl font-bold text-gray-900">{revenueData.totalOrders.toLocaleString()}</p>
+                </div>
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <FiShoppingCart className="text-blue-600" size={24} />
+                </div>
+              </div>
+              <div className="mt-4 flex items-center space-x-2">
+                <FiArrowUp className="text-green-500" size={16} />
+                <span className="text-sm text-green-600">+8.2% vs last period</span>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Avg Order Value</p>
+                  <p className="text-2xl font-bold text-gray-900">{formatCurrency(revenueData.averageOrderValue)}</p>
+                </div>
+                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <FiTrendingUp className="text-purple-600" size={24} />
+                </div>
+              </div>
+              <div className="mt-4 flex items-center space-x-2">
+                <FiArrowUp className="text-green-500" size={16} />
+                <span className="text-sm text-green-600">+3.7% vs last period</span>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Total Customers</p>
+                  <p className="text-2xl font-bold text-gray-900">{customerData.totalCustomers.toLocaleString()}</p>
+                </div>
+                <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                  <FiUsers className="text-orange-600" size={24} />
+                </div>
+              </div>
+              <div className="mt-4 flex items-center space-x-2">
+                <FiArrowUp className="text-green-500" size={16} />
+                <span className="text-sm text-green-600">+15.3% vs last period</span>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Charts Row */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Revenue Trend Chart */}
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-gray-900">Revenue Trend</h3>
+                <FiBarChart2 className="text-gray-400" size={20} />
+              </div>
+              <div className="h-64 flex items-end justify-between space-x-2">
+                {revenueData.revenueByPeriod.slice(-12).map((item, index) => (
+                  <div key={index} className="flex-1 flex flex-col items-center">
+                    <div 
+                      className="w-full bg-green-500 rounded-t"
+                      style={{ 
+                        height: `${(item.revenue / Math.max(...revenueData.revenueByPeriod.map(i => i.revenue))) * 200}px`,
+                        minHeight: '4px'
+                      }}
+                    />
+                    <span className="text-xs text-gray-500 mt-2 transform -rotate-45 origin-left">
+                      {item.period.slice(-5)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Customer Segments */}
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-gray-900">Customer Segments</h3>
+                <FiPieChart className="text-gray-400" size={20} />
+              </div>
+              <div className="space-y-4">
+                {Object.entries(customerData.segments).map(([segment, count]) => (
+                  <div key={segment} className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-3 h-3 rounded-full ${
+                        segment === 'new' ? 'bg-green-500' :
+                        segment === 'active' ? 'bg-blue-500' :
+                        segment === 'inactive' ? 'bg-yellow-500' : 'bg-red-500'
+                      }`} />
+                      <span className="text-sm font-medium text-gray-700 capitalize">{segment}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-sm font-semibold text-gray-900">{count}</span>
+                      <span className="text-xs text-gray-500 ml-2">
+                        ({formatPercentage(count, customerData.totalCustomers)}%)
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Top Performers */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Top Products */}
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-6">Top Selling Products</h3>
+              <div className="space-y-4">
+                {productData.topSellingProducts.slice(0, 5).map((product, index) => (
+                  <div key={index} className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <span className="text-sm font-semibold text-gray-600">#{index + 1}</span>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{product.name}</p>
+                        <p className="text-xs text-gray-500">{product.sold} units sold</p>
+                      </div>
+                    </div>
+                    <span className="text-sm font-semibold text-gray-900">
+                      {formatCurrency(product.revenue)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Top Customers */}
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-6">Top Customers</h3>
+              <div className="space-y-4">
+                {customerData.topCustomers.slice(0, 5).map((customer, index) => (
+                  <div key={index} className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <span className="text-sm font-semibold text-gray-600">#{index + 1}</span>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{customer.name}</p>
+                        <p className="text-xs text-gray-500">{customer.totalOrders} orders</p>
+                      </div>
+                    </div>
+                    <span className="text-sm font-semibold text-gray-900">
+                      {formatCurrency(customer.totalSpent)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Revenue Tab */}
+      {activeTab === 'revenue' && revenueData && (
+        <div className="space-y-6">
+          {/* Revenue Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Total Revenue</h3>
+              <p className="text-3xl font-bold text-green-600">{formatCurrency(revenueData.totalRevenue)}</p>
+            </div>
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Average Order Value</h3>
+              <p className="text-3xl font-bold text-blue-600">{formatCurrency(revenueData.averageOrderValue)}</p>
+            </div>
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Total Orders</h3>
+              <p className="text-3xl font-bold text-purple-600">{revenueData.totalOrders}</p>
+            </div>
+          </div>
+
+          {/* Revenue by Category */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">Revenue by Category</h3>
+            <div className="space-y-4">
+              {revenueData.revenueByCategory.map((category, index) => (
+                <div key={index} className="flex items-center space-x-4">
+                  <div className="flex-1">
+                    <div className="flex justify-between mb-1">
+                      <span className="text-sm font-medium text-gray-700">{category.category}</span>
+                      <span className="text-sm text-gray-500">{formatCurrency(category.revenue)}</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-green-500 h-2 rounded-full"
+                        style={{ 
+                          width: `${(category.revenue / Math.max(...revenueData.revenueByCategory.map(c => c.revenue))) * 100}%` 
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Customers Tab */}
+      {activeTab === 'customers' && customerData && (
+        <div className="space-y-6">
+          {/* Customer Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Total Customers</h3>
+              <p className="text-3xl font-bold text-blue-600">{customerData.totalCustomers}</p>
+            </div>
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Avg Lifetime Value</h3>
+              <p className="text-3xl font-bold text-green-600">{formatCurrency(customerData.averageLifetimeValue)}</p>
+            </div>
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Active Customers</h3>
+              <p className="text-3xl font-bold text-purple-600">{customerData.segments.active}</p>
+            </div>
+          </div>
+
+          {/* Geographic Distribution */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">Geographic Distribution</h3>
+            <div className="space-y-4">
+              {customerData.geographicDistribution.slice(0, 10).map((location, index) => (
+                <div key={index} className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700">{location.location}</span>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-32 bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-blue-500 h-2 rounded-full"
+                        style={{ 
+                          width: `${(location.count / Math.max(...customerData.geographicDistribution.map(l => l.count))) * 100}%` 
+                        }}
+                      />
+                    </div>
+                    <span className="text-sm text-gray-500 w-8 text-right">{location.count}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Products Tab */}
+      {activeTab === 'products' && productData && (
+        <div className="space-y-6">
+          {/* Product Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Total Products</h3>
+              <p className="text-3xl font-bold text-blue-600">{productData.totalProducts}</p>
+            </div>
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Product Revenue</h3>
+              <p className="text-3xl font-bold text-green-600">
+                {productData.topRevenueProducts[0] ? formatCurrency(productData.topRevenueProducts[0].revenue) : '₹0'}
+              </p>
+            </div>
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Low Stock Alerts</h3>
+              <p className="text-3xl font-bold text-red-600">{productData.lowStockAlerts.length}</p>
+            </div>
+          </div>
+
+          {/* Category Performance */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">Category Performance</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">Category</th>
+                    <th className="text-right py-3 px-4 font-medium text-gray-700">Units Sold</th>
+                    <th className="text-right py-3 px-4 font-medium text-gray-700">Revenue</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {productData.categoryPerformance.map((category, index) => (
+                    <tr key={index} className="border-b border-gray-100">
+                      <td className="py-3 px-4 text-gray-900">{category.category}</td>
+                      <td className="py-3 px-4 text-right text-gray-700">{category.sold}</td>
+                      <td className="py-3 px-4 text-right font-semibold text-gray-900">
+                        {formatCurrency(category.revenue)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Low Stock Alerts */}
+          {productData.lowStockAlerts.length > 0 && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-red-900 mb-4">Low Stock Alerts</h3>
+              <div className="space-y-2">
+                {productData.lowStockAlerts.map((product, index) => (
+                  <div key={index} className="flex items-center justify-between py-2">
+                    <span className="text-sm font-medium text-red-800">{product.name}</span>
+                    <span className="text-sm text-red-600">{product.inventory} units left</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 } 

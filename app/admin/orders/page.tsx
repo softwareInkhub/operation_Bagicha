@@ -13,9 +13,31 @@ import {
   FiClock,
   FiRefreshCw,
   FiPhone,
-  FiMapPin
+  FiMapPin,
+  FiGrid,
+  FiList,
+  FiDownload,
+  FiFilter,
+  FiCheckSquare,
+  FiSquare,
+  FiMessageSquare,
+  FiCalendar,
+  FiDollarSign,
+  FiUsers,
+  FiPlus,
+  FiFileText,
+  FiSearch,
+  FiTrendingUp
 } from 'react-icons/fi'
-import { getOrders, updateOrderStatus, subscribeToOrders } from '@/lib/firebase'
+import { 
+  getOrders, 
+  updateOrderStatus, 
+  subscribeToOrders, 
+  addOrderNote, 
+  bulkUpdateOrderStatus,
+  getOrdersByStatus,
+  getOrdersByDateRange 
+} from '@/lib/firebase'
 
 interface Order {
   id: string
@@ -53,6 +75,13 @@ export default function OrdersManagement() {
   const [searchTerm, setSearchTerm] = useState('')
   const [showStatusModal, setShowStatusModal] = useState<string | null>(null)
   const [newStatus, setNewStatus] = useState('')
+  const [selectedOrders, setSelectedOrders] = useState<string[]>([])
+  const [showBulkModal, setShowBulkModal] = useState(false)
+  const [bulkAction, setBulkAction] = useState('')
+  const [showNotesModal, setShowNotesModal] = useState<string | null>(null)
+  const [newNote, setNewNote] = useState('')
+  const [sortBy, setSortBy] = useState('createdAt')
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
 
   useEffect(() => {
     loadOrders()
@@ -84,7 +113,28 @@ export default function OrdersManagement() {
       order.customerPhone.includes(searchTerm) ||
       order.address.fullName.toLowerCase().includes(searchTerm.toLowerCase())
     return matchesStatus && matchesSearch
+  }).sort((a, b) => {
+    switch (sortBy) {
+      case 'createdAt':
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      case 'total':
+        return b.total - a.total
+      case 'status':
+        return a.status.localeCompare(b.status)
+      case 'customer':
+        return a.address.fullName.localeCompare(b.address.fullName)
+      default:
+        return 0
+    }
   })
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0
+    }).format(amount)
+  }
 
   const handleStatusUpdate = async (orderId: string, status: string) => {
     try {
@@ -94,6 +144,77 @@ export default function OrdersManagement() {
     } catch (error) {
       console.error('Error updating order status:', error)
     }
+  }
+
+  const handleBulkAction = async () => {
+    if (!bulkAction || selectedOrders.length === 0) return
+    
+    try {
+      if (bulkAction.startsWith('status-')) {
+        const status = bulkAction.replace('status-', '')
+        await bulkUpdateOrderStatus(selectedOrders, status)
+      }
+      
+      setShowBulkModal(false)
+      setSelectedOrders([])
+      setBulkAction('')
+      await loadOrders()
+    } catch (error) {
+      console.error('Error performing bulk action:', error)
+    }
+  }
+
+  const handleAddNote = async (orderId: string) => {
+    if (!newNote.trim()) return
+    
+    try {
+      await addOrderNote(orderId, newNote, 'Admin')
+      setNewNote('')
+      setShowNotesModal(null)
+      await loadOrders()
+    } catch (error) {
+      console.error('Error adding note:', error)
+    }
+  }
+
+  const toggleOrderSelection = (orderId: string) => {
+    setSelectedOrders(prev => 
+      prev.includes(orderId) 
+        ? prev.filter(id => id !== orderId)
+        : [...prev, orderId]
+    )
+  }
+
+  const selectAllOrders = () => {
+    if (selectedOrders.length === filteredOrders.length) {
+      setSelectedOrders([])
+    } else {
+      setSelectedOrders(filteredOrders.map(order => order.id))
+    }
+  }
+
+  const exportOrders = () => {
+    const csvContent = [
+      ['Order ID', 'Customer Phone', 'Customer Name', 'Total', 'Status', 'Created At', 'Items Count', 'City'].join(','),
+      ...filteredOrders.map(order => [
+        order.id,
+        order.customerPhone,
+        order.address.fullName,
+        order.total,
+        order.status,
+        formatDate(order.createdAt),
+        order.items.length,
+        order.address.city
+      ].join(','))
+    ].join('\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `orders-${new Date().toISOString().split('T')[0]}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
   const getStatusColor = (status: string) => {
@@ -148,18 +269,41 @@ export default function OrdersManagement() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Orders</h1>
-          <p className="text-gray-600">Manage customer orders and track delivery status</p>
+          <div className="flex items-center space-x-3 mb-1">
+            <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+              <FiShoppingCart className="text-green-600" size={20} />
+            </div>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Order Management</h1>
+          </div>
+          <p className="text-gray-600">Manage customer orders, track delivery status, and process orders efficiently</p>
         </div>
-        <button
-          onClick={loadOrders}
-          className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-        >
-          <FiRefreshCw size={20} />
-          <span>Refresh</span>
-        </button>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-3">
+          {selectedOrders.length > 0 && (
+            <button
+              onClick={() => setShowBulkModal(true)}
+              className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            >
+              <FiEdit size={16} />
+              <span>Bulk Actions ({selectedOrders.length})</span>
+            </button>
+          )}
+          <button
+            onClick={exportOrders}
+            className="flex items-center space-x-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors"
+          >
+            <FiDownload size={16} />
+            <span>Export</span>
+          </button>
+          <button
+            onClick={loadOrders}
+            className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+          >
+            <FiRefreshCw size={16} />
+            <span>Refresh</span>
+          </button>
+        </div>
       </div>
 
       {/* Status Stats */}
@@ -191,31 +335,77 @@ export default function OrdersManagement() {
         ))}
       </div>
 
-      {/* Filters */}
+      {/* Enhanced Filters */}
       <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-gray-200">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:space-x-4 space-y-4 lg:space-y-0">
-          <div className="flex-1">
-            <input
-              type="text"
-              placeholder="Search orders by ID, phone, or customer name..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
-            />
+        <div className="space-y-4">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:space-x-4 space-y-4 lg:space-y-0">
+            <div className="flex-1 relative">
+              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <input
+                type="text"
+                placeholder="Search orders by ID, phone, or customer name..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+              />
+            </div>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-3 sm:space-y-0">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none min-w-[140px]"
+              >
+                <option value="">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="processing">Processing</option>
+                <option value="shipped">Shipped</option>
+                <option value="delivered">Delivered</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none min-w-[140px]"
+              >
+                <option value="createdAt">Sort by Date</option>
+                <option value="total">Sort by Amount</option>
+                <option value="status">Sort by Status</option>
+                <option value="customer">Sort by Customer</option>
+              </select>
+              <div className="flex items-center space-x-2 border border-gray-300 rounded-lg p-1">
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-1 rounded ${viewMode === 'list' ? 'bg-green-500 text-white' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                  <FiList size={16} />
+                </button>
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-1 rounded ${viewMode === 'grid' ? 'bg-green-500 text-white' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                  <FiGrid size={16} />
+                </button>
+              </div>
+            </div>
           </div>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-3 sm:space-y-0">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none min-w-[140px]"
-            >
-              <option value="">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="processing">Processing</option>
-              <option value="shipped">Shipped</option>
-              <option value="delivered">Delivered</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
+          
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={selectAllOrders}
+                className="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900"
+              >
+                {selectedOrders.length === filteredOrders.length && filteredOrders.length > 0 ? 
+                  <FiCheckSquare size={16} /> : <FiSquare size={16} />
+                }
+                <span>Select All</span>
+              </button>
+              {selectedOrders.length > 0 && (
+                <span className="text-sm text-blue-600 font-medium">
+                  {selectedOrders.length} selected
+                </span>
+              )}
+            </div>
             <div className="text-sm text-gray-600 whitespace-nowrap">
               {filteredOrders.length} orders
             </div>
@@ -235,6 +425,15 @@ export default function OrdersManagement() {
           >
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4 space-y-3 lg:space-y-0">
               <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => toggleOrderSelection(order.id)}
+                  className="p-1 hover:bg-gray-100 rounded transition-colors"
+                >
+                  {selectedOrders.includes(order.id) ? 
+                    <FiCheckSquare className="text-green-600" size={20} /> : 
+                    <FiSquare className="text-gray-400" size={20} />
+                  }
+                </button>
                 <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
                   <FiShoppingCart className="text-green-600" size={20} />
                 </div>
@@ -252,6 +451,7 @@ export default function OrdersManagement() {
                   <button
                     onClick={() => setSelectedOrder(order)}
                     className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                    title="View Details"
                   >
                     <FiEye size={16} />
                   </button>
@@ -261,8 +461,19 @@ export default function OrdersManagement() {
                       setNewStatus(order.status)
                     }}
                     className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors"
+                    title="Update Status"
                   >
                     <FiEdit size={16} />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowNotesModal(order.id)
+                      setNewNote('')
+                    }}
+                    className="p-2 text-green-600 hover:text-green-900 hover:bg-green-50 rounded-lg transition-colors"
+                    title="Add Note"
+                  >
+                    <FiMessageSquare size={16} />
                   </button>
                 </div>
               </div>
@@ -282,7 +493,7 @@ export default function OrdersManagement() {
                 <span className="text-sm text-gray-600">{order.items.length} items</span>
               </div>
               <div className="flex items-center space-x-2 sm:justify-end">
-                <span className="text-lg font-semibold text-gray-900">₹{order.total.toLocaleString()}</span>
+                <span className="text-lg font-semibold text-gray-900">{formatCurrency(order.total)}</span>
               </div>
             </div>
 
@@ -389,8 +600,8 @@ export default function OrdersManagement() {
                           <p className="text-sm text-gray-600">Quantity: {item.qty}</p>
                         </div>
                         <div className="text-right">
-                          <p className="font-semibold">₹{(item.price * item.qty).toLocaleString()}</p>
-                          <p className="text-sm text-gray-600">₹{item.price} each</p>
+                          <p className="font-semibold">{formatCurrency(item.price * item.qty)}</p>
+                          <p className="text-sm text-gray-600">{formatCurrency(item.price)} each</p>
                         </div>
                       </div>
                     ))}
@@ -403,15 +614,15 @@ export default function OrdersManagement() {
                   <div className="bg-gray-50 rounded-lg p-4 space-y-2">
                     <div className="flex justify-between">
                       <span>Subtotal</span>
-                      <span>₹{selectedOrder.subtotal.toLocaleString()}</span>
+                      <span>{formatCurrency(selectedOrder.subtotal)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Delivery Fee</span>
-                      <span>{selectedOrder.deliveryFee === 0 ? 'FREE' : `₹${selectedOrder.deliveryFee}`}</span>
+                      <span>{selectedOrder.deliveryFee === 0 ? 'FREE' : formatCurrency(selectedOrder.deliveryFee)}</span>
                     </div>
                     <div className="border-t pt-2 flex justify-between font-semibold text-lg">
                       <span>Total</span>
-                      <span>₹{selectedOrder.total.toLocaleString()}</span>
+                      <span>{formatCurrency(selectedOrder.total)}</span>
                     </div>
                   </div>
                 </div>
@@ -422,6 +633,110 @@ export default function OrdersManagement() {
                   <div className="bg-gray-50 rounded-lg p-4">
                     <p><strong>Payment Method:</strong> {selectedOrder.paymentMethod || 'Cash on Delivery'}</p>
                   </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Bulk Actions Modal */}
+      <AnimatePresence>
+        {showBulkModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-xl p-6 w-full max-w-md"
+            >
+              <div className="text-center">
+                <div className="w-12 h-12 mx-auto bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                  <FiEdit className="text-blue-600" size={24} />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Bulk Actions</h3>
+                <p className="text-gray-600 mb-6">
+                  Apply actions to {selectedOrders.length} selected orders
+                </p>
+                
+                <div className="mb-6">
+                  <select
+                    value={bulkAction}
+                    onChange={(e) => setBulkAction(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  >
+                    <option value="">Select Action</option>
+                    <option value="status-processing">Mark as Processing</option>
+                    <option value="status-shipped">Mark as Shipped</option>
+                    <option value="status-delivered">Mark as Delivered</option>
+                    <option value="status-cancelled">Mark as Cancelled</option>
+                  </select>
+                </div>
+
+                <div className="flex space-x-4">
+                  <button
+                    onClick={() => setShowBulkModal(false)}
+                    className="flex-1 px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleBulkAction}
+                    disabled={!bulkAction}
+                    className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white rounded-lg transition-colors"
+                  >
+                    Apply
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Add Notes Modal */}
+      <AnimatePresence>
+        {showNotesModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-xl p-6 w-full max-w-md"
+            >
+              <div className="text-center">
+                <div className="w-12 h-12 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
+                  <FiMessageSquare className="text-green-600" size={24} />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Add Order Note</h3>
+                <p className="text-gray-600 mb-6">
+                  Add a note for order #{showNotesModal.slice(-8)}
+                </p>
+                
+                <div className="mb-6">
+                  <textarea
+                    value={newNote}
+                    onChange={(e) => setNewNote(e.target.value)}
+                    placeholder="Enter your note here..."
+                    rows={4}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none resize-none"
+                  />
+                </div>
+
+                <div className="flex space-x-4">
+                  <button
+                    onClick={() => setShowNotesModal(null)}
+                    className="flex-1 px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => handleAddNote(showNotesModal)}
+                    disabled={!newNote.trim()}
+                    className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white rounded-lg transition-colors"
+                  >
+                    Add Note
+                  </button>
                 </div>
               </div>
             </motion.div>
