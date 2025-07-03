@@ -4,10 +4,12 @@ import { useState, useContext } from 'react'
 import { motion } from 'framer-motion'
 import { Home, Search, ShoppingCart, User, Heart } from 'lucide-react'
 import { CartContext } from '../context/CartContext'
+import { useRouter } from 'next/navigation'
 
 export default function BottomNavigation() {
   const [activeTab, setActiveTab] = useState('home')
   const { cartCount } = useContext(CartContext)
+  const router = useRouter()
 
   const tabs = [
     { id: 'home', label: 'Home', icon: Home },
@@ -16,6 +18,20 @@ export default function BottomNavigation() {
     { id: 'cart', label: 'Cart', icon: ShoppingCart, badge: cartCount },
     { id: 'profile', label: 'Profile', icon: User },
   ]
+
+  const handleTabClick = (tabId: string) => {
+    setActiveTab(tabId)
+    
+    if (tabId === 'cart' && cartCount > 0) {
+      router.push('/checkout')
+    } else if (tabId === 'home') {
+      router.push('/')
+    } else if (tabId === 'wishlist') {
+      // Scroll to wishlist section
+      document.getElementById('wishlist')?.scrollIntoView({ behavior: 'smooth' })
+    }
+    // Add other navigation logic as needed
+  }
 
   return (
     <motion.nav 
@@ -32,7 +48,7 @@ export default function BottomNavigation() {
           return (
             <motion.button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => handleTabClick(tab.id)}
               className={`relative flex flex-col items-center py-2 px-3 transition-all duration-300 ${
                 isActive 
                   ? 'text-green-600' 

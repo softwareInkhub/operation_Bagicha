@@ -262,14 +262,15 @@ export default function TrendingPlants() {
                   whileTap={{ scale: 0.97 }}
                 >
                   {/* 2x2 image grid */}
-                  <div className="grid grid-cols-2 grid-rows-2 gap-1 w-full mb-2">
+                  <div className="grid grid-cols-2 grid-rows-2 gap-0.5 w-full mb-2 aspect-square">
                     {plants.slice(0, 4).map((plant, idx) => (
-                      <img
-                        key={plant.id}
-                        src={plant.image}
-                        alt={plant.name}
-                        className="w-8 h-8 md:w-10 md:h-10 object-cover rounded bg-gray-50 border border-gray-100 mx-auto"
-                      />
+                      <div key={plant.id} className="aspect-square overflow-hidden rounded-sm bg-gray-50 border border-gray-100">
+                        <img
+                          src={plant.image}
+                          alt={plant.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
                     ))}
                   </div>
                   {/* +X more badge */}

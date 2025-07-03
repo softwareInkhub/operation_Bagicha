@@ -184,16 +184,18 @@ export default function Header() {
 
                 {/* Cart - only show if cartCount > 0 */}
                 {cartCount > 0 && (
-                  <motion.button
-                    className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4" /><circle cx="7" cy="21" r="1" /><circle cx="20" cy="21" r="1" /></svg>
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 text-white text-xs rounded-full flex items-center justify-center">
-                      {cartCount}
-                    </span>
-                  </motion.button>
+                  <Link href="/checkout">
+                    <motion.button
+                      className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4" /><circle cx="7" cy="21" r="1" /><circle cx="20" cy="21" r="1" /></svg>
+                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 text-white text-xs rounded-full flex items-center justify-center">
+                        {cartCount}
+                      </span>
+                    </motion.button>
+                  </Link>
                 )}
 
                 {/* User Account */}
@@ -435,28 +437,30 @@ export default function Header() {
 
                     {/* Cart */}
                     {cartCount > 0 && (
-                      <motion.button
-                        className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors"
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                              <path d="M3 3h2l.4 2M7 13h10l4-8H5.4" />
-                              <circle cx="7" cy="21" r="1" />
-                              <circle cx="20" cy="21" r="1" />
-                            </svg>
+                      <Link href="/checkout" onClick={() => setIsMobileMenuOpen(false)}>
+                        <motion.button
+                          className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                              <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <path d="M3 3h2l.4 2M7 13h10l4-8H5.4" />
+                                <circle cx="7" cy="21" r="1" />
+                                <circle cx="20" cy="21" r="1" />
+                              </svg>
+                            </div>
+                            <div className="text-left">
+                              <span className="font-medium text-gray-900">Cart</span>
+                              <p className="text-xs text-gray-500">Your items</p>
+                            </div>
                           </div>
-                          <div className="text-left">
-                            <span className="font-medium text-gray-900">Cart</span>
-                            <p className="text-xs text-gray-500">Your items</p>
-                          </div>
-                        </div>
-                        <span className="w-6 h-6 bg-green-500 text-white text-xs rounded-full flex items-center justify-center">
-                          {cartCount}
-                        </span>
-                      </motion.button>
+                          <span className="w-6 h-6 bg-green-500 text-white text-xs rounded-full flex items-center justify-center">
+                            {cartCount}
+                          </span>
+                        </motion.button>
+                      </Link>
                     )}
                   </div>
 

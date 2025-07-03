@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "powershell -Command \"$ip = (ipconfig | findstr 'IPv4' | Select-String -Pattern '\\d+\\.\\d+\\.\\d+\\.\\d+' | ForEach-Object { $_.Matches[0].Value })[0]; Write-Host 'Your IP Address:' $ip; next dev -H 0.0.0.0\"",
-    "dev:ip": "powershell -Command \"$ip = (ipconfig | findstr 'IPv4' | Select-String -Pattern '\\d+\\.\\d+\\.\\d+\\.\\d+' | ForEach-Object { $_.Matches[0].Value })[0]; Write-Host 'Your IP Address:' $ip; next dev -H 0.0.0.0\"",
+    "dev": "echo \"Your IP Address: $(ifconfig | grep 'inet ' | grep -v 127.0.0.1 | head -1 | awk '{print $2}')\" && next dev -H 0.0.0.0",
+    "dev:ip": "echo \"Your IP Address: $(ifconfig | grep 'inet ' | grep -v 127.0.0.1 | head -1 | awk '{print $2}')\" && next dev -H 0.0.0.0",
     "dev:custom": "next dev -p 4000 -H 0.0.0.0",
     "build": "next build",
     "start": "next start",
@@ -13,14 +13,16 @@
     "eject": "react-scripts eject"
   },
   "dependencies": {
+    "autoprefixer": "^10.4.16",
+    "firebase": "^11.10.0",
+    "framer-motion": "^10.16.16",
+    "lucide-react": "^0.294.0",
     "next": "14.0.4",
+    "postcss": "^8.4.32",
     "react": "^18",
     "react-dom": "^18",
-    "lucide-react": "^0.294.0",
-    "framer-motion": "^10.16.16",
-    "tailwindcss": "^3.3.6",
-    "autoprefixer": "^10.4.16",
-    "postcss": "^8.4.32"
+    "react-icons": "^5.5.0",
+    "tailwindcss": "^3.3.6"
   },
   "devDependencies": {
     "@types/node": "^20",
@@ -42,4 +44,4 @@
       "last 1 safari version"
     ]
   }
-} 
+}
