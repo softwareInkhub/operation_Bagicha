@@ -53,14 +53,15 @@ export default function PhoneVerification({ onVerified }: PhoneVerificationProps
     setError('')
 
     try {
-      // Setup reCAPTCHA
-      const recaptchaVerifier = setupRecaptcha('recaptcha-container')
-      
       // Format phone number for India
       const formattedPhone = `+91${phoneNumber}`
       
-      // Send OTP
+      // Setup reCAPTCHA verifier
+      const recaptchaVerifier = setupRecaptcha('recaptcha-container')
+      
+      // Send OTP via Firebase
       const result = await sendOTP(formattedPhone, recaptchaVerifier)
+      
       setConfirmationResult(result)
       setStep('otp')
       setTimer(30)
@@ -68,8 +69,19 @@ export default function PhoneVerification({ onVerified }: PhoneVerificationProps
       
     } catch (error: any) {
       console.error('Error sending OTP:', error)
-      setError('Failed to send OTP. Please try again.')
-      // Cleanup reCAPTCHA
+      let errorMessage = 'Failed to send OTP. Please try again.'
+      
+      if (error.code === 'auth/billing-not-enabled') {
+        errorMessage = 'SMS service not enabled. Please contact support.'
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = 'Too many attempts. Please try again later.'
+      } else if (error.code === 'auth/invalid-phone-number') {
+        errorMessage = 'Invalid phone number format.'
+      }
+      
+      setError(errorMessage)
+      
+      // Cleanup reCAPTCHA on error
       if (recaptchaRef.current) {
         recaptchaRef.current.innerHTML = ''
       }
@@ -145,7 +157,7 @@ export default function PhoneVerification({ onVerified }: PhoneVerificationProps
           </h2>
           <p className="text-gray-600 text-sm">
             {step === 'phone' 
-              ? 'We\'ll send you a verification code' 
+              ? 'We\'ll send you a verification code via SMS' 
               : `We've sent a 6-digit code to +91 ${phoneNumber}`
             }
           </p>
@@ -205,6 +217,8 @@ export default function PhoneVerification({ onVerified }: PhoneVerificationProps
                 'Send OTP'
               )}
             </button>
+
+
           </motion.div>
         )}
 
@@ -246,6 +260,8 @@ export default function PhoneVerification({ onVerified }: PhoneVerificationProps
                 Verifying...
               </div>
             )}
+
+
 
             <div className="text-center">
               {canResend ? (
