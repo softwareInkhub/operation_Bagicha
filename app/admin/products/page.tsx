@@ -15,7 +15,7 @@ import {
   FiStar,
   FiPackage
 } from 'react-icons/fi'
-import { getProducts, addProduct, updateProduct, deleteProduct, getCategories } from '@/lib/firebase'
+import { getProducts, addProduct, updateProduct, deleteProduct, getCategories, createSampleProducts } from '@/lib/firebase'
 import ImageUpload from '@/components/ImageUpload'
 
 interface Product {
@@ -49,6 +49,7 @@ export default function ProductsManagement() {
   const [selectedCategory, setSelectedCategory] = useState('')
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null)
   const [imageUploadError, setImageUploadError] = useState<string>('')
+  const [availableSubcategories, setAvailableSubcategories] = useState<string[]>([])
 
   const [productForm, setProductForm] = useState<Product>({
     name: '',
@@ -113,17 +114,68 @@ export default function ProductsManagement() {
       description: ''
     })
     setEditingProduct(null)
+    setAvailableSubcategories([])
+    setImageUploadError('')
     setShowAddModal(true)
+  }
+
+  const handleCategoryChange = (categoryName: string) => {
+    setProductForm({ ...productForm, category: categoryName, subcategory: '' })
+    
+    // Find the selected category and update subcategories
+    const selectedCategory = categories.find(cat => cat.name === categoryName)
+    if (selectedCategory && selectedCategory.subcategories) {
+      setAvailableSubcategories(selectedCategory.subcategories)
+    } else {
+      setAvailableSubcategories([])
+    }
   }
 
   const handleEditProduct = (product: Product) => {
     setProductForm(product)
     setEditingProduct(product)
+    
+    // Load subcategories for the selected category
+    const selectedCategory = categories.find(cat => cat.name === product.category)
+    if (selectedCategory && selectedCategory.subcategories) {
+      setAvailableSubcategories(selectedCategory.subcategories)
+    } else {
+      setAvailableSubcategories([])
+    }
+    
+    setImageUploadError('')
     setShowAddModal(true)
   }
 
   const handleSaveProduct = async () => {
     try {
+      // Validation
+      if (!productForm.name.trim()) {
+        alert('Product name is required')
+        return
+      }
+      if (!productForm.category) {
+        alert('Please select a category')
+        return
+      }
+      if (!productForm.image) {
+        alert('Please upload a product image')
+        return
+      }
+      
+      // Validate category-subcategory relationship
+      const selectedCategory = categories.find(cat => cat.name === productForm.category)
+      if (selectedCategory && selectedCategory.subcategories && selectedCategory.subcategories.length > 0) {
+        if (!productForm.subcategory) {
+          alert('Please select a subcategory for this category')
+          return
+        }
+        if (!selectedCategory.subcategories.includes(productForm.subcategory)) {
+          alert('Selected subcategory is not valid for this category')
+          return
+        }
+      }
+
       if (editingProduct && editingProduct.id) {
         await updateProduct(editingProduct.id, productForm)
       } else {
@@ -132,8 +184,10 @@ export default function ProductsManagement() {
       await loadData()
       setShowAddModal(false)
       setEditingProduct(null)
+      setAvailableSubcategories([])
     } catch (error) {
       console.error('Error saving product:', error)
+      alert('Error saving product. Please try again.')
     }
   }
 
@@ -163,6 +217,26 @@ export default function ProductsManagement() {
     })
   }
 
+  const handleCreateSampleProducts = async () => {
+    if (confirm('This will create sample products with proper category-subcategory relationships. Continue?')) {
+      try {
+        setLoading(true)
+        const success = await createSampleProducts()
+        if (success) {
+          alert('Sample products created successfully!')
+          await loadData()
+        } else {
+          alert('Failed to create sample products.')
+        }
+      } catch (error) {
+        console.error('Error creating sample products:', error)
+        alert('Error creating sample products. Please try again.')
+      } finally {
+        setLoading(false)
+      }
+    }
+  }
+
   const badgeColors = [
     { label: 'Green', value: 'bg-green-500' },
     { label: 'Blue', value: 'bg-blue-500' },
@@ -188,13 +262,22 @@ export default function ProductsManagement() {
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Products</h1>
           <p className="text-gray-600 mt-1">Manage your product catalog</p>
         </div>
-        <button
-          onClick={handleAddProduct}
-          className="flex items-center justify-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors w-full lg:w-auto"
-        >
-          <FiPlus size={20} />
-          <span>Add Product</span>
-        </button>
+        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 w-full lg:w-auto">
+          <button
+            onClick={handleCreateSampleProducts}
+            className="flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+          >
+            <FiPackage size={20} />
+            <span>Create Sample Products</span>
+          </button>
+          <button
+            onClick={handleAddProduct}
+            className="flex items-center justify-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+          >
+            <FiPlus size={20} />
+            <span>Add Product</span>
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -271,7 +354,12 @@ export default function ProductsManagement() {
 
             <div className="space-y-2">
               <h3 className="font-semibold text-gray-900 text-sm line-clamp-2">{product.name}</h3>
-              <p className="text-xs text-gray-600">{product.category}</p>
+              <div className="text-xs text-gray-600">
+                <p className="font-medium">{product.category}</p>
+                {product.subcategory && (
+                  <p className="text-gray-500">• {product.subcategory}</p>
+                )}
+              </div>
               
               <div className="flex items-center space-x-1">
                 <FiStar className="text-yellow-400 fill-current" size={12} />
@@ -344,7 +432,7 @@ export default function ProductsManagement() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
                     <select
                       value={productForm.category}
-                      onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
+                      onChange={(e) => handleCategoryChange(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
                     >
                       <option value="">Select Category</option>
@@ -360,13 +448,31 @@ export default function ProductsManagement() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Subcategory</label>
-                    <input
-                      type="text"
+                    <select
                       value={productForm.subcategory}
                       onChange={(e) => setProductForm({ ...productForm, subcategory: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
-                      placeholder="Enter subcategory"
-                    />
+                      disabled={!productForm.category || availableSubcategories.length === 0}
+                    >
+                      <option value="">
+                        {!productForm.category 
+                          ? 'Select category first' 
+                          : availableSubcategories.length === 0 
+                            ? 'No subcategories available' 
+                            : 'Select subcategory'
+                        }
+                      </option>
+                      {availableSubcategories.map((subcategory, index) => (
+                        <option key={index} value={subcategory}>
+                          {subcategory}
+                        </option>
+                      ))}
+                    </select>
+                    {productForm.category && availableSubcategories.length === 0 && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        This category has no subcategories defined. You can add them in the Categories section.
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Product Image</label>

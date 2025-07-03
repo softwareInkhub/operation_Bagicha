@@ -856,43 +856,43 @@ export const createSampleCategories = async () => {
         name: 'Indoor Plants',
         description: 'Perfect plants for your home and office spaces',
         icon: '🪴',
-        subcategories: ['Succulents', 'Ferns', 'Air Purifying', 'Low Light']
+        subcategories: ['Succulents', 'Ferns', 'Air Purifying', 'Low Light', 'Snake Plants', 'Pothos', 'Monstera', 'Peace Lily']
       },
       {
         name: 'Outdoor Plants',
         description: 'Beautiful plants for gardens and outdoor spaces',
         icon: '🌳',
-        subcategories: ['Trees', 'Shrubs', 'Climbers', 'Ground Cover']
+        subcategories: ['Trees', 'Shrubs', 'Climbers', 'Ground Cover', 'Fruit Trees', 'Flowering Trees', 'Shade Trees']
       },
       {
         name: 'Flowering Plants',
         description: 'Vibrant flowers to brighten your space',
         icon: '🌸',
-        subcategories: ['Roses', 'Lilies', 'Marigolds', 'Jasmine']
+        subcategories: ['Roses', 'Lilies', 'Marigolds', 'Jasmine', 'Sunflowers', 'Petunias', 'Orchids', 'Tulips']
       },
       {
         name: 'Tools',
         description: 'Professional gardening tools and equipment',
         icon: '🛠️',
-        subcategories: ['Hand Tools', 'Watering', 'Pruning', 'Digging']
+        subcategories: ['Hand Tools', 'Watering Tools', 'Pruning Tools', 'Digging Tools', 'Measuring Tools', 'Protective Gear']
       },
       {
         name: 'Soil & Fertilizer',
         description: 'Organic soil and plant nutrition products',
         icon: '🪨',
-        subcategories: ['Potting Mix', 'Fertilizers', 'Compost', 'Amendments']
+        subcategories: ['Potting Mix', 'Organic Fertilizers', 'Liquid Fertilizers', 'Compost', 'Soil Amendments', 'Mulch']
       },
       {
         name: 'Pots & Planters',
         description: 'Beautiful containers for your plants',
         icon: '🏺',
-        subcategories: ['Ceramic', 'Plastic', 'Terracotta', 'Hanging']
+        subcategories: ['Ceramic Pots', 'Plastic Planters', 'Terracotta Pots', 'Hanging Planters', 'Self-Watering', 'Decorative Pots']
       },
       {
         name: 'Seeds',
         description: 'High-quality seeds for growing your own plants',
         icon: '🌾',
-        subcategories: ['Flower Seeds', 'Vegetable Seeds', 'Herb Seeds', 'Grass Seeds']
+        subcategories: ['Flower Seeds', 'Vegetable Seeds', 'Herb Seeds', 'Grass Seeds', 'Exotic Seeds', 'Organic Seeds']
       }
     ]
 
@@ -903,6 +903,126 @@ export const createSampleCategories = async () => {
     return true
   } catch (error) {
     console.error('Error creating sample categories:', error)
+    return false
+  }
+}
+
+export const createSampleProducts = async () => {
+  try {
+    console.log('Creating sample products...')
+    
+    const sampleProducts = [
+      {
+        name: 'Snake Plant (Sansevieria)',
+        category: 'Indoor Plants',
+        subcategory: 'Snake Plants',
+        price: 599,
+        originalPrice: 799,
+        rating: 4.8,
+        reviews: 234,
+        image: '', // Will be added via admin panel
+        badge: 'Bestseller',
+        badgeColor: 'bg-green-500',
+        inStock: true,
+        fastDelivery: true,
+        organic: true,
+        features: ['Air Purifying', 'Low Maintenance', 'Low Light Tolerant'],
+        description: 'Perfect air-purifying plant for beginners. Thrives in low light and requires minimal watering.'
+      },
+      {
+        name: 'Monstera Deliciosa',
+        category: 'Indoor Plants',
+        subcategory: 'Monstera',
+        price: 1299,
+        originalPrice: 1599,
+        rating: 4.9,
+        reviews: 156,
+        image: '',
+        badge: 'Premium',
+        badgeColor: 'bg-purple-500',
+        inStock: true,
+        fastDelivery: false,
+        organic: true,
+        features: ['Instagram Favorite', 'Fast Growing', 'Statement Plant'],
+        description: 'Popular tropical houseplant with stunning split leaves. Perfect for bright, indirect light.'
+      },
+      {
+        name: 'Rose Plant - Red Beauty',
+        category: 'Flowering Plants',
+        subcategory: 'Roses',
+        price: 349,
+        originalPrice: 499,
+        rating: 4.6,
+        reviews: 89,
+        image: '',
+        badge: 'New',
+        badgeColor: 'bg-blue-500',
+        inStock: true,
+        fastDelivery: true,
+        organic: false,
+        features: ['Fragrant Blooms', 'Long Lasting', 'Garden Classic'],
+        description: 'Beautiful red roses that bloom throughout the season. Perfect for gardens and bouquets.'
+      },
+      {
+        name: 'Professional Pruning Shears',
+        category: 'Tools',
+        subcategory: 'Pruning Tools',
+        price: 899,
+        originalPrice: 1199,
+        rating: 4.7,
+        reviews: 267,
+        image: '',
+        badge: 'Tool of the Month',
+        badgeColor: 'bg-orange-500',
+        inStock: true,
+        fastDelivery: true,
+        organic: false,
+        features: ['Sharp Blades', 'Ergonomic Handle', 'Lifetime Warranty'],
+        description: 'Professional-grade pruning shears for precise cuts. Ideal for roses, shrubs, and small branches.'
+      },
+      {
+        name: 'Organic Potting Mix - 5kg',
+        category: 'Soil & Fertilizer',
+        subcategory: 'Potting Mix',
+        price: 299,
+        originalPrice: 399,
+        rating: 4.5,
+        reviews: 445,
+        image: '',
+        badge: 'Organic',
+        badgeColor: 'bg-emerald-500',
+        inStock: true,
+        fastDelivery: true,
+        organic: true,
+        features: ['100% Organic', 'Ready to Use', 'Nutrient Rich'],
+        description: 'Premium organic potting mix perfect for indoor and outdoor plants. Enriched with natural nutrients.'
+      },
+      {
+        name: 'Ceramic Planter - White',
+        category: 'Pots & Planters',
+        subcategory: 'Ceramic Pots',
+        price: 799,
+        originalPrice: 999,
+        rating: 4.4,
+        reviews: 123,
+        image: '',
+        badge: 'Trending',
+        badgeColor: 'bg-pink-500',
+        inStock: true,
+        fastDelivery: false,
+        organic: false,
+        features: ['Drainage Holes', 'Modern Design', 'Weather Resistant'],
+        description: 'Elegant white ceramic planter with drainage holes. Perfect for indoor and covered outdoor spaces.'
+      }
+    ]
+
+    const promises = sampleProducts.map(product => addProduct(product))
+    await Promise.all(promises)
+    
+    console.log('Sample products created successfully!')
+    return true
+  } catch (error) {
+    console.error('Error creating sample products:', error)
     return false
   }
 }
