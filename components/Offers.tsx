@@ -1,7 +1,9 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { ArrowRight, Clock } from 'lucide-react'
+import { useComponentConfig } from '@/lib/useComponentConfig'
 
 const offers = [
   {
@@ -34,6 +36,32 @@ const offers = [
 ]
 
 export default function Offers() {
+  const [currentOfferIndex, setCurrentOfferIndex] = useState(0)
+  
+  // Load admin configuration
+  const { config } = useComponentConfig('offers', {
+    autoRotate: true,
+    rotationInterval: 5000,
+    showTimer: true,
+    maxOffers: 6,
+    showDiscountPercentage: true,
+    enableHover: true
+  })
+
+  // Auto-rotation effect
+  useEffect(() => {
+    if (config.autoRotate && offers.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentOfferIndex((prev) => (prev + 1) % Math.min(offers.length, config.maxOffers))
+      }, config.rotationInterval)
+      
+      return () => clearInterval(interval)
+    }
+  }, [config.autoRotate, config.rotationInterval, config.maxOffers])
+
+  // Filter offers based on maxOffers setting
+  const displayedOffers = offers.slice(0, config.maxOffers)
+
   return (
     <section className="py-8 bg-gray-50">
       <div className="mobile-container">
@@ -46,7 +74,7 @@ export default function Offers() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {offers.map((offer, index) => (
+          {displayedOffers.map((offer, index) => (
             <motion.div
               key={offer.id}
               initial={{ opacity: 0, y: 20 }}
@@ -54,7 +82,7 @@ export default function Offers() {
               transition={{ duration: 0.4, delay: index * 0.1 }}
               className="relative overflow-hidden"
             >
-              <div className={`bg-gradient-to-br ${offer.color} rounded-xl p-6 text-white relative overflow-hidden`}>
+              <div className={`bg-gradient-to-br ${offer.color} rounded-xl p-6 text-white relative overflow-hidden ${config.enableHover ? 'hover:scale-105 transition-transform duration-200' : ''}`}>
                 {/* Background Pattern */}
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white bg-opacity-10 rounded-full -translate-y-16 translate-x-16"></div>
                 <div className="absolute bottom-0 left-0 w-24 h-24 bg-white bg-opacity-10 rounded-full translate-y-12 -translate-x-12"></div>
@@ -73,10 +101,12 @@ export default function Offers() {
                       <p className="text-xs opacity-90 mb-4">{offer.description}</p>
                       
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-1 text-xs opacity-80">
-                          <Clock className="w-3 h-3" />
-                          <span>{offer.timeLeft}</span>
-                        </div>
+                        {config.showTimer && (
+                          <div className="flex items-center space-x-1 text-xs opacity-80">
+                            <Clock className="w-3 h-3" />
+                            <span>{offer.timeLeft}</span>
+                          </div>
+                        )}
                         <button className="bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg text-xs font-normal transition-all duration-200">
                           Claim Now
                         </button>

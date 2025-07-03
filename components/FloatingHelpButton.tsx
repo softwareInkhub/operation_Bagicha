@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MessageCircle, X, Send, HelpCircle, Phone, Mail, MessageSquare } from 'lucide-react'
+import { useComponentConfig } from '@/lib/useComponentConfig'
 
 // Define the ChatMessage type
 type ChatMessage = {
@@ -45,6 +46,18 @@ export default function FloatingHelpButton() {
   const [isOpen, setIsOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<'chat' | 'faq' | 'support'>('chat')
   const [message, setMessage] = useState('')
+  const [isVisible, setIsVisible] = useState(true)
+  
+  // Load admin configuration
+  const { config } = useComponentConfig('floating-help-button', {
+    showOnMobile: true,
+    showOnDesktop: true,
+    position: 'bottom-right',
+    showUnreadCount: true,
+    enableSound: false,
+    autoExpand: false
+  })
+  
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     {
       id: 1,
@@ -53,6 +66,45 @@ export default function FloatingHelpButton() {
       timestamp: new Date()
     }
   ])
+
+  // Check device type and visibility
+  useEffect(() => {
+    const checkVisibility = () => {
+      const isMobile = window.innerWidth < 768
+      const shouldShow = isMobile ? config.showOnMobile : config.showOnDesktop
+      setIsVisible(shouldShow)
+    }
+    
+    checkVisibility()
+    window.addEventListener('resize', checkVisibility)
+    return () => window.removeEventListener('resize', checkVisibility)
+  }, [config.showOnMobile, config.showOnDesktop])
+
+  // Auto-expand functionality
+  useEffect(() => {
+    if (config.autoExpand) {
+      const timer = setTimeout(() => {
+        setIsOpen(true)
+      }, 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [config.autoExpand])
+
+  // Position classes based on config
+  const getPositionClasses = () => {
+    switch (config.position) {
+      case 'bottom-left':
+        return 'bottom-20 left-4'
+      case 'bottom-right':
+        return 'bottom-20 right-4'
+      case 'top-left':
+        return 'top-20 left-4'
+      case 'top-right':
+        return 'top-20 right-4'
+      default:
+        return 'bottom-20 right-4'
+    }
+  }
 
   const handleSendMessage = () => {
     if (!message.trim()) return
@@ -102,11 +154,14 @@ export default function FloatingHelpButton() {
     }, 1000)
   }
 
+  // Don't render if visibility is disabled
+  if (!isVisible) return null
+
   return (
     <>
       {/* Floating Help Button */}
       <motion.button
-        className="fixed bottom-20 right-4 w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full shadow-lg z-40 flex items-center justify-center"
+        className={`fixed ${getPositionClasses()} w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full shadow-lg z-40 flex items-center justify-center`}
         onClick={() => setIsOpen(true)}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
@@ -115,6 +170,11 @@ export default function FloatingHelpButton() {
         transition={{ delay: 2, type: "spring" }}
       >
         <MessageCircle className="w-6 h-6" />
+        {config.showUnreadCount && (
+          <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+            3
+          </span>
+        )}
       </motion.button>
 
       {/* Chat/Help Drawer */}

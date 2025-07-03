@@ -1,180 +1,90 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import ProductModal from './ProductModal'
 import ProductDetails from './ProductDetails'
 import WishlistButton from './WishlistButton'
+import { getProducts } from '@/lib/firebase'
 
-const trendingPlants = [
-  {
-    id: 1,
-    name: 'Monstera Deliciosa',
-    image: 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=300&h=300&fit=crop',
-    price: 899,
-    originalPrice: 1299,
-    rating: 4.8,
-    reviews: 234,
-    badge: 'Trending',
-    badgeColor: 'bg-red-500',
-    category: 'Indoor Plants',
-    features: ['Air Purifying', 'Low Maintenance', 'Pet Safe']
-  },
-  {
-    id: 2,
-    name: 'Snake Plant',
-    image: 'https://images.unsplash.com/photo-1593691509543-c55fb32e5cee?w=300&h=300&fit=crop',
-    price: 399,
-    originalPrice: 599,
-    rating: 4.9,
-    reviews: 456,
-    badge: 'Best Seller',
-    badgeColor: 'bg-green-500',
-    category: 'Indoor Plants',
-    features: ['Air Purifying', 'Low Maintenance', 'Drought Tolerant']
-  },
-  {
-    id: 3,
-    name: 'Peace Lily',
-    image: 'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?w=300&h=300&fit=crop',
-    price: 499,
-    originalPrice: 699,
-    rating: 4.7,
-    reviews: 189,
-    badge: 'Air Purifier',
-    badgeColor: 'bg-blue-500',
-    category: 'Indoor Plants',
-    features: ['Air Purifying', 'Flowering', 'Low Light']
-  },
-  {
-    id: 4,
-    name: 'ZZ Plant',
-    image: 'https://images.unsplash.com/photo-1501004318641-b39e6451bec6?w=300&h=300&fit=crop',
-    price: 349,
-    originalPrice: 499,
-    rating: 4.6,
-    reviews: 156,
-    badge: 'Low Maintenance',
-    badgeColor: 'bg-purple-500',
-    category: 'Indoor Plants',
-    features: ['Low Maintenance', 'Drought Tolerant', 'Pet Safe']
-  },
-  {
-    id: 5,
-    name: 'Pothos',
-    image: 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=300&h=300&fit=crop',
-    price: 299,
-    originalPrice: 399,
-    rating: 4.5,
-    reviews: 267,
-    badge: 'Trailing',
-    badgeColor: 'bg-orange-500',
-    category: 'Indoor Plants',
-    features: ['Trailing', 'Air Purifying', 'Easy Care']
-  },
-  {
-    id: 6,
-    name: 'Fiddle Leaf Fig',
-    image: 'https://images.unsplash.com/photo-1593691509543-c55fb32e5cee?w=300&h=300&fit=crop',
-    price: 1299,
-    originalPrice: 1799,
-    rating: 4.8,
-    reviews: 123,
-    badge: 'Statement',
-    badgeColor: 'bg-indigo-500',
-    category: 'Indoor Plants',
-    features: ['Statement Piece', 'Large Leaves', 'Modern Look']
-  },
-  {
-    id: 7,
-    name: 'Aloe Vera',
-    image: 'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?w=300&h=300&fit=crop',
-    price: 199,
-    originalPrice: 299,
-    rating: 4.7,
-    reviews: 340,
-    badge: 'Medicinal',
-    badgeColor: 'bg-lime-500',
-    category: 'Succulents',
-    features: ['Medicinal', 'Low Maintenance', 'Healing']
-  },
-  {
-    id: 8,
-    name: 'Jade Plant',
-    image: 'https://images.unsplash.com/photo-1501004318641-b39e6451bec6?w=300&h=300&fit=crop',
-    price: 399,
-    originalPrice: 599,
-    rating: 4.5,
-    reviews: 145,
-    badge: 'Lucky',
-    badgeColor: 'bg-yellow-400',
-    category: 'Succulents',
-    features: ['Lucky Plant', 'Low Maintenance', 'Symbolic']
-  },
-  {
-    id: 9,
-    name: 'Spider Plant',
-    image: 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=300&h=300&fit=crop',
-    price: 299,
-    originalPrice: 399,
-    rating: 4.4,
-    reviews: 120,
-    badge: 'Pet Friendly',
-    badgeColor: 'bg-pink-400',
-    category: 'Pet Friendly',
-    features: ['Pet Safe', 'Air Purifying', 'Easy Care']
-  },
-  {
-    id: 10,
-    name: 'Rubber Plant',
-    image: 'https://images.unsplash.com/photo-1593691509543-c55fb32e5cee?w=300&h=300&fit=crop',
-    price: 599,
-    originalPrice: 899,
-    rating: 4.7,
-    reviews: 175,
-    badge: 'Statement',
-    badgeColor: 'bg-indigo-500',
-    category: 'Statement Plants',
-    features: ['Large Leaves', 'Air Purifying', 'Modern Look']
-  },
-  {
-    id: 11,
-    name: 'Calathea',
-    image: 'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?w=300&h=300&fit=crop',
-    price: 499,
-    originalPrice: 699,
-    rating: 4.6,
-    reviews: 130,
-    badge: 'Decorative',
-    badgeColor: 'bg-fuchsia-500',
-    category: 'Decorative Plants',
-    features: ['Patterned Leaves', 'Air Purifying', 'Pet Safe']
-  },
-  {
-    id: 12,
-    name: 'Bamboo Plant',
-    image: 'https://images.unsplash.com/photo-1501004318641-b39e6451bec6?w=300&h=300&fit=crop',
-    price: 349,
-    originalPrice: 499,
-    rating: 4.6,
-    reviews: 110,
-    badge: 'Lucky',
-    badgeColor: 'bg-yellow-400',
-    category: 'Lucky Plants',
-    features: ['Easy Care', 'Symbolic', 'Air Purifying']
-  }
-]
+interface Product {
+  id: string
+  name: string
+  image: string
+  price: number
+  originalPrice?: number
+  rating: number
+  reviews: number
+  badge?: string
+  badgeColor?: string
+  category: string
+  features: string[]
+}
 
 export default function TrendingPlants() {
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<any>(null)
 
+  useEffect(() => {
+    loadTrendingProducts()
+  }, [])
+
+  const loadTrendingProducts = async () => {
+    try {
+      const allProducts = await getProducts() as Product[]
+      
+      // Filter and sort to get trending products
+      const trendingProducts = allProducts
+        .filter(product => product.category?.includes('Plant') || product.category?.includes('Indoor') || product.category?.includes('Outdoor'))
+        .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+        .slice(0, 12) // Take top 12 trending plants
+        .map(product => ({
+          ...product,
+          badge: getTrendingBadge(product),
+          badgeColor: getBadgeColor(product)
+        }))
+      
+      setProducts(trendingProducts)
+    } catch (error) {
+      console.error('Error loading trending products:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const getTrendingBadge = (product: Product) => {
+    if (product.rating >= 4.8) return 'Top Rated'
+    if (product.rating >= 4.5) return 'Trending'
+    if (product.category?.includes('Air')) return 'Air Purifier'
+    if (product.category?.includes('Lucky')) return 'Lucky'
+    if (product.category?.includes('Medicinal')) return 'Medicinal'
+    if (product.features?.includes('Pet Safe')) return 'Pet Friendly'
+    return 'Popular'
+  }
+
+  const getBadgeColor = (product: Product) => {
+    const badge = getTrendingBadge(product)
+    const colorMap: { [key: string]: string } = {
+      'Top Rated': 'bg-green-500',
+      'Trending': 'bg-red-500',
+      'Air Purifier': 'bg-blue-500',
+      'Lucky': 'bg-yellow-400',
+      'Medicinal': 'bg-lime-500',
+      'Pet Friendly': 'bg-pink-400',
+      'Popular': 'bg-purple-500'
+    }
+    return colorMap[badge] || 'bg-gray-500'
+  }
+
   // Group plants by badge
-  const groupedPlants: { [badge: string]: typeof trendingPlants } = {}
-  trendingPlants.forEach(plant => {
-    if (!groupedPlants[plant.badge]) groupedPlants[plant.badge] = []
-    groupedPlants[plant.badge].push(plant)
+  const groupedPlants: { [badge: string]: Product[] } = {}
+  products.forEach(product => {
+    const badge = product.badge || 'Popular'
+    if (!groupedPlants[badge]) groupedPlants[badge] = []
+    groupedPlants[badge].push(product)
   })
 
   // Prepare cards for two-row slider
@@ -201,37 +111,93 @@ export default function TrendingPlants() {
 
   const getCategoryIcon = (badge: string) => {
     const icons: { [key: string]: string } = {
+      'Top Rated': '⭐',
       'Trending': '🔥',
-      'Best Seller': '⭐',
-      'Air Purifier': '🌿',
-      'Low Maintenance': '🌱',
-      'Trailing': '🌿',
-      'Statement': '🌳',
-      'Medicinal': '💊',
+      'Air Purifier': '💨',
       'Lucky': '🍀',
+      'Medicinal': '💊',
       'Pet Friendly': '🐾',
+      'Popular': '🌟',
+      'Low Maintenance': '🛡️',
+      'Statement': '🎭',
       'Decorative': '🎨'
     }
-    return icons[badge] || '🌿'
+    return icons[badge] || '🌱'
   }
 
   const getModalItems = () => {
     if (!selectedCategory) return []
-    const categoryPlants = groupedPlants[selectedCategory] || []
-    return categoryPlants.map((plant, index) => ({
-      ...plant,
+    const categoryProducts = groupedPlants[selectedCategory] || []
+    return categoryProducts.map(product => ({
+      ...product,
       wishlistButton: <WishlistButton product={{ 
-        id: plant.id, 
-        name: plant.name, 
-        price: plant.price, 
-        image: plant.image 
+        id: product.id, 
+        name: product.name, 
+        price: product.price, 
+        image: product.image 
       }} />
     }))
   }
 
+  if (loading) {
+    return (
+      <motion.section 
+        className="mt-6 mb-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <h2 className="text-lg font-semibold text-gray-900 px-4 pt-4 pb-2">
+          🌱 Trending Plants
+        </h2>
+        <div className="space-y-4">
+          {[0, 1].map(rowIndex => (
+            <div key={rowIndex} className="relative flex items-center">
+              <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 md:gap-5 px-2 md:px-10 scrollbar-none w-full">
+                {[...Array(3)].map((_, index) => (
+                  <div
+                    key={index}
+                    className="bg-white shadow-lg border border-gray-100 rounded-xl p-2 md:p-3 flex flex-col items-center min-w-[120px] max-w-[140px] md:min-w-[140px] md:max-w-[160px] mx-auto snap-start animate-pulse"
+                  >
+                    <div className="grid grid-cols-2 grid-rows-2 gap-1 w-full mb-2">
+                      {[...Array(4)].map((_, idx) => (
+                        <div key={idx} className="w-8 h-8 md:w-10 md:h-10 bg-gray-200 rounded"></div>
+                      ))}
+                    </div>
+                    <div className="w-16 h-4 bg-gray-200 rounded mb-2"></div>
+                    <div className="w-20 h-3 bg-gray-200 rounded"></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </motion.section>
+    )
+  }
+
+  if (products.length === 0) {
+    return (
+      <motion.section 
+        className="mt-6 mb-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <h2 className="text-lg font-semibold text-gray-900 px-4 pt-4 pb-2">
+          🌱 Trending Plants
+        </h2>
+        <div className="text-center py-8 px-4">
+          <p className="text-gray-500">No trending plants available at the moment.</p>
+          <p className="text-sm text-gray-400 mt-2">Please check back later or contact admin.</p>
+        </div>
+      </motion.section>
+    )
+  }
+
   return (
     <motion.section 
-      className="mt-0 pt-0 mb-6"
+      className="mt-6 mb-6"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
@@ -242,7 +208,7 @@ export default function TrendingPlants() {
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
       >
-        🌿 Trending Plants
+        🌱 Trending Plants
       </motion.h2>
       
       {/* Two-row slider */}
@@ -250,7 +216,7 @@ export default function TrendingPlants() {
         {rows.map((row, rowIndex) => (
           <div key={rowIndex} className="relative flex items-center">
             <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 md:gap-5 px-2 md:px-10 scrollbar-none w-full">
-              {row.map(([badge, plants], index) => (
+              {row.map(([badge, categoryProducts], index) => (
                 <motion.div
                   key={badge}
                   initial={{ opacity: 0, y: 30 }}
@@ -262,19 +228,24 @@ export default function TrendingPlants() {
                   whileTap={{ scale: 0.97 }}
                 >
                   {/* 2x2 image grid */}
-                  <div className="grid grid-cols-2 grid-rows-2 gap-0.5 w-full mb-2 aspect-square">
-                    {plants.slice(0, 4).map((plant, idx) => (
-                      <div key={plant.id} className="aspect-square overflow-hidden rounded-sm bg-gray-50 border border-gray-100">
-                        <img
-                          src={plant.image}
-                          alt={plant.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
+                  <div className="grid grid-cols-2 grid-rows-2 gap-1 w-full mb-2">
+                    {categoryProducts.slice(0, 4).map((product, idx) => (
+                      <img
+                        key={product.id}
+                        src={product.image || 'https://via.placeholder.com/40x40?text=No+Image'}
+                        alt={product.name}
+                        className="w-8 h-8 md:w-10 md:h-10 object-cover rounded bg-gray-50 border border-gray-100 mx-auto"
+                      />
+                    ))}
+                    {/* Fill empty slots if less than 4 products */}
+                    {Array.from({ length: Math.max(0, 4 - categoryProducts.length) }).map((_, idx) => (
+                      <div key={`empty-${idx}`} className="w-8 h-8 md:w-10 md:h-10 bg-gray-100 rounded border border-gray-200 mx-auto"></div>
                     ))}
                   </div>
                   {/* +X more badge */}
-                  <div className="text-[10px] md:text-xs text-green-600 font-semibold mb-0.5 bg-green-50 px-1.5 py-0.5 rounded-full shadow-sm">+{plants.length} more</div>
+                  <div className="text-[10px] md:text-xs text-green-600 font-semibold mb-0.5 bg-green-50 px-1.5 py-0.5 rounded-full shadow-sm">
+                    {categoryProducts.length} plant{categoryProducts.length !== 1 ? 's' : ''}
+                  </div>
                   {/* Category name */}
                   <div className="text-[10px] md:text-xs font-bold text-gray-800 text-center leading-tight mt-0.5">{badge}</div>
                 </motion.div>
@@ -293,7 +264,7 @@ export default function TrendingPlants() {
             setSelectedProduct(null)
           }}
           title={selectedCategory || ''}
-          icon={selectedCategory ? getCategoryIcon(selectedCategory) : '🌿'}
+          icon={selectedCategory ? getCategoryIcon(selectedCategory) : '🌱'}
           items={getModalItems()}
           onProductClick={handleProductClick}
         />

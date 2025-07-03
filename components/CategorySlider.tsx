@@ -1,40 +1,103 @@
-import { useState } from 'react'
+'use client'
+
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { getCategories } from '@/lib/firebase'
 
 interface Category {
-  name: string;
-  icon: string;
-  sectionId: string;
+  id?: string
+  name: string
+  icon: string
+  sectionId?: string
 }
 
-const categories: Category[] = [
-  { name: 'All', icon: '🌱', sectionId: 'top' },
-  { name: 'Indoor Plants', icon: '🪴', sectionId: 'trending-plants' },
-  { name: 'Flowering Plants', icon: '🌸', sectionId: 'bestseller-section' },
-  { name: 'Pots & Gamlas', icon: '🏺', sectionId: 'product-catalog' },
-  { name: 'Seeds', icon: '🌾', sectionId: 'product-catalog' },
-  { name: 'Fertilizers', icon: '🧪', sectionId: 'fertilizer-section' },
-  { name: 'Tools', icon: '🛠️', sectionId: 'tools-and-accessories' },
-  { name: 'Offers', icon: '🎁', sectionId: 'offers-section' },
-  { name: 'Wishlist', icon: '❤️', sectionId: 'wishlist' },
-]
-
 export default function CategorySlider() {
+  const [categories, setCategories] = useState<Category[]>([])
   const [active, setActive] = useState('All')
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    loadCategories()
+  }, [])
+
+  const loadCategories = async () => {
+    try {
+      const categoriesData = await getCategories() as Category[]
+      
+      // Add default categories that are essential for navigation
+      const defaultCategories: Category[] = [
+        { name: 'All', icon: '🌱', sectionId: 'top' },
+        { name: 'Offers', icon: '🎁', sectionId: 'offers-section' },
+        { name: 'Wishlist', icon: '❤️', sectionId: 'wishlist' },
+      ]
+
+      // Map Firebase categories to include navigation sections
+      const firebaseCategories: Category[] = categoriesData.map(cat => ({
+        ...cat,
+        sectionId: getSectionId(cat.name)
+      }))
+
+      // Combine categories
+      const allCategories = [...defaultCategories, ...firebaseCategories]
+      setCategories(allCategories)
+    } catch (error) {
+      console.error('Error loading categories:', error)
+      // Fallback to default categories if Firebase fails
+      setCategories([
+        { name: 'All', icon: '🌱', sectionId: 'top' },
+        { name: 'Indoor Plants', icon: '🪴', sectionId: 'trending-plants' },
+        { name: 'Flowering Plants', icon: '🌸', sectionId: 'bestseller-section' },
+        { name: 'Pots & Gamlas', icon: '🏺', sectionId: 'product-catalog' },
+        { name: 'Seeds', icon: '🌾', sectionId: 'product-catalog' },
+        { name: 'Fertilizers', icon: '🧪', sectionId: 'fertilizer-section' },
+        { name: 'Tools', icon: '🛠️', sectionId: 'tools-and-accessories' },
+        { name: 'Offers', icon: '🎁', sectionId: 'offers-section' },
+        { name: 'Wishlist', icon: '❤️', sectionId: 'wishlist' },
+      ])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const getSectionId = (categoryName: string) => {
+    const sectionMap: { [key: string]: string } = {
+      'Indoor Plants': 'trending-plants',
+      'Flowering Plants': 'bestseller-section',
+      'Outdoor Plants': 'new-arrivals',
+      'Tools': 'tools-and-accessories',
+      'Soil & Fertilizer': 'fertilizer-section',
+      'Pots & Planters': 'product-catalog',
+      'Seeds': 'product-catalog',
+    }
+    return sectionMap[categoryName] || 'product-catalog'
+  }
 
   const handleCategoryClick = (cat: Category) => {
     setActive(cat.name)
-    const section = document.getElementById(cat.sectionId)
+    const section = document.getElementById(cat.sectionId || 'product-catalog')
     if (section) {
       section.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="overflow-x-auto flex gap-2 px-3 py-2 my-0 bg-white border-b">
+        {[...Array(6)].map((_, idx) => (
+          <div key={idx} className="w-18 flex flex-col items-center justify-center px-2 py-1 animate-pulse">
+            <div className="w-10 h-10 bg-gray-200 rounded-full mb-1"></div>
+            <div className="w-12 h-3 bg-gray-200 rounded"></div>
+          </div>
+        ))}
+      </div>
+    )
   }
 
   return (
     <div className="overflow-x-auto flex gap-2 px-3 py-0 my-0 leading-none h-auto min-h-0 bg-white border-b scrollbar-none snap-x snap-mandatory">
       {categories.map((cat, idx) => (
         <motion.button
-          key={cat.name}
+          key={cat.id || cat.name}
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: idx * 0.05 }}

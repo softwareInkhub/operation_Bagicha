@@ -7,6 +7,7 @@ import {
   ChevronLeft, ChevronRight 
 } from 'lucide-react'
 import Link from 'next/link'
+import { useComponentConfig } from '@/lib/useComponentConfig'
 
 const heroSlides = [
   {
@@ -53,6 +54,17 @@ const stats = [
 
 export default function Hero() {
   const [currentSlide, setCurrentSlide] = useState(0)
+  
+  // Load admin configuration
+  const { config } = useComponentConfig('hero', {
+    showCallToAction: true,
+    title: 'Welcome to Bagicha',
+    subtitle: 'Your Garden Store',
+    buttonText: 'Shop Now',
+    showVideo: false,
+    autoplay: false,
+    backgroundImage: ''
+  })
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
@@ -87,17 +99,19 @@ export default function Hero() {
         {/* Minimalist Centered Content */}
         <div className="relative z-10 flex flex-col items-center justify-center w-full px-4 sm:px-0">
           <h1 className="text-2xl sm:text-3xl md:text-5xl font-extrabold text-white text-center mb-3 drop-shadow-lg">
-            {heroSlides[currentSlide].title}
+            {config.title || heroSlides[currentSlide].title}
           </h1>
           <p className="text-base sm:text-lg md:text-xl text-white/90 text-center mb-6 max-w-xl drop-shadow-md">
-            {heroSlides[currentSlide].subtitle}
+            {config.subtitle || heroSlides[currentSlide].subtitle}
           </p>
-          <Link href="/auth/login">
-            <button className="bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl px-8 py-3 text-lg shadow-lg transition-all mb-12">
-              <ShoppingCart className="inline-block w-5 h-5 mr-2 -mt-1" />
-              {heroSlides[currentSlide].ctaText}
-            </button>
-          </Link>
+          {config.showCallToAction && (
+            <Link href="/auth/login">
+              <button className="bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl px-8 py-3 text-lg shadow-lg transition-all mb-12">
+                <ShoppingCart className="inline-block w-5 h-5 mr-2 -mt-1" />
+                {config.buttonText || heroSlides[currentSlide].ctaText}
+              </button>
+            </Link>
+          )}
         </div>
         {/* Responsive Stats as overlays */}
         {/* Desktop: corners, Mobile: stacked and centered */}

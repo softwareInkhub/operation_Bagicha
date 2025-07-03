@@ -8,7 +8,7 @@ import WishlistButton from './WishlistButton'
 
 const tools = [
   {
-    id: 1,
+    id: '1',
     name: 'Professional Pruner',
     image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=300&h=300&fit=crop',
     price: 599,
@@ -20,7 +20,7 @@ const tools = [
     features: ['Sharp Blades', 'Ergonomic Grip', 'Safety Lock']
   },
   {
-    id: 2,
+    id: '2',
     name: 'Garden Trowel Set',
     image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=300&h=300&fit=crop',
     price: 299,
@@ -32,7 +32,7 @@ const tools = [
     features: ['Stainless Steel', '3 Sizes', 'Comfortable Handle']
   },
   {
-    id: 3,
+    id: '3',
     name: 'Watering Can',
     image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=300&h=300&fit=crop',
     price: 449,
@@ -44,7 +44,7 @@ const tools = [
     features: ['2L Capacity', 'Fine Rose', 'Ergonomic Design']
   },
   {
-    id: 4,
+    id: '4',
     name: 'Garden Gloves',
     image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=300&h=300&fit=crop',
     price: 199,
@@ -56,7 +56,7 @@ const tools = [
     features: ['Leather Palm', 'Breathable', 'Touch Compatible']
   },
   {
-    id: 5,
+    id: '5',
     name: 'Plant Mister',
     image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=300&h=300&fit=crop',
     price: 149,
@@ -68,7 +68,7 @@ const tools = [
     features: ['Fine Mist', '500ml Capacity', 'Adjustable Nozzle']
   },
   {
-    id: 6,
+    id: '6',
     name: 'Garden Fork',
     image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=300&h=300&fit=crop',
     price: 249,
@@ -80,7 +80,7 @@ const tools = [
     features: ['Sturdy Design', '4 Prongs', 'Wooden Handle']
   },
   {
-    id: 7,
+    id: '7',
     name: 'Garden Rake',
     image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=300&h=300&fit=crop',
     price: 199,
@@ -92,7 +92,7 @@ const tools = [
     features: ['Wide Head', 'Lightweight', 'Durable']
   },
   {
-    id: 8,
+    id: '8',
     name: 'Garden Shears',
     image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=300&h=300&fit=crop',
     price: 399,
@@ -104,7 +104,7 @@ const tools = [
     features: ['Sharp Blades', 'Spring Loaded', 'Safety Lock']
   },
   {
-    id: 9,
+    id: '9',
     name: 'Garden Sprayer',
     image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=300&h=300&fit=crop',
     price: 349,
@@ -116,7 +116,7 @@ const tools = [
     features: ['2L Capacity', 'Adjustable Spray', 'Pump Action']
   },
   {
-    id: 10,
+    id: '10',
     name: 'Garden Apron',
     image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=300&h=300&fit=crop',
     price: 179,
@@ -128,7 +128,7 @@ const tools = [
     features: ['Waterproof', 'Multiple Pockets', 'Adjustable Straps']
   },
   {
-    id: 11,
+    id: '11',
     name: 'Garden Hoe',
     image: 'https://images.unsplash.com/photo-1464983953574-0892a716854b?w=300&h=300&fit=crop',
     price: 299,
@@ -140,7 +140,7 @@ const tools = [
     features: ['Sharp Edge', 'Wooden Handle']
   },
   {
-    id: 12,
+    id: '12',
     name: 'Leaf Blower',
     image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=300&h=300&fit=crop',
     price: 899,

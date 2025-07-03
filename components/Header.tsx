@@ -10,6 +10,7 @@ import Link from 'next/link'
 import SearchModal from './SearchModal'
 import { CartContext } from '../context/CartContext'
 import { useWishlist } from '../context/WishlistContext'
+import { useComponentConfig } from '@/lib/useComponentConfig'
 
 export default function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
@@ -21,6 +22,16 @@ export default function Header() {
   const { wishlistCount, wishlist, removeFromWishlist } = useWishlist()
   const [searchFocused, setSearchFocused] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
+  
+  // Load admin configuration
+  const { config } = useComponentConfig('header', {
+    showSearch: true,
+    showCart: true,
+    showWishlist: true,
+    sticky: true,
+    showCategories: true,
+    showLogo: true
+  })
   const suggestions = [
     'Search for plants, tools, seeds...',
     'Try "Indoor Plants"',
@@ -122,7 +133,7 @@ export default function Header() {
 
       {/* Main Header */}
       <motion.header 
-        className={`sticky top-0 z-50 transition-all duration-300 ${
+        className={`${config.sticky ? 'sticky' : 'relative'} top-0 z-50 transition-all duration-300 ${
           isScrolled 
             ? 'bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-100' 
             : 'bg-white'
@@ -134,18 +145,20 @@ export default function Header() {
         <div className="container-responsive">
           <div className="flex items-center justify-between py-2">
             {/* Logo */}
-            <motion.div 
-              className="flex items-center gap-2"
-              whileHover={{ scale: 1.05 }}
-            >
-              <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-xl">🌱</span>
-          </div>
-              <div>
-                <h1 className="text-lg font-semibold text-gradient">Bagicha</h1>
-                <p className="text-xs font-normal -mt-1">Garden Essentials</p>
-        </div>
-            </motion.div>
+            {config.showLogo && (
+              <motion.div 
+                className="flex items-center gap-2"
+                whileHover={{ scale: 1.05 }}
+              >
+                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center">
+                  <span className="text-white font-bold text-xl">🌱</span>
+                </div>
+                <div>
+                  <h1 className="text-lg font-semibold text-gradient">Bagicha</h1>
+                  <p className="text-xs font-normal -mt-1">Garden Essentials</p>
+                </div>
+              </motion.div>
+            )}
 
             {/* Right Actions */}
             <div className="flex items-center gap-2 md:gap-4">
@@ -166,24 +179,26 @@ export default function Header() {
                 </motion.button>
 
                 {/* Wishlist */}
-                <motion.button
-                  onClick={() => {
-                    document.getElementById('wishlist')?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Heart className="w-6 h-6 text-gray-600" />
-                  {wishlistCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-pink-500 text-white text-xs rounded-full flex items-center justify-center">
-                      {wishlistCount}
-                    </span>
-                  )}
-                </motion.button>
+                {config.showWishlist && (
+                  <motion.button
+                    onClick={() => {
+                      document.getElementById('wishlist')?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Heart className="w-6 h-6 text-gray-600" />
+                    {wishlistCount > 0 && (
+                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-pink-500 text-white text-xs rounded-full flex items-center justify-center">
+                        {wishlistCount}
+                      </span>
+                    )}
+                  </motion.button>
+                )}
 
-                {/* Cart - only show if cartCount > 0 */}
-                {cartCount > 0 && (
+                {/* Cart - only show if cartCount > 0 and config allows */}
+                {config.showCart && cartCount > 0 && (
                   <Link href="/checkout">
                     <motion.button
                       className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors"
@@ -197,6 +212,20 @@ export default function Header() {
                     </motion.button>
                   </Link>
                 )}
+
+                {/* Admin Link */}
+                <Link href="/admin">
+                  <motion.button
+                    className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    title="Admin Panel"
+                  >
+                    <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                    </svg>
+                  </motion.button>
+                </Link>
 
                 {/* User Account */}
                 <motion.div className="relative group">

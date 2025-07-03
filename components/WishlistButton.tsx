@@ -4,7 +4,7 @@ import { Heart } from 'lucide-react';
 import { useWishlist } from '../context/WishlistContext';
 
 interface Product {
-  id: number;
+  id: string;
   name: string;
   price: number;
   image: string;

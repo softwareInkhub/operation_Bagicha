@@ -9,7 +9,7 @@ import WishlistButton from './WishlistButton'
 
 const products = [
   {
-    id: 1,
+    id: '1',
     name: 'Fresh Tomatoes',
     price: 40,
     originalPrice: 60,
@@ -20,7 +20,7 @@ const products = [
     discount: 33
   },
   {
-    id: 2,
+    id: '2',
     name: 'Organic Bananas',
     price: 50,
     originalPrice: 50,
@@ -31,7 +31,7 @@ const products = [
     discount: 0
   },
   {
-    id: 3,
+    id: '3',
     name: 'Fresh Milk',
     price: 65,
     originalPrice: 75,
@@ -42,7 +42,7 @@ const products = [
     discount: 13
   },
   {
-    id: 4,
+    id: '4',
     name: 'Whole Wheat Bread',
     price: 35,
     originalPrice: 45,
@@ -53,7 +53,7 @@ const products = [
     discount: 22
   },
   {
-    id: 5,
+    id: '5',
     name: 'Fresh Onions',
     price: 30,
     originalPrice: 40,
@@ -64,7 +64,7 @@ const products = [
     discount: 25
   },
   {
-    id: 6,
+    id: '6',
     name: 'Sweet Potatoes',
     price: 45,
     originalPrice: 55,

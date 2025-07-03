@@ -5,7 +5,7 @@ import { useWishlist } from '../context/WishlistContext'
 import { useState } from 'react'
 
 interface ProductItem {
-  id?: number
+  id?: string
   name: string
   image: string
   price: number
@@ -37,7 +37,7 @@ export default function ProductDetails({ product, onClose }: ProductDetailsProps
   const brand = product.brand || 'Bagicha'
   const mrp = product.mrp || Math.round(product.price * 1.3)
   const discount = Math.round(((mrp - product.price) / mrp) * 100)
-  const productId = product.id || Math.random() // fallback ID if not provided
+  const productId = product.id || Math.random().toString() // fallback ID if not provided
 
   const handleAddToCart = () => {
     if (!inStock) return

@@ -73,10 +73,36 @@ export default function CheckoutPage() {
     setIsPlacingOrder(true)
     
     try {
-      // Simulate order placement
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      if (!address) {
+        throw new Error('Address is required')
+      }
+
+      // Calculate totals
+      const subtotal = getTotalPrice()
+      const deliveryFee = subtotal >= 500 ? 0 : 50
+      const total = subtotal + deliveryFee
+
+      // Create order data
+      const orderData = {
+        customerPhone: verifiedPhone,
+        items: cartItems.map(item => ({
+          name: item.name,
+          price: item.price,
+          qty: item.qty,
+          image: item.image
+        })),
+        address: address,
+        subtotal: subtotal,
+        deliveryFee: deliveryFee,
+        total: total,
+        paymentMethod: 'Cash on Delivery',
+        status: 'pending'
+      }
+
+      // Save order to Firebase
+      const { createOrder } = await import('@/lib/firebase')
+      const newOrderId = await createOrder(orderData)
       
-      const newOrderId = 'ORD' + Date.now()
       setOrderId(newOrderId)
       setOrderPlaced(true)
       clearCart()
@@ -88,6 +114,7 @@ export default function CheckoutPage() {
       
     } catch (error) {
       console.error('Error placing order:', error)
+      alert('Failed to place order. Please try again.')
     } finally {
       setIsPlacingOrder(false)
     }
