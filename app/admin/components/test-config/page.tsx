@@ -8,6 +8,7 @@ export default function TestConfigPage() {
   const [previewMode, setPreviewMode] = useState(false)
   
   const components = [
+    // Core UI Components
     {
       id: 'hero',
       name: 'Hero Section',
@@ -15,10 +16,16 @@ export default function TestConfigPage() {
       configKeys: ['title', 'subtitle', 'buttonText', 'showCallToAction']
     },
     {
-      id: 'offers',
-      name: 'Offers Section',
-      description: 'Test auto-rotation, timer display, and max offers',
-      configKeys: ['autoRotate', 'rotationInterval', 'showTimer', 'maxOffers']
+      id: 'header',
+      name: 'Header',
+      description: 'Test element visibility and sticky behavior',
+      configKeys: ['showLogo', 'showSearch', 'showCart', 'showWishlist', 'sticky']
+    },
+    {
+      id: 'footer',
+      name: 'Footer',
+      description: 'Test section visibility and social links',
+      configKeys: ['showSocialLinks', 'showContactInfo', 'showLegalLinks', 'showQuickLinks']
     },
     {
       id: 'floating-help-button',
@@ -27,33 +34,106 @@ export default function TestConfigPage() {
       configKeys: ['position', 'showOnMobile', 'showOnDesktop', 'showUnreadCount']
     },
     {
-      id: 'header',
-      name: 'Header',
-      description: 'Test element visibility and sticky behavior',
-      configKeys: ['showLogo', 'showSearch', 'showCart', 'showWishlist', 'sticky']
+      id: 'wishlist-button',
+      name: 'Wishlist Button',
+      description: 'Test tooltip, animations, and positioning',
+      configKeys: ['showTooltip', 'animateOnAdd', 'position', 'showCount']
+    },
+    
+    // Product Components
+    {
+      id: 'product-catalog',
+      name: 'Product Catalog',
+      description: 'Test filters, pagination, and grid layout',
+      configKeys: ['showFilters', 'itemsPerPage', 'gridLayout', 'showCategories']
+    },
+    {
+      id: 'bestseller-section',
+      name: 'Bestseller Section',
+      description: 'Test ratings, auto-slide, and category badges',
+      configKeys: ['maxProducts', 'showRatings', 'enableAutoSlide', 'showCategoryBadges']
+    },
+    {
+      id: 'trending-plants',
+      name: 'Trending Plants',
+      description: 'Test badges, auto-refresh, and hover effects',
+      configKeys: ['maxItems', 'showBadges', 'enableHover', 'showTrendingBadge']
+    },
+    {
+      id: 'new-arrivals',
+      name: 'New Arrivals',
+      description: 'Test new badges, carousel, and date display',
+      configKeys: ['maxItems', 'showNewBadge', 'enableCarousel', 'showAddedDate']
+    },
+    {
+      id: 'featured-products',
+      name: 'Featured Products',
+      description: 'Test auto-rotation, ratings, and price display',
+      configKeys: ['autoRotate', 'showRatings', 'showPrices', 'maxItems']
+    },
+    {
+      id: 'tools-accessories',
+      name: 'Tools & Accessories',
+      description: 'Test hover effects, badges, and item limits',
+      configKeys: ['enableHover', 'showBadges', 'showCategories', 'maxItems']
+    },
+    {
+      id: 'fertilizer-section',
+      name: 'Fertilizer Section',
+      description: 'Test product types, filtering, and benefits',
+      configKeys: ['showProductTypes', 'enableFiltering', 'showBenefits', 'maxProducts']
+    },
+    
+    // Navigation Components
+    {
+      id: 'category-slider',
+      name: 'Category Slider',
+      description: 'Test auto-scroll, arrows, and touch navigation',
+      configKeys: ['autoScroll', 'showArrows', 'enableTouch', 'centerActiveItem']
+    },
+    {
+      id: 'bottom-navigation',
+      name: 'Bottom Navigation',
+      description: 'Test labels, badges, and notifications',
+      configKeys: ['showLabels', 'showBadges', 'hideOnScroll', 'showNotifications']
+    },
+    
+    // Content Components
+    {
+      id: 'offers',
+      name: 'Offers Section',
+      description: 'Test auto-rotation, timer display, and max offers',
+      configKeys: ['autoRotate', 'rotationInterval', 'showTimer', 'maxOffers']
+    },
+    {
+      id: 'customer-reviews',
+      name: 'Customer Reviews',
+      description: 'Test ratings, photos, and moderation',
+      configKeys: ['showRatings', 'showPhotos', 'maxReviews', 'showVerifiedBadge']
+    },
+    {
+      id: 'plant-care-tips',
+      name: 'Plant Care Tips',
+      description: 'Test images, read more, and author display',
+      configKeys: ['showImages', 'showReadMore', 'maxTips', 'showAuthor']
+    },
+    {
+      id: 'video-tutorials',
+      name: 'Video Tutorials',
+      description: 'Test thumbnails, fullscreen, and duration',
+      configKeys: ['autoplay', 'showThumbnails', 'enableFullscreen', 'showDuration']
     }
   ]
 
   const handleTestConfig = (componentId: string) => {
     // Save a test configuration
     const testConfigs = {
+      // Core UI Components
       'hero': {
         title: 'TEST: Admin Modified Title',
         subtitle: 'TEST: This subtitle was changed via admin',
         buttonText: 'TEST: Admin Button',
         showCallToAction: true
-      },
-      'offers': {
-        autoRotate: true,
-        rotationInterval: 3000,
-        showTimer: true,
-        maxOffers: 2
-      },
-      'floating-help-button': {
-        position: 'bottom-left',
-        showOnMobile: true,
-        showOnDesktop: true,
-        showUnreadCount: true
       },
       'header': {
         showLogo: true,
@@ -61,6 +141,108 @@ export default function TestConfigPage() {
         showCart: true,
         showWishlist: true,
         sticky: true
+      },
+      'footer': {
+        showSocialLinks: false,
+        showContactInfo: false,
+        showLegalLinks: true,
+        showQuickLinks: true
+      },
+      'floating-help-button': {
+        position: 'bottom-left',
+        showOnMobile: true,
+        showOnDesktop: true,
+        showUnreadCount: true
+      },
+      'wishlist-button': {
+        showTooltip: true,
+        animateOnAdd: true,
+        position: 'top-left',
+        showCount: true
+      },
+      
+      // Product Components
+      'product-catalog': {
+        showFilters: false,
+        itemsPerPage: 8,
+        gridLayout: 'list',
+        showCategories: false
+      },
+      'bestseller-section': {
+        maxProducts: 6,
+        showRatings: false,
+        enableAutoSlide: true,
+        showCategoryBadges: false
+      },
+      'trending-plants': {
+        maxItems: 4,
+        showBadges: false,
+        enableHover: false,
+        showTrendingBadge: false
+      },
+      'new-arrivals': {
+        maxItems: 6,
+        showNewBadge: false,
+        enableCarousel: false,
+        showAddedDate: false
+      },
+      'featured-products': {
+        autoRotate: true,
+        showRatings: false,
+        showPrices: true,
+        maxItems: 4
+      },
+      'tools-accessories': {
+        enableHover: false,
+        showBadges: false,
+        showCategories: true,
+        maxItems: 6
+      },
+      'fertilizer-section': {
+        showProductTypes: false,
+        enableFiltering: false,
+        showBenefits: false,
+        maxProducts: 4
+      },
+      
+      // Navigation Components
+      'category-slider': {
+        autoScroll: true,
+        showArrows: false,
+        enableTouch: false,
+        centerActiveItem: false
+      },
+      'bottom-navigation': {
+        showLabels: false,
+        showBadges: false,
+        hideOnScroll: true,
+        showNotifications: false
+      },
+      
+      // Content Components
+      'offers': {
+        autoRotate: true,
+        rotationInterval: 3000,
+        showTimer: true,
+        maxOffers: 2
+      },
+      'customer-reviews': {
+        showRatings: false,
+        showPhotos: false,
+        maxReviews: 8,
+        showVerifiedBadge: false
+      },
+      'plant-care-tips': {
+        showImages: false,
+        showReadMore: false,
+        maxTips: 4,
+        showAuthor: false
+      },
+      'video-tutorials': {
+        autoplay: true,
+        showThumbnails: false,
+        enableFullscreen: false,
+        showDuration: false
       }
     }
     

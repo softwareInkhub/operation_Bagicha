@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Plus, Star, Heart } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { useWishlist } from '../context/WishlistContext'
 import WishlistButton from './WishlistButton'
+import { useComponentConfig } from '@/lib/useComponentConfig'
 
 const products = [
   {
@@ -79,6 +80,31 @@ const products = [
 export default function FeaturedProducts() {
   const { addToCart } = useCart()
   const [showCartSuccess, setShowCartSuccess] = useState<string | null>(null)
+  const [currentIndex, setCurrentIndex] = useState(0)
+
+  // Load admin configuration
+  const { config } = useComponentConfig('featured-products', {
+    showCategories: true,
+    showPrices: true,
+    showRatings: true,
+    maxItems: 8,
+    autoRotate: false,
+    rotationInterval: 4000
+  })
+
+  // Filter products based on maxItems setting
+  const displayedProducts = products.slice(0, config.maxItems)
+
+  // Auto-rotation effect
+  useEffect(() => {
+    if (config.autoRotate && displayedProducts.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentIndex((prev) => (prev + 1) % displayedProducts.length)
+      }, config.rotationInterval)
+      
+      return () => clearInterval(interval)
+    }
+  }, [config.autoRotate, config.rotationInterval, displayedProducts.length])
 
   const handleAddToCart = (product: typeof products[0]) => {
     addToCart({
@@ -104,7 +130,7 @@ export default function FeaturedProducts() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {products.map((product, index) => (
+          {displayedProducts.map((product, index) => (
             <motion.div
               key={product.id}
               initial={{ opacity: 0, y: 20 }}
@@ -134,32 +160,38 @@ export default function FeaturedProducts() {
 
                 {/* Product Info */}
                 <div className="space-y-2">
-                  <div className="flex items-center space-x-1 text-xs text-gray-500">
-                    <span>{product.category}</span>
-                  </div>
+                  {config.showCategories && (
+                    <div className="flex items-center space-x-1 text-xs text-gray-500">
+                      <span>{product.category}</span>
+                    </div>
+                  )}
                   
                   <h3 className="font-semibold text-gray-800 text-sm line-clamp-2">
                     {product.name}
                   </h3>
 
                   {/* Rating */}
-                  <div className="flex items-center space-x-1">
+                  {config.showRatings && (
                     <div className="flex items-center space-x-1">
-                      <Star className="w-3 h-3 text-yellow-400 fill-current" />
-                      <span className="text-xs text-gray-600">{product.rating}</span>
+                      <div className="flex items-center space-x-1">
+                        <Star className="w-3 h-3 text-yellow-400 fill-current" />
+                        <span className="text-xs text-gray-600">{product.rating}</span>
+                      </div>
+                      <span className="text-xs text-gray-400">({product.reviews})</span>
                     </div>
-                    <span className="text-xs text-gray-400">({product.reviews})</span>
-                  </div>
+                  )}
 
                   {/* Price */}
-                  <div className="flex items-center space-x-2">
-                    <span className="font-bold text-gray-800">₹{product.price}</span>
-                    {product.originalPrice > product.price && (
-                      <span className="text-sm text-gray-400 line-through">
-                        ₹{product.originalPrice}
-                      </span>
-                    )}
-                  </div>
+                  {config.showPrices && (
+                    <div className="flex items-center space-x-2">
+                      <span className="font-bold text-gray-800">₹{product.price}</span>
+                      {product.originalPrice > product.price && (
+                        <span className="text-sm text-gray-400 line-through">
+                          ₹{product.originalPrice}
+                        </span>
+                      )}
+                    </div>
+                  )}
 
                   {/* Add to Cart Button */}
                   <button

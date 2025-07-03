@@ -59,9 +59,9 @@ export default function ComponentsManagement() {
 
   const loadComponents = async () => {
     try {
-      // Simulate loading components data
+      // Load all components from the components folder
       const componentsData: ComponentConfig[] = [
-        // Product Components
+        // Product Components (7 components)
         {
           id: 'product-catalog',
           name: 'Product Catalog',
@@ -146,8 +146,18 @@ export default function ComponentsManagement() {
           categoriesConnected: 2,
           configurable: true
         },
+        {
+          id: 'essentials-section',
+          name: 'Essentials Section',
+          description: 'Essential gardening items showcase',
+          icon: FiBox,
+          status: 'active',
+          type: 'product',
+          lastModified: '2024-01-15',
+          configurable: true
+        },
 
-        // Navigation Components
+        // Navigation Components (6 components)
         {
           id: 'category-slider',
           name: 'Category Slider',
@@ -189,8 +199,28 @@ export default function ComponentsManagement() {
           lastModified: '2024-01-15',
           configurable: true
         },
+        {
+          id: 'footer',
+          name: 'Footer',
+          description: 'Main website footer component',
+          icon: FiNavigation,
+          status: 'active',
+          type: 'navigation',
+          lastModified: '2024-01-15',
+          configurable: true
+        },
+        {
+          id: 'categories',
+          name: 'Categories',
+          description: 'General categories display component',
+          icon: FiGrid,
+          status: 'active',
+          type: 'navigation',
+          lastModified: '2024-01-15',
+          configurable: true
+        },
 
-        // UI Components
+        // UI Components (13 components)
         {
           id: 'hero',
           name: 'Hero Section',
@@ -312,17 +342,17 @@ export default function ComponentsManagement() {
           configurable: true
         },
         {
-          id: 'footer',
-          name: 'Footer',
-          description: 'Main website footer component',
-          icon: FiNavigation,
+          id: 'gardening-categories-row',
+          name: 'Gardening Categories Row',
+          description: 'Horizontal category display row',
+          icon: FiGrid,
           status: 'active',
           type: 'ui',
-          lastModified: '2024-01-15',
+          lastModified: '2024-01-16',
           configurable: true
         },
 
-        // Content Components
+        // Content Components (7 components)
         {
           id: 'offers',
           name: 'Offers',
@@ -374,16 +404,6 @@ export default function ComponentsManagement() {
           configurable: true
         },
         {
-          id: 'gardening-categories-row',
-          name: 'Gardening Categories Row',
-          description: 'Horizontal category display',
-          icon: FiGrid,
-          status: 'active',
-          type: 'content',
-          lastModified: '2024-01-16',
-          configurable: true
-        },
-        {
           id: 'customer-reviews',
           name: 'Customer Reviews',
           description: 'Customer testimonials and reviews',
@@ -391,26 +411,6 @@ export default function ComponentsManagement() {
           status: 'active',
           type: 'content',
           lastModified: '2024-01-16',
-          configurable: true
-        },
-        {
-          id: 'essentials-section',
-          name: 'Essentials Section',
-          description: 'Essential gardening items showcase',
-          icon: FiBox,
-          status: 'active',
-          type: 'content',
-          lastModified: '2024-01-15',
-          configurable: true
-        },
-        {
-          id: 'categories',
-          name: 'Categories',
-          description: 'General categories display component',
-          icon: FiGrid,
-          status: 'active',
-          type: 'content',
-          lastModified: '2024-01-15',
           configurable: true
         }
       ]

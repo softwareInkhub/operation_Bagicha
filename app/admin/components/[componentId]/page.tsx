@@ -129,6 +129,118 @@ export default function ComponentConfigPage() {
       type: 'navigation',
       icon: FiBox,
       configurable: true
+    },
+    'tools-accessories': {
+      id: 'tools-accessories',
+      name: 'Tools & Accessories',
+      description: 'Gardening tools and accessories section',
+      type: 'product',
+      icon: FiBox,
+      configurable: true
+    },
+    'featured-products': {
+      id: 'featured-products',
+      name: 'Featured Products',
+      description: 'Highlighted products for promotion',
+      type: 'product',
+      icon: FiBox,
+      configurable: true
+    },
+    'wishlist-button': {
+      id: 'wishlist-button',
+      name: 'Wishlist Button',
+      description: 'Add/remove wishlist functionality',
+      type: 'ui',
+      icon: FiBox,
+      configurable: true
+    },
+    'phone-verification': {
+      id: 'phone-verification',
+      name: 'Phone Verification',
+      description: 'OTP verification component',
+      type: 'ui',
+      icon: FiBox,
+      configurable: true
+    },
+    'order-summary': {
+      id: 'order-summary',
+      name: 'Order Summary',
+      description: 'Checkout order summary component',
+      type: 'ui',
+      icon: FiBox,
+      configurable: true
+    },
+    'address-form': {
+      id: 'address-form',
+      name: 'Address Form',
+      description: 'Customer address input form',
+      type: 'ui',
+      icon: FiBox,
+      configurable: true
+    },
+    'search-bar': {
+      id: 'search-bar',
+      name: 'Search Bar',
+      description: 'Product search input component',
+      type: 'ui',
+      icon: FiBox,
+      configurable: true
+    },
+    'gardening-events': {
+      id: 'gardening-events',
+      name: 'Gardening Events',
+      description: 'Upcoming gardening events and workshops',
+      type: 'content',
+      icon: FiBox,
+      configurable: true
+    },
+    'navbar': {
+      id: 'navbar',
+      name: 'Navbar',
+      description: 'Top navigation bar component',
+      type: 'navigation',
+      icon: FiBox,
+      configurable: true
+    },
+    'gardening-blogs': {
+      id: 'gardening-blogs',
+      name: 'Gardening Blogs',
+      description: 'Blog posts and articles',
+      type: 'content',
+      icon: FiBox,
+      configurable: true
+    },
+    'gardening-categories-row': {
+      id: 'gardening-categories-row',
+      name: 'Gardening Categories Row',
+      description: 'Horizontal category display row',
+      type: 'navigation',
+      icon: FiBox,
+      configurable: true
+    },
+    'essentials-section': {
+      id: 'essentials-section',
+      name: 'Essentials Section',
+      description: 'Essential gardening items section',
+      type: 'product',
+      icon: FiBox,
+      configurable: true
+    },
+    'categories': {
+      id: 'categories',
+      name: 'Categories',
+      description: 'Product categories grid display',
+      type: 'navigation',
+      icon: FiBox,
+      configurable: true
+    },
+    'sticky-footer': {
+      id: 'sticky-footer',
+      name: 'Sticky Footer',
+      description: 'Fixed footer with quick actions',
+      type: 'ui',
+      icon: FiBox,
+      configurable: true
     }
   }
 

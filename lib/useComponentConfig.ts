@@ -145,6 +145,155 @@ export const componentDefaultConfigs = {
     hideOnScroll: false,
     showNotifications: true,
     vibrate: true
+  },
+  'tools-accessories': {
+    showCategories: true,
+    showPrices: true,
+    showRatings: true,
+    maxItems: 12,
+    enableHover: true,
+    showBadges: true
+  },
+  'product-details': {
+    showDescription: true,
+    showSpecifications: true,
+    showReviews: true,
+    showRelatedProducts: true,
+    enableZoom: true,
+    showShare: true
+  },
+  'featured-products': {
+    showCategories: true,
+    showPrices: true,
+    showRatings: true,
+    maxItems: 8,
+    autoRotate: false,
+    rotationInterval: 4000
+  },
+  'wishlist-button': {
+    showTooltip: true,
+    animateOnAdd: true,
+    showCount: false,
+    position: 'top-right'
+  },
+  'phone-verification': {
+    enableAutoDetect: true,
+    showCountryCode: true,
+    resendTimeout: 30,
+    maxAttempts: 3
+  },
+  'order-summary': {
+    showItemImages: true,
+    showDeliveryInfo: true,
+    showDiscounts: true,
+    enablePromoCode: true
+  },
+  'address-form': {
+    enableAutocomplete: true,
+    showMap: false,
+    requirePincode: true,
+    enableGPS: true
+  },
+  'search-bar': {
+    enableVoiceSearch: true,
+    showSuggestions: true,
+    maxSuggestions: 5,
+    enableHistory: true
+  },
+  'gardening-events': {
+    showImages: true,
+    showDate: true,
+    showLocation: true,
+    maxEvents: 6,
+    enableRegistration: true
+  },
+  'navbar': {
+    showLogo: true,
+    showSearch: true,
+    showCart: true,
+    sticky: true
+  },
+  'gardening-blogs': {
+    showImages: true,
+    showDate: true,
+    showAuthor: true,
+    maxBlogs: 6,
+    enableComments: false
+  },
+  'gardening-categories-row': {
+    showIcons: true,
+    showCounts: true,
+    maxCategories: 8,
+    enableHover: true
+  },
+  'essentials-section': {
+    showPrices: true,
+    showRatings: true,
+    maxItems: 6,
+    enableQuickAdd: true
+  },
+  'categories': {
+    showImages: true,
+    showCounts: true,
+    gridLayout: true,
+    maxCategories: 12
+  },
+  'sticky-footer': {
+    showOnMobile: true,
+    showOnDesktop: false,
+    showCart: true,
+    showWishlist: true,
+    showSearch: true
+  },
+  // Product Components
+  'product-catalog': {
+    showFilters: true,
+    itemsPerPage: 12,
+    enableSearch: true,
+    showSortOptions: true,
+    gridLayout: 'grid',
+    showCategories: true,
+    enablePagination: true
+  },
+  'bestseller-section': {
+    maxProducts: 8,
+    showRatings: true,
+    enableAutoSlide: false,
+    slideInterval: 4000,
+    showCategoryBadges: true,
+    sortBy: 'rating'
+  },
+  'trending-plants': {
+    maxItems: 6,
+    showBadges: true,
+    autoRefresh: true,
+    refreshInterval: 300000, // 5 minutes
+    enableHover: true,
+    showTrendingBadge: true
+  },
+  'new-arrivals': {
+    maxItems: 8,
+    showNewBadge: true,
+    badgeDuration: 7, // days
+    enableCarousel: true,
+    autoSlide: false,
+    showAddedDate: true
+  },
+  'fertilizer-section': {
+    showProductTypes: true,
+    enableFiltering: true,
+    maxProducts: 6,
+    showBenefits: true,
+    compactView: false,
+    showUsageInstructions: true
+  },
+  'category-slider': {
+    autoScroll: false,
+    scrollSpeed: 2000,
+    showArrows: true,
+    enableTouch: true,
+    centerActiveItem: true,
+    showSectionNames: true
   }
 }
 

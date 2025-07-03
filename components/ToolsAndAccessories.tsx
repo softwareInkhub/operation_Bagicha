@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import ProductModal from './ProductModal'
 import ProductDetails from './ProductDetails'
 import WishlistButton from './WishlistButton'
+import { useComponentConfig } from '@/lib/useComponentConfig'
 
 const tools = [
   {
@@ -158,9 +159,22 @@ export default function ToolsAndAccessories() {
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<any>(null)
 
+  // Load admin configuration
+  const { config } = useComponentConfig('tools-accessories', {
+    showCategories: true,
+    showPrices: true,
+    showRatings: true,
+    maxItems: 12,
+    enableHover: true,
+    showBadges: true
+  })
+
+  // Filter tools based on maxItems setting
+  const filteredTools = tools.slice(0, config.maxItems)
+
   // Group tools by category
-  const groupedTools: { [category: string]: typeof tools } = {}
-  tools.forEach(tool => {
+  const groupedTools: { [category: string]: typeof filteredTools } = {}
+  filteredTools.forEach(tool => {
     if (!groupedTools[tool.category]) groupedTools[tool.category] = []
     groupedTools[tool.category].push(tool)
   })
@@ -241,9 +255,11 @@ export default function ToolsAndAccessories() {
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: (rowIndex * 0.1) + (index * 0.1) }}
-                  className="bg-white shadow-lg border border-gray-100 rounded-xl p-2 md:p-3 flex flex-col items-center hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer min-w-[120px] max-w-[140px] md:min-w-[140px] md:max-w-[160px] mx-auto snap-start"
+                  className={`bg-white shadow-lg border border-gray-100 rounded-xl p-2 md:p-3 flex flex-col items-center transition-all duration-300 cursor-pointer min-w-[120px] max-w-[140px] md:min-w-[140px] md:max-w-[160px] mx-auto snap-start ${
+                    config.enableHover ? 'hover:scale-105 hover:shadow-2xl' : ''
+                  }`}
                   onClick={() => handleCardClick(category)}
-                  whileHover={{ scale: 1.05 }}
+                  whileHover={config.enableHover ? { scale: 1.05 } : {}}
                   whileTap={{ scale: 0.97 }}
                 >
                   {/* 2x2 image grid */}
@@ -258,9 +274,13 @@ export default function ToolsAndAccessories() {
                     ))}
                   </div>
                   {/* +X more badge */}
-                  <div className="text-[10px] md:text-xs text-green-600 font-semibold mb-0.5 bg-green-50 px-1.5 py-0.5 rounded-full shadow-sm">+{categoryTools.length} more</div>
+                  {config.showBadges && (
+                    <div className="text-[10px] md:text-xs text-green-600 font-semibold mb-0.5 bg-green-50 px-1.5 py-0.5 rounded-full shadow-sm">+{categoryTools.length} more</div>
+                  )}
                   {/* Category name */}
-                  <div className="text-[10px] md:text-xs font-bold text-gray-800 text-center leading-tight mt-0.5">{category}</div>
+                  {config.showCategories && (
+                    <div className="text-[10px] md:text-xs font-bold text-gray-800 text-center leading-tight mt-0.5">{category}</div>
+                  )}
                 </motion.div>
               ))}
             </div>
