@@ -6,6 +6,7 @@ import {
   Search, X, Clock, TrendingUp, Filter, Star, 
   ShoppingCart, Heart, Eye, ArrowRight 
 } from 'lucide-react'
+import { getCategories } from '@/lib/firebase'
 
 interface SearchModalProps {
   isOpen: boolean
@@ -84,30 +85,46 @@ const trendingSearches = [
   'vertical garden'
 ]
 
-const categories = [
-  'Indoor Plants',
-  'Outdoor Plants',
-  'Gardening Tools',
-  'Soil & Fertilizer',
-  'Pots & Planters',
-  'Seeds & Bulbs',
-  'Plant Care'
-]
-
 export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [isSearching, setIsSearching] = useState(false)
   const [showResults, setShowResults] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState('All')
   const searchInputRef = useRef<HTMLInputElement>(null)
+  const [categories, setCategories] = useState<any[]>([])
+  const [categoriesLoading, setCategoriesLoading] = useState(true)
 
   useEffect(() => {
     if (isOpen) {
       searchInputRef.current?.focus()
       setSearchQuery('')
       setShowResults(false)
+      if (categories.length === 0) {
+        loadCategories()
+      }
     }
   }, [isOpen])
+
+  const loadCategories = async () => {
+    try {
+      const categoriesData = await getCategories()
+      setCategories(categoriesData)
+    } catch (error) {
+      console.error('Error loading categories:', error)
+      // Fallback to some default categories if Firebase fails
+      setCategories([
+        { name: 'Indoor Plants', icon: '🪴' },
+        { name: 'Outdoor Plants', icon: '🌳' },
+        { name: 'Gardening Tools', icon: '🛠️' },
+        { name: 'Soil & Fertilizer', icon: '🪨' },
+        { name: 'Pots & Planters', icon: '🏺' },
+        { name: 'Seeds', icon: '🌾' },
+        { name: 'Plant Care', icon: '🌿' }
+      ])
+    } finally {
+      setCategoriesLoading(false)
+    }
+  }
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -216,21 +233,44 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                   <div className="mb-8">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Browse Categories</h3>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                      {categories.map((category, index) => (
-                        <motion.button
-                          key={category}
-                          className="p-3 bg-gray-50 hover:bg-green-50 border border-gray-200 hover:border-green-200 rounded-xl text-left transition-all duration-200"
-                          onClick={() => handleSearch(category)}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.3, delay: index * 0.05 }}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                        >
-                          <div className="text-sm font-medium text-gray-900">{category}</div>
-                          <div className="text-xs text-gray-500 mt-1">Explore products</div>
-                        </motion.button>
-                      ))}
+                      {categoriesLoading ? (
+                        // Loading skeleton
+                        [...Array(8)].map((_, index) => (
+                          <div key={index} className="p-3 bg-gray-50 border border-gray-200 rounded-xl animate-pulse">
+                            <div className="w-20 h-4 bg-gray-200 rounded mb-2"></div>
+                            <div className="w-16 h-3 bg-gray-200 rounded"></div>
+                          </div>
+                        ))
+                      ) : (
+                        categories.map((category, index) => (
+                          <motion.button
+                            key={category.id || category.name}
+                            className="p-3 bg-gray-50 hover:bg-green-50 border border-gray-200 hover:border-green-200 rounded-xl text-left transition-all duration-200"
+                            onClick={() => handleSearch(category.name)}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3, delay: index * 0.05 }}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            <div className="flex items-center gap-2 mb-1">
+                              {(category as any).image ? (
+                                <div className="w-6 h-6 rounded-full overflow-hidden bg-green-100 flex items-center justify-center">
+                                  <img
+                                    src={(category as any).image}
+                                    alt={category.name}
+                                    className="w-full h-full object-cover rounded-full"
+                                  />
+                                </div>
+                              ) : (
+                                <span className="text-lg">{category.icon}</span>
+                              )}
+                              <div className="text-sm font-medium text-gray-900">{category.name}</div>
+                            </div>
+                            <div className="text-xs text-gray-500">Explore products</div>
+                          </motion.button>
+                        ))
+                      )}
                     </div>
                   </div>
 

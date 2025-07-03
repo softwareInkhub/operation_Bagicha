@@ -32,7 +32,8 @@ import {
   subscribeToCustomers,
   updateCustomer,
   createCustomer,
-  getCustomerAnalytics
+  getCustomerAnalytics,
+  createSampleCustomers
 } from '@/lib/firebase'
 
 interface Customer {
@@ -118,20 +119,42 @@ export default function CustomersManagement() {
     const now = new Date()
     
     return customersData.map(customer => {
-      // Calculate customer segment based on last order date
-      const lastOrderDate = customer.lastOrderDate?.toDate() || new Date(customer.lastOrderDate)
-      const daysSinceLastOrder = (now.getTime() - lastOrderDate.getTime()) / (1000 * 60 * 60 * 24)
+      // Handle missing lastOrderDate properly
+      let lastOrderDate = customer.lastOrderDate
+      let daysSinceLastOrder = 0
+      
+      if (lastOrderDate) {
+        lastOrderDate = lastOrderDate.toDate ? lastOrderDate.toDate() : new Date(lastOrderDate)
+        daysSinceLastOrder = (now.getTime() - lastOrderDate.getTime()) / (1000 * 60 * 60 * 24)
+      } else if (customer.createdAt) {
+        // If no last order date, use created date
+        const createdAt = customer.createdAt.toDate ? customer.createdAt.toDate() : new Date(customer.createdAt)
+        daysSinceLastOrder = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24)
+      } else {
+        // Default to treating as new customer
+        daysSinceLastOrder = 0
+      }
       
       let segment: 'new' | 'active' | 'inactive' | 'churned' = 'new'
-      if (daysSinceLastOrder <= 30) segment = 'new'
-      else if (daysSinceLastOrder <= 90) segment = 'active'
-      else if (daysSinceLastOrder <= 180) segment = 'inactive'
-      else segment = 'churned'
+      if (customer.totalOrders === 0) {
+        segment = 'new'
+      } else if (daysSinceLastOrder <= 30) {
+        segment = 'new'
+      } else if (daysSinceLastOrder <= 90) {
+        segment = 'active'
+      } else if (daysSinceLastOrder <= 180) {
+        segment = 'inactive'
+      } else {
+        segment = 'churned'
+      }
 
       return {
         ...customer,
         segment,
-        averageOrderValue: customer.totalOrders > 0 ? customer.totalSpent / customer.totalOrders : 0
+        totalOrders: customer.totalOrders || 0,
+        totalSpent: customer.totalSpent || 0,
+        averageOrderValue: customer.totalOrders > 0 ? (customer.totalSpent || 0) / customer.totalOrders : 0,
+        loyaltyPoints: customer.loyaltyPoints || 0
       }
     })
   }
@@ -231,6 +254,19 @@ export default function CustomersManagement() {
     a.download = `customers-${new Date().toISOString().split('T')[0]}.csv`
     a.click()
     URL.revokeObjectURL(url)
+  }
+
+  const handleCreateSampleData = async () => {
+    try {
+      setLoading(true)
+      await createSampleCustomers()
+      await loadCustomers()
+      await loadAnalytics()
+    } catch (error) {
+      console.error('Error creating sample customers:', error)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const stats = getSegmentStats()
@@ -514,10 +550,19 @@ export default function CustomersManagement() {
         ))}
       </div>
 
-      {filteredCustomers.length === 0 && (
+      {filteredCustomers.length === 0 && !loading && (
         <div className="text-center py-12">
           <FiUsers className="mx-auto h-12 w-12 text-gray-300 mb-4" />
-          <p className="text-gray-500">No customers found</p>
+          <p className="text-gray-500 mb-4">No customers found</p>
+          {customers.length === 0 && (
+            <button
+              onClick={handleCreateSampleData}
+              className="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            >
+              <FiUserPlus size={16} />
+              <span>Add Sample Customers</span>
+            </button>
+          )}
         </div>
       )}
 

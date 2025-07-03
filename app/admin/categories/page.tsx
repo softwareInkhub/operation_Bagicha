@@ -11,13 +11,15 @@ import {
   FiSave,
   FiFolder
 } from 'react-icons/fi'
-import { getCategories, addCategory, updateCategory, deleteCategory } from '@/lib/firebase'
+import { getCategories, addCategory, updateCategory, deleteCategory, createSampleCategories } from '@/lib/firebase'
+import ImageUpload from '@/components/ImageUpload'
 
 interface Category {
   id?: string
   name: string
   description: string
   icon: string
+  image?: string
   subcategories: string[]
   productCount?: number
   createdAt?: any
@@ -30,11 +32,13 @@ export default function CategoriesManagement() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null)
+  const [imageUploadError, setImageUploadError] = useState<string>('')
 
   const [categoryForm, setCategoryForm] = useState<Category>({
     name: '',
     description: '',
     icon: '🌱',
+    image: '',
     subcategories: []
   })
 
@@ -58,9 +62,11 @@ export default function CategoriesManagement() {
       name: '',
       description: '',
       icon: '🌱',
+      image: '',
       subcategories: []
     })
     setEditingCategory(null)
+    setImageUploadError('')
     setShowAddModal(true)
   }
 
@@ -152,8 +158,16 @@ export default function CategoriesManagement() {
             className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
           >
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center text-2xl flex-shrink-0">
-                {category.icon}
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden">
+                {category.image ? (
+                  <img
+                    src={category.image}
+                    alt={category.name}
+                    className="w-full h-full object-cover rounded-lg"
+                  />
+                ) : (
+                  <span>{category.icon}</span>
+                )}
               </div>
               <div className="flex space-x-2 flex-shrink-0">
                 <button
@@ -213,12 +227,26 @@ export default function CategoriesManagement() {
         <div className="text-center py-12">
           <FiFolder className="mx-auto h-12 w-12 text-gray-300 mb-4" />
           <p className="text-gray-500">No categories found</p>
-          <button
-            onClick={handleAddCategory}
-            className="mt-4 text-green-600 hover:text-green-700 font-medium"
-          >
-            Create your first category
-          </button>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center mt-4">
+            <button
+              onClick={handleAddCategory}
+              className="text-green-600 hover:text-green-700 font-medium"
+            >
+              Create your first category
+            </button>
+            <span className="text-gray-300 hidden sm:inline">or</span>
+            <button
+              onClick={async () => {
+                const success = await createSampleCategories()
+                if (success) {
+                  await loadCategories()
+                }
+              }}
+              className="text-blue-600 hover:text-blue-700 font-medium"
+            >
+              Load sample categories
+            </button>
+          </div>
         </div>
       )}
 
@@ -270,7 +298,7 @@ export default function CategoriesManagement() {
 
                 {/* Icon Selection */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Category Icon</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Category Icon (Emoji)</label>
                   <div className="grid grid-cols-10 gap-2 mb-3">
                     {commonIcons.map((icon) => (
                       <button
@@ -293,6 +321,23 @@ export default function CategoriesManagement() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
                     placeholder="Or enter custom emoji"
                   />
+                </div>
+
+                {/* Image Upload */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Category Image (Optional)</label>
+                  <p className="text-xs text-gray-500 mb-3">Upload an image to use instead of emoji icon</p>
+                  <ImageUpload
+                    value={categoryForm.image}
+                    onChange={(url) => setCategoryForm({ ...categoryForm, image: url })}
+                    onError={(error) => setImageUploadError(error)}
+                    folder="categories"
+                    placeholder="Upload category image"
+                    className="w-full"
+                  />
+                  {imageUploadError && (
+                    <p className="text-red-500 text-sm mt-2">{imageUploadError}</p>
+                  )}
                 </div>
 
                 {/* Subcategories */}
@@ -342,8 +387,16 @@ export default function CategoriesManagement() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Preview</label>
                   <div className="p-4 bg-gray-50 rounded-lg">
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center text-xl">
-                        {categoryForm.icon}
+                      <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center text-xl overflow-hidden">
+                        {categoryForm.image ? (
+                          <img
+                            src={categoryForm.image}
+                            alt="Preview"
+                            className="w-full h-full object-cover rounded-lg"
+                          />
+                        ) : (
+                          <span>{categoryForm.icon}</span>
+                        )}
                       </div>
                       <div>
                         <h4 className="font-medium text-gray-900">{categoryForm.name || 'Category Name'}</h4>

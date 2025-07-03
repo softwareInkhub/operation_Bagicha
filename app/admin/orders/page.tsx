@@ -414,104 +414,121 @@ export default function OrdersManagement() {
       </div>
 
       {/* Orders List */}
-      <div className="space-y-4">
+      <div className="grid gap-4 md:gap-5">
         {filteredOrders.map((order, index) => (
           <motion.div
             key={order.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
+            transition={{ delay: index * 0.05 }}
+            onClick={() => setSelectedOrder(order)}
+            className="group bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-lg hover:border-gray-200 transition-all duration-300 cursor-pointer relative overflow-hidden"
           >
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4 space-y-3 lg:space-y-0">
-              <div className="flex items-center space-x-4">
-                <button
-                  onClick={() => toggleOrderSelection(order.id)}
-                  className="p-1 hover:bg-gray-100 rounded transition-colors"
-                >
-                  {selectedOrders.includes(order.id) ? 
-                    <FiCheckSquare className="text-green-600" size={20} /> : 
-                    <FiSquare className="text-gray-400" size={20} />
-                  }
-                </button>
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <FiShoppingCart className="text-green-600" size={20} />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900">Order #{order.id.slice(-8)}</h3>
-                  <p className="text-sm text-gray-600">{formatDate(order.createdAt)}</p>
-                </div>
-              </div>
-              <div className="flex items-center justify-between lg:justify-end space-x-3">
-                <span className={`inline-flex items-center space-x-1 px-3 py-1 text-sm font-medium border rounded-full ${getStatusColor(order.status)}`}>
-                  {getStatusIcon(order.status)}
-                  <span className="capitalize">{order.status}</span>
-                </span>
-                <div className="flex space-x-2">
+            {/* Subtle hover gradient */}
+            <div className="absolute inset-0 bg-gradient-to-r from-green-50/30 to-blue-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl" />
+            
+            {/* Content */}
+            <div className="relative">
+              {/* Header Row */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-4">
+                  {/* Selection Checkbox */}
                   <button
-                    onClick={() => setSelectedOrder(order)}
-                    className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-                    title="View Details"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      toggleOrderSelection(order.id)
+                    }}
+                    className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
                   >
-                    <FiEye size={16} />
+                    {selectedOrders.includes(order.id) ? 
+                      <FiCheckSquare className="text-green-600" size={18} /> : 
+                      <FiSquare className="text-gray-400" size={18} />
+                    }
                   </button>
+
+                  {/* Order Info */}
+                  <div>
+                    <div className="flex items-center space-x-3">
+                      <h3 className="font-semibold text-gray-900 text-lg">
+                        #{order.id.slice(-8).toUpperCase()}
+                      </h3>
+                      <span className={`inline-flex items-center space-x-1.5 px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(order.status)}`}>
+                        {getStatusIcon(order.status)}
+                        <span className="capitalize">{order.status}</span>
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-500 mt-1">{formatDate(order.createdAt)}</p>
+                  </div>
+                </div>
+
+                {/* Quick Actions */}
+                <div className="flex items-center space-x-2">
                   <button
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation()
                       setShowStatusModal(order.id)
                       setNewStatus(order.status)
                     }}
-                    className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors"
+                    className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                     title="Update Status"
                   >
                     <FiEdit size={16} />
                   </button>
                   <button
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation()
                       setShowNotesModal(order.id)
                       setNewNote('')
                     }}
-                    className="p-2 text-green-600 hover:text-green-900 hover:bg-green-50 rounded-lg transition-colors"
+                    className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                     title="Add Note"
                   >
                     <FiMessageSquare size={16} />
                   </button>
                 </div>
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-              <div className="flex items-center space-x-2">
-                <FiPhone className="text-gray-400 flex-shrink-0" size={16} />
-                <span className="text-sm text-gray-600 truncate">{order.customerPhone}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <FiMapPin className="text-gray-400 flex-shrink-0" size={16} />
-                <span className="text-sm text-gray-600 truncate">{order.address.city}, {order.address.state}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <FiPackage className="text-gray-400 flex-shrink-0" size={16} />
-                <span className="text-sm text-gray-600">{order.items.length} items</span>
-              </div>
-              <div className="flex items-center space-x-2 sm:justify-end">
-                <span className="text-lg font-semibold text-gray-900">{formatCurrency(order.total)}</span>
-              </div>
-            </div>
-
-            <div className="mt-4 pt-4 border-t border-gray-100">
-              <div className="flex flex-wrap items-center gap-3 md:gap-4">
-                {order.items.slice(0, 3).map((item, idx) => (
-                  <div key={idx} className="flex items-center space-x-2 min-w-0">
-                    <img 
-                      src={item.image || 'https://via.placeholder.com/40x40'} 
-                      alt={item.name}
-                      className="w-8 h-8 rounded object-cover bg-gray-100 flex-shrink-0"
-                    />
-                    <span className="text-sm text-gray-600 truncate">{item.name} x{item.qty}</span>
+              {/* Order Details Row */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {/* Customer Phone */}
+                <div className="flex items-center space-x-2">
+                  <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <FiPhone className="text-gray-500" size={14} />
                   </div>
-                ))}
-                {order.items.length > 3 && (
-                  <span className="text-sm text-gray-500 whitespace-nowrap">+{order.items.length - 3} more</span>
-                )}
+                  <span className="text-sm text-gray-600 truncate font-medium">{order.customerPhone}</span>
+                </div>
+
+                {/* Location */}
+                <div className="flex items-center space-x-2">
+                  <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <FiMapPin className="text-gray-500" size={14} />
+                  </div>
+                  <span className="text-sm text-gray-600 truncate">{order.address.city}, {order.address.state}</span>
+                </div>
+
+                {/* Items Count */}
+                <div className="flex items-center space-x-2">
+                  <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <FiPackage className="text-gray-500" size={14} />
+                  </div>
+                  <span className="text-sm text-gray-600">{order.items.length} items</span>
+                </div>
+
+                {/* Total Amount */}
+                <div className="flex items-center justify-end md:justify-start space-x-2">
+                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <FiDollarSign className="text-green-600" size={14} />
+                  </div>
+                  <span className="text-lg font-bold text-gray-900">{formatCurrency(order.total)}</span>
+                </div>
+              </div>
+
+              {/* Click Indicator */}
+              <div className="mt-4 pt-3 border-t border-gray-100">
+                <div className="flex items-center justify-center text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <FiEye size={12} className="mr-1" />
+                  Click to view details
+                </div>
               </div>
             </div>
           </motion.div>

@@ -16,6 +16,7 @@ import {
   FiPackage
 } from 'react-icons/fi'
 import { getProducts, addProduct, updateProduct, deleteProduct, getCategories } from '@/lib/firebase'
+import ImageUpload from '@/components/ImageUpload'
 
 interface Product {
   id?: string
@@ -47,6 +48,7 @@ export default function ProductsManagement() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null)
+  const [imageUploadError, setImageUploadError] = useState<string>('')
 
   const [productForm, setProductForm] = useState<Product>({
     name: '',
@@ -346,12 +348,11 @@ export default function ProductsManagement() {
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
                     >
                       <option value="">Select Category</option>
-                      <option value="Indoor Plants">Indoor Plants</option>
-                      <option value="Outdoor Plants">Outdoor Plants</option>
-                      <option value="Tools">Tools</option>
-                      <option value="Soil & Fertilizer">Soil & Fertilizer</option>
-                      <option value="Pots & Planters">Pots & Planters</option>
-                      <option value="Seeds">Seeds</option>
+                      {categories.map((category) => (
+                        <option key={category.id} value={category.name}>
+                          {category.name}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -368,14 +369,18 @@ export default function ProductsManagement() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Image URL</label>
-                    <input
-                      type="url"
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Product Image</label>
+                    <ImageUpload
                       value={productForm.image}
-                      onChange={(e) => setProductForm({ ...productForm, image: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
-                      placeholder="https://example.com/image.jpg"
+                      onChange={(url) => setProductForm({ ...productForm, image: url })}
+                      onError={(error) => setImageUploadError(error)}
+                      folder="products"
+                      placeholder="Upload product image"
+                      className="w-full"
                     />
+                    {imageUploadError && (
+                      <p className="text-red-500 text-sm mt-2">{imageUploadError}</p>
+                    )}
                   </div>
                 </div>
 

@@ -43,17 +43,17 @@ export default function CategorySlider() {
     } catch (error) {
       console.error('Error loading categories:', error)
       // Fallback to default categories if Firebase fails
-      setCategories([
+      const defaultCategories: Category[] = [
         { name: 'All', icon: '🌱', sectionId: 'top' },
-        { name: 'Indoor Plants', icon: '🪴', sectionId: 'trending-plants' },
-        { name: 'Flowering Plants', icon: '🌸', sectionId: 'bestseller-section' },
-        { name: 'Pots & Gamlas', icon: '🏺', sectionId: 'product-catalog' },
-        { name: 'Seeds', icon: '🌾', sectionId: 'product-catalog' },
-        { name: 'Fertilizers', icon: '🧪', sectionId: 'fertilizer-section' },
-        { name: 'Tools', icon: '🛠️', sectionId: 'tools-and-accessories' },
         { name: 'Offers', icon: '🎁', sectionId: 'offers-section' },
         { name: 'Wishlist', icon: '❤️', sectionId: 'wishlist' },
-      ])
+        { name: 'Indoor Plants', icon: '🪴', sectionId: 'trending-plants' },
+        { name: 'Flowering Plants', icon: '🌸', sectionId: 'bestseller-section' },
+        { name: 'Pots & Planters', icon: '🏺', sectionId: 'product-catalog' },
+        { name: 'Seeds', icon: '🌾', sectionId: 'product-catalog' },
+        { name: 'Tools', icon: '🛠️', sectionId: 'tools-and-accessories' },
+      ]
+      setCategories(defaultCategories)
     } finally {
       setLoading(false)
     }

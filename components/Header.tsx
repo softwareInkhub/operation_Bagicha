@@ -11,6 +11,7 @@ import SearchModal from './SearchModal'
 import { CartContext } from '../context/CartContext'
 import { useWishlist } from '../context/WishlistContext'
 import { useComponentConfig } from '@/lib/useComponentConfig'
+import { getCategories } from '@/lib/firebase'
 
 export default function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
@@ -22,6 +23,8 @@ export default function Header() {
   const { wishlistCount, wishlist, removeFromWishlist } = useWishlist()
   const [searchFocused, setSearchFocused] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
+  const [categories, setCategories] = useState<any[]>([])
+  const [categoriesLoading, setCategoriesLoading] = useState(true)
   
   // Load admin configuration
   const { config } = useComponentConfig('header', {
@@ -50,6 +53,30 @@ export default function Header() {
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  useEffect(() => {
+    loadCategories()
+  }, [])
+
+  const loadCategories = async () => {
+    try {
+      const categoriesData = await getCategories()
+      setCategories(categoriesData)
+    } catch (error) {
+      console.error('Error loading categories:', error)
+      // Fallback to some default categories if Firebase fails
+      setCategories([
+        { name: 'Indoor Plants', icon: '🪴' },
+        { name: 'Flowering Plants', icon: '🌸' },
+        { name: 'Pots & Planters', icon: '🏺' },
+        { name: 'Seeds', icon: '🌾' },
+        { name: 'Fertilizers', icon: '🧪' },
+        { name: 'Tools', icon: '🛠️' }
+      ])
+    } finally {
+      setCategoriesLoading(false)
+    }
+  }
 
   useEffect(() => {
     if (!searchFocused) {
@@ -497,33 +524,44 @@ export default function Header() {
                   <div className="p-4 border-t border-gray-100">
                     <h4 className="text-sm font-semibold text-gray-700 mb-3">Categories</h4>
                     <div className="space-y-2">
-                      {[
-                        { name: 'Indoor Plants', icon: '🪴', color: 'bg-blue-100', iconColor: 'text-blue-600' },
-                        { name: 'Flowering Plants', icon: '🌸', color: 'bg-pink-100', iconColor: 'text-pink-600' },
-                        { name: 'Pots & Gamlas', icon: '🏺', color: 'bg-orange-100', iconColor: 'text-orange-600' },
-                        { name: 'Seeds', icon: '🌾', color: 'bg-yellow-100', iconColor: 'text-yellow-600' },
-                        { name: 'Fertilizers', icon: '🧪', color: 'bg-purple-100', iconColor: 'text-purple-600' },
-                        { name: 'Tools', icon: '🛠️', color: 'bg-gray-100', iconColor: 'text-gray-600' }
-                      ].map((category, index) => (
-                        <motion.button
-                          key={category.name}
-                          className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => {
-                            setIsMobileMenuOpen(false);
-                            const section = document.getElementById(category.name.toLowerCase().replace(/\s+/g, '-').replace('&', 'and'));
-                            if (section) {
-                              section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                            }
-                          }}
-                        >
-                          <div className={`w-10 h-10 ${category.color} rounded-lg flex items-center justify-center text-lg`}>
-                            {category.icon}
+                      {categoriesLoading ? (
+                        // Loading skeleton
+                        [...Array(6)].map((_, index) => (
+                          <div key={index} className="w-full flex items-center gap-3 p-3 rounded-lg animate-pulse">
+                            <div className="w-10 h-10 bg-gray-200 rounded-lg"></div>
+                            <div className="w-24 h-4 bg-gray-200 rounded"></div>
                           </div>
-                          <span className="font-medium text-gray-900">{category.name}</span>
-                        </motion.button>
-                      ))}
+                        ))
+                      ) : (
+                        categories.map((category, index) => (
+                          <motion.button
+                            key={category.id || category.name}
+                            className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => {
+                              setIsMobileMenuOpen(false);
+                              const section = document.getElementById(category.name.toLowerCase().replace(/\s+/g, '-').replace('&', 'and'));
+                              if (section) {
+                                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                              }
+                            }}
+                          >
+                            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center text-lg overflow-hidden">
+                              {(category as any).image ? (
+                                <img
+                                  src={(category as any).image}
+                                  alt={category.name}
+                                  className="w-full h-full object-cover rounded-lg"
+                                />
+                              ) : (
+                                <span>{category.icon}</span>
+                              )}
+                            </div>
+                            <span className="font-medium text-gray-900">{category.name}</span>
+                          </motion.button>
+                        ))
+                      )}
                     </div>
                   </div>
 

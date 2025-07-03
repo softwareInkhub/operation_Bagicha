@@ -1,6 +1,7 @@
-import { initializeApp } from 'firebase/app'
+import { initializeApp, getApps } from 'firebase/app'
 import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, connectAuthEmulator } from 'firebase/auth'
-import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, getDocs, getDoc, query, where, orderBy, limit, onSnapshot } from 'firebase/firestore'
+import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, getDocs, getDoc, query, where, orderBy, limit, onSnapshot, Timestamp, writeBatch } from 'firebase/firestore'
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -19,6 +20,9 @@ export const auth = getAuth(app)
 
 // Initialize Firestore
 export const db = getFirestore(app)
+
+// Initialize Firebase Storage
+export const storage = getStorage(app)
 
 // Production Firebase Auth configuration
 auth.useDeviceLanguage()
@@ -543,6 +547,17 @@ export const getCustomerAnalytics = async () => {
       getOrders()
     ])
     
+    // Handle empty customer data gracefully
+    if (!customers || customers.length === 0) {
+      return {
+        totalCustomers: 0,
+        segments: { new: 0, active: 0, inactive: 0, churned: 0 },
+        averageLifetimeValue: 0,
+        geographicDistribution: [],
+        topCustomers: []
+      }
+    }
+    
     // Customer segmentation
     const segments = {
       new: 0, // 0-30 days
@@ -558,7 +573,17 @@ export const getCustomerAnalytics = async () => {
     const now = new Date()
     
     customers.forEach((customer: any) => {
-      const lastOrderDate = customer.lastOrderDate?.toDate() || new Date(customer.lastOrderDate)
+      // Handle missing lastOrderDate
+      let lastOrderDate = customer.lastOrderDate
+      if (lastOrderDate) {
+        lastOrderDate = lastOrderDate.toDate ? lastOrderDate.toDate() : new Date(lastOrderDate)
+      } else {
+        // If no last order date, use created date or current date
+        lastOrderDate = customer.createdAt ? 
+          (customer.createdAt.toDate ? customer.createdAt.toDate() : new Date(customer.createdAt)) :
+          new Date()
+      }
+      
       const daysSinceLastOrder = (now.getTime() - lastOrderDate.getTime()) / (1000 * 60 * 60 * 24)
       
       if (daysSinceLastOrder <= 30) segments.new++
@@ -573,10 +598,13 @@ export const getCustomerAnalytics = async () => {
       geographicDistribution.set(location, (geographicDistribution.get(location) || 0) + 1)
     })
     
+    const totalSpent = customers.reduce((sum: number, c: any) => sum + (c.totalSpent || 0), 0)
+    const averageLifetimeValue = customers.length > 0 ? totalSpent / customers.length : 0
+    
     return {
       totalCustomers: customers.length,
       segments,
-      averageLifetimeValue: customers.reduce((sum: number, c: any) => sum + (c.totalSpent || 0), 0) / customers.length,
+      averageLifetimeValue,
       geographicDistribution: Array.from(geographicDistribution.entries()).map(([location, count]) => ({ location, count })),
       topCustomers: customers.slice(0, 10).map((c: any) => ({
         id: c.id,
@@ -588,7 +616,14 @@ export const getCustomerAnalytics = async () => {
     }
   } catch (error) {
     console.error('Error getting customer analytics:', error)
-    throw error
+    // Return empty analytics if there's an error
+    return {
+      totalCustomers: 0,
+      segments: { new: 0, active: 0, inactive: 0, churned: 0 },
+      averageLifetimeValue: 0,
+      geographicDistribution: [],
+      topCustomers: []
+    }
   }
 }
 
@@ -686,6 +721,296 @@ export const subscribeToAnalytics = (callback: (data: any) => void) => {
       statusCounts,
       recentOrders: orders.slice(0, 10)
     })
+  })
+}
+
+// Function to create sample customer data for testing
+export const createSampleCustomers = async () => {
+  try {
+    const sampleCustomers = [
+      {
+        name: 'Rajesh Kumar',
+        phone: '+91-9876543210',
+        email: 'rajesh.kumar@email.com',
+        city: 'Delhi',
+        state: 'Delhi',
+        totalOrders: 5,
+        totalSpent: 12500,
+        lastOrderDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000), // 15 days ago
+        firstOrderDate: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000), // 3 months ago
+        loyaltyPoints: 125,
+        preferredCategories: ['plants', 'fertilizers']
+      },
+      {
+        name: 'Priya Sharma',
+        phone: '+91-9876543211',
+        email: 'priya.sharma@email.com',
+        city: 'Mumbai',
+        state: 'Maharashtra',
+        totalOrders: 8,
+        totalSpent: 18750,
+        lastOrderDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
+        firstOrderDate: new Date(Date.now() - 120 * 24 * 60 * 60 * 1000), // 4 months ago
+        loyaltyPoints: 188,
+        preferredCategories: ['plants', 'tools']
+      },
+      {
+        name: 'Amit Patel',
+        phone: '+91-9876543212',
+        email: 'amit.patel@email.com',
+        city: 'Bangalore',
+        state: 'Karnataka',
+        totalOrders: 3,
+        totalSpent: 7250,
+        lastOrderDate: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000), // 45 days ago
+        firstOrderDate: new Date(Date.now() - 75 * 24 * 60 * 60 * 1000), // 2.5 months ago
+        loyaltyPoints: 72,
+        preferredCategories: ['seeds', 'fertilizers']
+      },
+      {
+        name: 'Sunita Verma',
+        phone: '+91-9876543213',
+        email: 'sunita.verma@email.com',
+        city: 'Chennai',
+        state: 'Tamil Nadu',
+        totalOrders: 12,
+        totalSpent: 28900,
+        lastOrderDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+        firstOrderDate: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000), // 6 months ago
+        loyaltyPoints: 289,
+        preferredCategories: ['plants', 'fertilizers', 'tools']
+      },
+      {
+        name: 'Ravi Singh',
+        phone: '+91-9876543214',
+        city: 'Pune',
+        state: 'Maharashtra',
+        totalOrders: 2,
+        totalSpent: 4500,
+        lastOrderDate: new Date(Date.now() - 120 * 24 * 60 * 60 * 1000), // 4 months ago
+        firstOrderDate: new Date(Date.now() - 150 * 24 * 60 * 60 * 1000), // 5 months ago
+        loyaltyPoints: 45,
+        preferredCategories: ['seeds']
+      },
+      {
+        name: 'Meera Gupta',
+        phone: '+91-9876543215',
+        email: 'meera.gupta@email.com',
+        city: 'Kolkata',
+        state: 'West Bengal',
+        totalOrders: 6,
+        totalSpent: 15200,
+        lastOrderDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
+        firstOrderDate: new Date(Date.now() - 100 * 24 * 60 * 60 * 1000), // 3.3 months ago
+        loyaltyPoints: 152,
+        preferredCategories: ['plants', 'tools']
+      },
+      {
+        name: 'Karan Joshi',
+        phone: '+91-9876543216',
+        email: 'karan.joshi@email.com',
+        city: 'Ahmedabad',
+        state: 'Gujarat',
+        totalOrders: 4,
+        totalSpent: 9800,
+        lastOrderDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 1 month ago
+        firstOrderDate: new Date(Date.now() - 80 * 24 * 60 * 60 * 1000), // 2.7 months ago
+        loyaltyPoints: 98,
+        preferredCategories: ['fertilizers', 'tools']
+      },
+      {
+        name: 'Deepika Reddy',
+        phone: '+91-9876543217',
+        email: 'deepika.reddy@email.com',
+        city: 'Hyderabad',
+        state: 'Telangana',
+        totalOrders: 9,
+        totalSpent: 22300,
+        lastOrderDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 1 week ago
+        firstOrderDate: new Date(Date.now() - 130 * 24 * 60 * 60 * 1000), // 4.3 months ago
+        loyaltyPoints: 223,
+        preferredCategories: ['plants', 'fertilizers', 'seeds']
+      }
+    ]
+
+    const customerIds = []
+    for (const customerData of sampleCustomers) {
+      const customerId = await createCustomer(customerData)
+      customerIds.push(customerId)
+      console.log(`Created customer: ${customerData.name} with ID: ${customerId}`)
+    }
+
+    return customerIds
+  } catch (error) {
+    console.error('Error creating sample customers:', error)
+    throw error
+  }
+}
+
+export const createSampleCategories = async () => {
+  try {
+    console.log('Creating sample categories...')
+    
+    const sampleCategories = [
+      {
+        name: 'Indoor Plants',
+        description: 'Perfect plants for your home and office spaces',
+        icon: '🪴',
+        subcategories: ['Succulents', 'Ferns', 'Air Purifying', 'Low Light']
+      },
+      {
+        name: 'Outdoor Plants',
+        description: 'Beautiful plants for gardens and outdoor spaces',
+        icon: '🌳',
+        subcategories: ['Trees', 'Shrubs', 'Climbers', 'Ground Cover']
+      },
+      {
+        name: 'Flowering Plants',
+        description: 'Vibrant flowers to brighten your space',
+        icon: '🌸',
+        subcategories: ['Roses', 'Lilies', 'Marigolds', 'Jasmine']
+      },
+      {
+        name: 'Tools',
+        description: 'Professional gardening tools and equipment',
+        icon: '🛠️',
+        subcategories: ['Hand Tools', 'Watering', 'Pruning', 'Digging']
+      },
+      {
+        name: 'Soil & Fertilizer',
+        description: 'Organic soil and plant nutrition products',
+        icon: '🪨',
+        subcategories: ['Potting Mix', 'Fertilizers', 'Compost', 'Amendments']
+      },
+      {
+        name: 'Pots & Planters',
+        description: 'Beautiful containers for your plants',
+        icon: '🏺',
+        subcategories: ['Ceramic', 'Plastic', 'Terracotta', 'Hanging']
+      },
+      {
+        name: 'Seeds',
+        description: 'High-quality seeds for growing your own plants',
+        icon: '🌾',
+        subcategories: ['Flower Seeds', 'Vegetable Seeds', 'Herb Seeds', 'Grass Seeds']
+      }
+    ]
+
+    const promises = sampleCategories.map(category => addCategory(category))
+    await Promise.all(promises)
+    
+    console.log('Sample categories created successfully!')
+    return true
+  } catch (error) {
+    console.error('Error creating sample categories:', error)
+    return false
+  }
+}
+
+// Image Upload Utilities
+export const uploadImage = async (file: File, folder: string = 'images'): Promise<string> => {
+  try {
+    // Create a unique filename
+    const timestamp = Date.now()
+    const filename = `${timestamp}_${file.name}`
+    const storageRef = ref(storage, `${folder}/${filename}`)
+    
+    // Upload the file
+    const snapshot = await uploadBytes(storageRef, file)
+    
+    // Get the download URL
+    const downloadURL = await getDownloadURL(snapshot.ref)
+    
+    console.log('Image uploaded successfully:', downloadURL)
+    return downloadURL
+  } catch (error) {
+    console.error('Error uploading image:', error)
+    throw new Error('Failed to upload image. Please try again.')
+  }
+}
+
+export const uploadMultipleImages = async (files: File[], folder: string = 'images'): Promise<string[]> => {
+  try {
+    const uploadPromises = files.map(file => uploadImage(file, folder))
+    const urls = await Promise.all(uploadPromises)
+    return urls
+  } catch (error) {
+    console.error('Error uploading multiple images:', error)
+    throw new Error('Failed to upload images. Please try again.')
+  }
+}
+
+export const deleteImageFromStorage = async (imageUrl: string): Promise<boolean> => {
+  try {
+    // Extract the path from the URL
+    const urlParts = imageUrl.split('/')
+    const fileName = urlParts[urlParts.length - 1].split('?')[0]
+    
+    // Create reference and delete
+    const imageRef = ref(storage, fileName)
+    await deleteObject(imageRef)
+    
+    console.log('Image deleted successfully')
+    return true
+  } catch (error) {
+    console.error('Error deleting image:', error)
+    return false
+  }
+}
+
+// Image validation utility
+export const validateImageFile = (file: File): { isValid: boolean; error?: string } => {
+  // Check file type
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']
+  if (!allowedTypes.includes(file.type)) {
+    return { 
+      isValid: false, 
+      error: 'Please select a valid image file (JPEG, PNG, WebP, or GIF)' 
+    }
+  }
+  
+  // Check file size (max 5MB)
+  const maxSize = 5 * 1024 * 1024 // 5MB in bytes
+  if (file.size > maxSize) {
+    return { 
+      isValid: false, 
+      error: 'Image size must be less than 5MB' 
+    }
+  }
+  
+  return { isValid: true }
+}
+
+// Image compression utility (optional)
+export const compressImage = (file: File, maxWidth: number = 800, quality: number = 0.8): Promise<File> => {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+    const img = new Image()
+    
+    img.onload = () => {
+      // Calculate new dimensions
+      const ratio = Math.min(maxWidth / img.width, maxWidth / img.height)
+      canvas.width = img.width * ratio
+      canvas.height = img.height * ratio
+      
+      // Draw and compress
+      ctx?.drawImage(img, 0, 0, canvas.width, canvas.height)
+      
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const compressedFile = new File([blob], file.name, {
+            type: file.type,
+            lastModified: Date.now()
+          })
+          resolve(compressedFile)
+        } else {
+          resolve(file) // Return original if compression fails
+        }
+      }, file.type, quality)
+    }
+    
+    img.src = URL.createObjectURL(file)
   })
 }
 
