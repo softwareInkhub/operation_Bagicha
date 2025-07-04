@@ -11,9 +11,11 @@ import SearchModal from './SearchModal'
 import { CartContext } from '../context/CartContext'
 import { useWishlist } from '../context/WishlistContext'
 import { useComponentConfig } from '@/lib/useComponentConfig'
-import { getCategories } from '@/lib/firebase'
+import { getCategories, getCurrentCustomer, clearCurrentCustomer, isCustomerLoggedIn } from '@/lib/firebase'
+import { useRouter } from 'next/navigation'
 
 export default function Header() {
+  const router = useRouter()
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isWishlistDrawerOpen, setIsWishlistDrawerOpen] = useState(false)
@@ -25,6 +27,8 @@ export default function Header() {
   const searchInputRef = useRef<HTMLInputElement>(null)
   const [categories, setCategories] = useState<any[]>([])
   const [categoriesLoading, setCategoriesLoading] = useState(true)
+  const [currentCustomer, setCurrentCustomer] = useState<any>(null)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
   
   // Load admin configuration
   const { config } = useComponentConfig('header', {
@@ -56,7 +60,36 @@ export default function Header() {
 
   useEffect(() => {
     loadCategories()
+    checkLoginStatus()
   }, [])
+
+  // Check login status and customer info
+  useEffect(() => {
+    checkLoginStatus()
+    
+    // Listen for storage changes (when user logs in/out in another tab)
+    const handleStorageChange = () => {
+      checkLoginStatus()
+    }
+    
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
+  }, [])
+
+  const checkLoginStatus = () => {
+    const customer = getCurrentCustomer()
+    const loggedIn = isCustomerLoggedIn()
+    
+    setCurrentCustomer(customer)
+    setIsLoggedIn(loggedIn)
+  }
+
+  const handleLogout = () => {
+    clearCurrentCustomer()
+    setCurrentCustomer(null)
+    setIsLoggedIn(false)
+    router.push('/')
+  }
 
   const loadCategories = async () => {
     try {
@@ -262,35 +295,67 @@ export default function Header() {
                     whileTap={{ scale: 0.95 }}
           >
                     <User className="w-6 h-6 text-gray-600" />
-                    <span className="text-sm font-medium text-gray-700">Account</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      {isLoggedIn ? currentCustomer?.name?.split(' ')[0] || 'Account' : 'Account'}
+                    </span>
                     <ChevronDown className="w-4 h-4 text-gray-400" />
                   </motion.button>
                   {/* Dropdown Menu */}
-                  <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                  <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                     <div className="p-2">
-                      <Link href="/auth/login" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
-                        Sign In
-                      </Link>
-                      <Link href="/auth/signup" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
-                        Create Account
-                      </Link>
-                      <hr className="my-2" />
-                      <a href="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
-                        My Profile
-                      </a>
-                      <a href="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
-                        My Orders
-                      </a>
-                      <a href="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
-                        Wishlist
-                      </a>
-                      <a href="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
-                        Settings
-                      </a>
-                      <hr className="my-2" />
-                      <a href="#" className="block px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                        Sign Out
-                      </a>
+                      {isLoggedIn ? (
+                        <>
+                          {/* Logged In User Menu */}
+                          <div className="px-3 py-2 border-b border-gray-100 mb-2">
+                            <p className="text-sm font-medium text-gray-900">{currentCustomer?.name}</p>
+                            <p className="text-xs text-gray-500">{currentCustomer?.phone}</p>
+                            {currentCustomer?.loyaltyPoints > 0 && (
+                              <p className="text-xs text-green-600 mt-1">
+                                {currentCustomer.loyaltyPoints} loyalty points
+                              </p>
+                            )}
+                          </div>
+                          <Link href="/account" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                            My Profile
+                          </Link>
+                          <a href="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                            My Orders
+                          </a>
+                          <button 
+                            onClick={() => setIsWishlistDrawerOpen(true)}
+                            className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                          >
+                            Wishlist ({wishlistCount})
+                          </button>
+                          <a href="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                            Account Settings
+                          </a>
+                          <hr className="my-2" />
+                          <button 
+                            onClick={handleLogout}
+                            className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          >
+                            Sign Out
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          {/* Guest User Menu */}
+                          <Link href="/auth/login" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                            Sign In
+                          </Link>
+                          <Link href="/auth/signup" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                            Create Account
+                          </Link>
+                          <hr className="my-2" />
+                          <button 
+                            onClick={() => setIsWishlistDrawerOpen(true)}
+                            className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                          >
+                            Wishlist ({wishlistCount})
+                          </button>
+                        </>
+                      )}
           </div>
         </div>
                 </motion.div>
@@ -414,29 +479,69 @@ export default function Header() {
                 <div className="flex-1 overflow-y-auto">
                   {/* User Section */}
                   <div className="p-4 border-b border-gray-100">
-                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                      <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                        <User className="w-6 h-6 text-green-600" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900">Welcome!</h3>
-                        <p className="text-sm text-gray-600">Sign in to your account</p>
-                      </div>
-                    </div>
-                    <div className="mt-3 grid grid-cols-2 gap-2">
-                      <Link
-                        href="/auth/login"
-                        className="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors text-center"
-                      >
-                        Sign In
-                      </Link>
-                      <Link
-                        href="/auth/signup"
-                        className="flex-1 bg-white border border-green-600 text-green-600 hover:bg-green-50 text-sm font-medium py-2 px-3 rounded-lg transition-colors text-center"
-                      >
-                        Sign Up
-                      </Link>
-                    </div>
+                    {isLoggedIn ? (
+                      <>
+                        {/* Logged In User */}
+                        <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+                          <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                            <User className="w-6 h-6 text-green-600" />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-gray-900">{currentCustomer?.name}</h3>
+                            <p className="text-sm text-gray-600">{currentCustomer?.phone}</p>
+                            {currentCustomer?.loyaltyPoints > 0 && (
+                              <p className="text-xs text-green-600 mt-1">
+                                {currentCustomer.loyaltyPoints} loyalty points
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="mt-3 space-y-2">
+                          <Link
+                            href="/account"
+                            className="w-full bg-green-100 hover:bg-green-200 text-green-700 text-sm font-medium py-2 px-3 rounded-lg transition-colors text-center block"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            My Account
+                          </Link>
+                          <button
+                            onClick={handleLogout}
+                            className="w-full bg-red-100 hover:bg-red-200 text-red-700 text-sm font-medium py-2 px-3 rounded-lg transition-colors text-center"
+                          >
+                            Sign Out
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        {/* Guest User */}
+                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                          <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                            <User className="w-6 h-6 text-green-600" />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-gray-900">Welcome!</h3>
+                            <p className="text-sm text-gray-600">Sign in to your account</p>
+                          </div>
+                        </div>
+                        <div className="mt-3 grid grid-cols-2 gap-2">
+                          <Link
+                            href="/auth/login"
+                            className="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors text-center"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            Sign In
+                          </Link>
+                          <Link
+                            href="/auth/signup"
+                            className="flex-1 bg-white border border-green-600 text-green-600 hover:bg-green-50 text-sm font-medium py-2 px-3 rounded-lg transition-colors text-center"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            Sign Up
+                          </Link>
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   {/* Quick Actions */}

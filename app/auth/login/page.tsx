@@ -1,28 +1,149 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Eye, EyeOff, Mail, Lock, ArrowLeft, User } from 'lucide-react'
+import { ArrowLeft, Phone, Shield, Check } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { setupRecaptcha, sendOTP, getCustomerByPhone, createCustomer } from '@/lib/firebase'
 
 export default function LoginPage() {
-  const [showPassword, setShowPassword] = useState(false)
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  })
+  const router = useRouter()
+  const [phoneNumber, setPhoneNumber] = useState('')
+  const [otp, setOtp] = useState(['', '', '', '', '', ''])
+  const [step, setStep] = useState('phone') // 'phone' or 'otp'
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [confirmationResult, setConfirmationResult] = useState<any>(null)
+  const [timer, setTimer] = useState(30)
+  const [canResend, setCanResend] = useState(false)
+  
+  const otpRefs = useRef<(HTMLInputElement | null)[]>([])
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Handle login logic here
-    console.log('Login attempt:', formData)
+  useEffect(() => {
+    let interval: NodeJS.Timeout
+    if (step === 'otp' && timer > 0) {
+      interval = setInterval(() => {
+        setTimer(prev => {
+          if (prev <= 1) {
+            setCanResend(true)
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+    }
+    return () => clearInterval(interval)
+  }, [step, timer])
+
+  const validatePhoneNumber = (phone: string) => {
+    const phoneRegex = /^[6-9]\d{9}$/
+    return phoneRegex.test(phone)
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    })
+  const handleSendOTP = async () => {
+    if (!validatePhoneNumber(phoneNumber)) {
+      setError('Please enter a valid 10-digit mobile number')
+      return
+    }
+
+    setLoading(true)
+    setError('')
+
+    try {
+      // Format phone number for India
+      const formattedPhone = `+91${phoneNumber}`
+      
+      // Setup reCAPTCHA verifier
+      const recaptchaVerifier = setupRecaptcha('recaptcha-container')
+      
+      // Send OTP via Firebase
+      const result = await sendOTP(formattedPhone, recaptchaVerifier)
+      
+      setConfirmationResult(result)
+      setStep('otp')
+      setTimer(30)
+      setCanResend(false)
+      
+    } catch (error: any) {
+      console.error('Error sending OTP:', error)
+      let errorMessage = 'Failed to send OTP. Please try again.'
+      
+      if (error.code === 'auth/billing-not-enabled') {
+        errorMessage = 'SMS service not enabled. Please contact support.'
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = 'Too many attempts. Please try again later.'
+      } else if (error.code === 'auth/invalid-phone-number') {
+        errorMessage = 'Invalid phone number format.'
+      }
+      
+      setError(errorMessage)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleOTPChange = (index: number, value: string) => {
+    if (value.length > 1) return
+
+    const newOtp = [...otp]
+    newOtp[index] = value
+    setOtp(newOtp)
+
+    // Auto-focus next input
+    if (value && index < 5) {
+      otpRefs.current[index + 1]?.focus()
+    }
+
+    // Auto-verify when all fields are filled
+    if (newOtp.every(digit => digit !== '')) {
+      verifyOTP(newOtp.join(''))
+    }
+  }
+
+  const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      otpRefs.current[index - 1]?.focus()
+    }
+  }
+
+  const verifyOTP = async (otpCode: string) => {
+    if (!confirmationResult) return
+
+    setLoading(true)
+    setError('')
+
+    try {
+      await confirmationResult.confirm(otpCode)
+      
+      // Check if customer exists, if not, redirect to signup
+      const formattedPhone = `+91${phoneNumber}`
+      const existingCustomer = await getCustomerByPhone(formattedPhone)
+      
+      if (existingCustomer) {
+        // Store customer info in localStorage for session management
+        localStorage.setItem('currentCustomer', JSON.stringify(existingCustomer))
+        router.push('/')
+      } else {
+        // Redirect to signup with verified phone
+        router.push(`/auth/signup?phone=${encodeURIComponent(formattedPhone)}&verified=true`)
+      }
+      
+    } catch (error: any) {
+      console.error('Error verifying OTP:', error)
+      setError('Invalid OTP. Please try again.')
+      setOtp(['', '', '', '', '', ''])
+      otpRefs.current[0]?.focus()
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleResendOTP = () => {
+    setOtp(['', '', '', '', '', ''])
+    setTimer(30)
+    setCanResend(false)
+    handleSendOTP()
   }
 
   return (
@@ -57,110 +178,150 @@ export default function LoginPage() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8"
         >
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email Field */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email Address
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
-                  placeholder="Enter your email"
-                />
-              </div>
+          {/* Header */}
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              {step === 'phone' ? (
+                <Phone className="text-green-500 text-2xl" />
+              ) : (
+                <Shield className="text-green-500 text-2xl" />
+              )}
             </div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">
+              {step === 'phone' ? 'Enter your mobile number' : 'Verify OTP'}
+            </h2>
+            <p className="text-gray-600 text-sm">
+              {step === 'phone' 
+                ? 'We\'ll send you a verification code via SMS' 
+                : `We've sent a 6-digit code to +91 ${phoneNumber}`
+              }
+            </p>
+          </div>
 
-            {/* Password Field */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full pl-10 pr-12 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
-                  placeholder="Enter your password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
-
-            {/* Remember Me & Forgot Password */}
-            <div className="flex items-center justify-between">
-              <label className="flex items-center">
-                <input type="checkbox" className="rounded border-gray-300 text-green-600 focus:ring-green-500" />
-                <span className="ml-2 text-sm text-gray-600">Remember me</span>
-              </label>
-              <Link href="/auth/forgot-password" className="text-sm text-green-600 hover:text-green-700">
-                Forgot password?
-              </Link>
-            </div>
-
-            {/* Login Button */}
-            <motion.button
-              type="submit"
-              className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold py-3 rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+          {/* Phone Number Input */}
+          {step === 'phone' && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-4"
             >
-              Sign In
-            </motion.button>
-
-            {/* Divider */}
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200"></div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Mobile Number
+                </label>
+                <div className="flex">
+                  <div className="flex items-center px-3 py-3 bg-gray-50 border border-r-0 border-gray-300 rounded-l-lg">
+                    <span className="text-gray-600 font-medium">🇮🇳 +91</span>
+                  </div>
+                  <input
+                    type="tel"
+                    value={phoneNumber}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '').slice(0, 10)
+                      setPhoneNumber(value)
+                      setError('')
+                    }}
+                    placeholder="Enter 10-digit number"
+                    className="flex-1 px-4 py-3 border border-gray-300 rounded-r-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+                    maxLength={10}
+                  />
+                </div>
               </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Or continue with</span>
-              </div>
-            </div>
 
-            {/* Social Login Buttons */}
-            <div className="grid grid-cols-2 gap-3">
+              {error && (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-red-500 text-sm"
+                >
+                  {error}
+                </motion.p>
+              )}
+
               <button
-                type="button"
-                className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+                onClick={handleSendOTP}
+                disabled={loading || phoneNumber.length !== 10}
+                className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 disabled:from-gray-300 disabled:to-gray-400 text-white font-semibold py-3 rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 disabled:scale-100"
               >
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                </svg>
-                Google
+                {loading ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    Sending OTP...
+                  </div>
+                ) : (
+                  'Send OTP'
+                )}
               </button>
+
+              {/* reCAPTCHA container */}
+              <div id="recaptcha-container" className="flex justify-center"></div>
+            </motion.div>
+          )}
+
+          {/* OTP Input */}
+          {step === 'otp' && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-4"
+            >
+              <div className="flex justify-center space-x-2">
+                {otp.map((digit, index) => (
+                  <input
+                    key={index}
+                    ref={(el) => { otpRefs.current[index] = el }}
+                    type="text"
+                    value={digit}
+                    onChange={(e) => handleOTPChange(index, e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(index, e)}
+                    className="w-12 h-12 text-center text-lg font-semibold border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+                    maxLength={1}
+                  />
+                ))}
+              </div>
+
+              {error && (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-red-500 text-sm text-center"
+                >
+                  {error}
+                </motion.p>
+              )}
+
+              {loading && (
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-green-500 mr-2"></div>
+                  <span className="text-gray-600">Verifying...</span>
+                </div>
+              )}
+
+              {/* Resend OTP */}
+              <div className="text-center">
+                {timer > 0 ? (
+                  <p className="text-gray-500 text-sm">
+                    Resend OTP in {timer}s
+                  </p>
+                ) : (
+                  <button
+                    onClick={handleResendOTP}
+                    disabled={loading}
+                    className="text-green-600 hover:text-green-700 font-medium text-sm"
+                  >
+                    Resend OTP
+                  </button>
+                )}
+              </div>
+
               <button
-                type="button"
-                className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+                onClick={() => setStep('phone')}
+                className="w-full text-gray-600 hover:text-gray-700 font-medium text-sm"
               >
-                <svg className="w-5 h-5" fill="#1877F2" viewBox="0 0 24 24">
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                </svg>
-                Facebook
+                Change phone number
               </button>
-            </div>
-          </form>
+            </motion.div>
+          )}
 
           {/* Sign Up Link */}
           <div className="mt-6 text-center">
@@ -182,28 +343,24 @@ export default function LoginPage() {
         >
           <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4">
             <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-2">
-              <User className="w-4 h-4 text-green-600" />
+              <Check className="w-4 h-4 text-green-600" />
             </div>
-            <h3 className="text-sm font-medium text-gray-900">Personalized Experience</h3>
-            <p className="text-xs text-gray-600 mt-1">Get recommendations based on your preferences</p>
+            <h3 className="text-sm font-medium text-gray-900">Secure Login</h3>
+            <p className="text-xs text-gray-600 mt-1">OTP-based secure authentication</p>
           </div>
           <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4">
             <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-2">
-              <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
+              <Phone className="w-4 h-4 text-green-600" />
             </div>
-            <h3 className="text-sm font-medium text-gray-900">Secure & Safe</h3>
-            <p className="text-xs text-gray-600 mt-1">Your data is protected with encryption</p>
+            <h3 className="text-sm font-medium text-gray-900">Quick Access</h3>
+            <p className="text-xs text-gray-600 mt-1">Login with just your phone number</p>
           </div>
           <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4">
             <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-2">
-              <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
+              <Shield className="w-4 h-4 text-green-600" />
             </div>
-            <h3 className="text-sm font-medium text-gray-900">Fast Access</h3>
-            <p className="text-xs text-gray-600 mt-1">Quick login to your favorite plants</p>
+            <h3 className="text-sm font-medium text-gray-900">Privacy Protected</h3>
+            <p className="text-xs text-gray-600 mt-1">Your data is safe and encrypted</p>
           </div>
         </motion.div>
       </motion.div>

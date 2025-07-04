@@ -8,6 +8,7 @@ import PhoneVerification from '@/components/PhoneVerification'
 import AddressForm from '@/components/AddressForm'
 import OrderSummary from '@/components/OrderSummary'
 import { FiArrowLeft, FiCheck, FiTruck, FiCreditCard } from 'react-icons/fi'
+import { getCurrentCustomer, isCustomerLoggedIn } from '@/lib/firebase'
 
 interface Address {
   fullName: string
@@ -24,6 +25,8 @@ export default function CheckoutPage() {
   const { cart: cartItems, cartCount, clearCart } = useCart()
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
+  const [customer, setCustomer] = useState<any>(null)
+  const [initializing, setInitializing] = useState(true)
   
   // Calculate total price
   const getTotalPrice = () => {
@@ -51,12 +54,36 @@ export default function CheckoutPage() {
     { id: 3, title: 'Payment & Review', icon: '💳' },
   ]
 
+  // Check customer login status and initialize checkout flow
+  useEffect(() => {
+    initializeCheckout()
+  }, [])
+
+  const initializeCheckout = async () => {
+    try {
+      // Check if customer is already logged in
+      if (isCustomerLoggedIn()) {
+        const customerData = getCurrentCustomer()
+        setCustomer(customerData)
+        setPhoneVerified(true)
+        setVerifiedPhone(customerData.phone)
+        
+        // Skip phone verification step and go to address
+        setCurrentStep(2)
+      }
+    } catch (error) {
+      console.error('Error initializing checkout:', error)
+    } finally {
+      setInitializing(false)
+    }
+  }
+
   // Redirect if cart is empty
   useEffect(() => {
-    if (Array.isArray(cartItems) && cartItems.length === 0 && !orderPlaced) {
+    if (Array.isArray(cartItems) && cartItems.length === 0 && !orderPlaced && !initializing) {
       router.push('/')
     }
-  }, [cartItems, router, orderPlaced])
+  }, [cartItems, router, orderPlaced, initializing])
 
   const handlePhoneVerified = (phone: string) => {
     setPhoneVerified(true)
@@ -82,9 +109,41 @@ export default function CheckoutPage() {
       const deliveryFee = subtotal >= 500 ? 0 : 50
       const total = subtotal + deliveryFee
 
+      // Use existing customer or create new one
+      let customerData = customer
+      
+      if (!customerData) {
+        // Check if customer exists, if not create one
+        const { getCustomerByPhone, createCustomer } = await import('@/lib/firebase')
+        customerData = await getCustomerByPhone(verifiedPhone)
+        
+        if (!customerData) {
+          // Create new customer account
+          const newCustomerData = {
+            name: address.fullName,
+            phone: verifiedPhone,
+            email: '', // Can be added later
+            city: address.city,
+            state: address.state,
+            totalOrders: 0,
+            totalSpent: 0,
+            loyaltyPoints: 0,
+            preferredCategories: []
+          }
+          
+          const customerId = await createCustomer(newCustomerData)
+          customerData = { ...newCustomerData, id: customerId }
+          
+          // Store customer info in localStorage for session management
+          localStorage.setItem('currentCustomer', JSON.stringify(customerData))
+        }
+      }
+
       // Create order data
       const orderData = {
+        customerId: customerData.id,
         customerPhone: verifiedPhone,
+        customerName: address.fullName,
         items: cartItems.map(item => ({
           name: item.name,
           price: item.price,
@@ -100,8 +159,24 @@ export default function CheckoutPage() {
       }
 
       // Save order to Firebase
-      const { createOrder } = await import('@/lib/firebase')
+      const { createOrder, updateCustomer } = await import('@/lib/firebase')
       const newOrderId = await createOrder(orderData)
+      
+      // Update customer stats
+      if (customerData) {
+        const updatedCustomerData = {
+          ...customerData,
+          totalOrders: ((customerData as any).totalOrders || 0) + 1,
+          totalSpent: ((customerData as any).totalSpent || 0) + total,
+          loyaltyPoints: ((customerData as any).loyaltyPoints || 0) + Math.floor(total / 10), // 1 point per ₹10
+          lastOrderDate: new Date()
+        }
+        
+        await updateCustomer(customerData.id, updatedCustomerData)
+        
+        // Update localStorage with new customer data
+        localStorage.setItem('currentCustomer', JSON.stringify(updatedCustomerData))
+      }
       
       setOrderId(newOrderId)
       setOrderPlaced(true)
@@ -120,35 +195,50 @@ export default function CheckoutPage() {
     }
   }
 
-  const renderStepIndicator = () => (
-    <div className="flex items-center justify-center mb-8 px-4">
-      {steps.map((step, index) => (
-        <div key={step.id} className="flex items-center">
-          <div className={`flex flex-col items-center ${index < steps.length - 1 ? 'flex-1' : ''}`}>
-            <div className={`
-              w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium mb-2
-              ${currentStep >= step.id 
-                ? 'bg-green-500 text-white' 
-                : 'bg-gray-200 text-gray-600'
-              }
-            `}>
-              {currentStep > step.id ? <FiCheck size={16} /> : step.id}
+  const renderStepIndicator = () => {
+    // Hide phone verification step if customer is already logged in
+    const visibleSteps = customer ? steps.filter(step => step.id !== 1) : steps
+    const adjustedCurrentStep = customer ? currentStep - 1 : currentStep
+
+    return (
+      <div className="flex items-center justify-center mb-8 px-4">
+        {visibleSteps.map((step, index) => (
+          <div key={step.id} className="flex items-center">
+            <div className={`flex flex-col items-center ${index < visibleSteps.length - 1 ? 'flex-1' : ''}`}>
+              <div className={`
+                w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium mb-2
+                ${adjustedCurrentStep >= (customer ? step.id - 1 : step.id)
+                  ? 'bg-green-500 text-white' 
+                  : 'bg-gray-200 text-gray-600'
+                }
+              `}>
+                {adjustedCurrentStep > (customer ? step.id - 1 : step.id) ? <FiCheck size={16} /> : (customer ? step.id - 1 : step.id)}
+              </div>
+              <span className={`text-xs text-center ${
+                adjustedCurrentStep >= (customer ? step.id - 1 : step.id) ? 'text-green-600 font-medium' : 'text-gray-500'
+              }`}>
+                {step.title}
+              </span>
             </div>
-            <span className={`text-xs text-center ${
-              currentStep >= step.id ? 'text-green-600 font-medium' : 'text-gray-500'
-            }`}>
-              {step.title}
-            </span>
+            {index < visibleSteps.length - 1 && (
+              <div className={`h-0.5 flex-1 mx-4 ${
+                adjustedCurrentStep > (customer ? step.id - 1 : step.id) ? 'bg-green-500' : 'bg-gray-200'
+              }`} />
+            )}
           </div>
-          {index < steps.length - 1 && (
-            <div className={`h-0.5 flex-1 mx-4 ${
-              currentStep > step.id ? 'bg-green-500' : 'bg-gray-200'
-            }`} />
-          )}
-        </div>
-      ))}
-    </div>
-  )
+        ))}
+      </div>
+    )
+  }
+
+  // Show loading during initialization
+  if (initializing) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+      </div>
+    )
+  }
 
   if (orderPlaced) {
     return (
@@ -194,9 +284,28 @@ export default function CheckoutPage() {
         {/* Step Indicator */}
         {renderStepIndicator()}
 
+        {/* Welcome message for logged-in customers */}
+        {customer && currentStep === 2 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mx-4 mb-6 bg-green-50 border border-green-200 rounded-xl p-4"
+          >
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                <FiCheck className="text-green-500" />
+              </div>
+              <div>
+                <h3 className="font-medium text-green-900">Welcome back, {customer.name}!</h3>
+                <p className="text-sm text-green-600">Please confirm your delivery address</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Step Content */}
         <AnimatePresence mode="wait">
-          {currentStep === 1 && (
+          {currentStep === 1 && !customer && (
             <motion.div
               key="phone-verification"
               initial={{ opacity: 0, x: 50 }}
@@ -218,8 +327,16 @@ export default function CheckoutPage() {
             >
               <AddressForm 
                 initialPhone={verifiedPhone}
+                initialData={customer ? {
+                  fullName: customer.name,
+                  phoneNumber: customer.phone,
+                  city: customer.city || '',
+                  state: customer.state || '',
+                  addressLine1: '',
+                  pincode: ''
+                } : undefined}
                 onSubmit={handleAddressSubmit}
-                onBack={() => setCurrentStep(1)}
+                onBack={() => setCurrentStep(customer ? 2 : 1)}
               />
             </motion.div>
           )}

@@ -1,94 +1,67 @@
 'use client'
 
 import { useCart } from '@/context/CartContext'
-import { FiShoppingBag, FiTruck, FiTag } from 'react-icons/fi'
 
 export default function OrderSummary() {
   const { cart: cartItems } = useCart()
 
-  // Calculate total price
-  const getTotalPrice = () => {
+  const getSubtotal = () => {
     return cartItems.reduce((total, item) => total + (item.price * item.qty), 0)
   }
 
-  const subtotal = getTotalPrice()
-  const deliveryFee = subtotal >= 500 ? 0 : 50 // Free delivery above ₹500
+  const subtotal = getSubtotal()
+  const deliveryFee = subtotal >= 500 ? 0 : 50
   const total = subtotal + deliveryFee
 
   return (
     <div className="bg-white rounded-xl p-4 shadow-sm">
-      <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
-        <FiShoppingBag className="mr-2 text-green-500" />
-        Order Summary
-      </h3>
-
+      <h3 className="font-semibold text-gray-900 mb-4">Order Summary</h3>
+      
       {/* Cart Items */}
       <div className="space-y-3 mb-4">
-        {cartItems.map((item, index) => (
-          <div key={`${item.name}-${index}`} className="flex items-center space-x-3">
-            <img
-              src={item.image}
+        {cartItems.map((item) => (
+          <div key={item.name} className="flex items-center space-x-3">
+            <img 
+              src={item.image} 
               alt={item.name}
-              className="w-12 h-12 object-cover rounded-lg bg-gray-100"
+              className="w-12 h-12 object-cover rounded-lg"
             />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">
-                {item.name}
-              </p>
-              <p className="text-xs text-gray-500">
-                Qty: {item.qty}
-              </p>
+            <div className="flex-1">
+              <h4 className="text-sm font-medium text-gray-900">{item.name}</h4>
+              <p className="text-xs text-gray-500">Qty: {item.qty}</p>
             </div>
-            <div className="text-sm font-medium text-gray-900">
+            <span className="text-sm font-medium text-gray-900">
               ₹{(item.price * item.qty).toLocaleString()}
-            </div>
+            </span>
           </div>
         ))}
       </div>
 
-      {/* Pricing Details */}
-      <div className="border-t pt-4 space-y-2">
+      {/* Price Breakdown */}
+      <div className="border-t border-gray-200 pt-4 space-y-2">
         <div className="flex justify-between text-sm">
           <span className="text-gray-600">Subtotal ({cartItems.length} items)</span>
           <span className="text-gray-900">₹{subtotal.toLocaleString()}</span>
         </div>
-        
         <div className="flex justify-between text-sm">
-          <span className="text-gray-600 flex items-center">
-            <FiTruck className="mr-1" />
-            Delivery Fee
-          </span>
-          <span className={`${deliveryFee === 0 ? 'text-green-600' : 'text-gray-900'}`}>
+          <span className="text-gray-600">Delivery Fee</span>
+          <span className="text-gray-900">
             {deliveryFee === 0 ? 'FREE' : `₹${deliveryFee}`}
           </span>
         </div>
-
-        {deliveryFee === 0 && (
-          <div className="flex items-center text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
-            <FiTag className="mr-1" />
-            You saved ₹50 on delivery!
-          </div>
-        )}
-
-        <div className="border-t pt-2 flex justify-between text-base font-semibold">
-          <span className="text-gray-900">Total Amount</span>
+        <div className="flex justify-between font-semibold text-lg border-t border-gray-200 pt-2">
+          <span>Total</span>
           <span className="text-green-600">₹{total.toLocaleString()}</span>
         </div>
       </div>
 
-      {/* Delivery Info */}
-      <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-        <div className="flex items-start space-x-2">
-          <FiTruck className="text-blue-500 mt-0.5" />
-          <div className="text-sm">
-            <p className="text-blue-900 font-medium">Expected Delivery</p>
-            <p className="text-blue-700">2-3 business days</p>
-            <p className="text-blue-600 text-xs mt-1">
-              Plants will be delivered fresh from our nursery
-            </p>
-          </div>
+      {subtotal < 500 && (
+        <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+          <p className="text-xs text-blue-700">
+            Add ₹{(500 - subtotal).toLocaleString()} more for FREE delivery!
+          </p>
         </div>
-      </div>
+      )}
     </div>
   )
 } 

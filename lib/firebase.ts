@@ -1134,4 +1134,51 @@ export const compressImage = (file: File, maxWidth: number = 800, quality: numbe
   })
 }
 
+// Customer Session Management
+export const getCurrentCustomer = () => {
+  if (typeof window !== 'undefined') {
+    const customerData = localStorage.getItem('currentCustomer')
+    return customerData ? JSON.parse(customerData) : null
+  }
+  return null
+}
+
+export const setCurrentCustomer = (customer: any) => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('currentCustomer', JSON.stringify(customer))
+  }
+}
+
+export const clearCurrentCustomer = () => {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('currentCustomer')
+  }
+}
+
+export const isCustomerLoggedIn = () => {
+  return getCurrentCustomer() !== null
+}
+
+// Enhanced customer creation with better defaults
+export const createCustomerAccount = async (customerData: any) => {
+  try {
+    const enhancedData = {
+      ...customerData,
+      createdAt: new Date(),
+      firstOrderDate: null,
+      lastOrderDate: null,
+      totalOrders: 0,
+      totalSpent: 0,
+      loyaltyPoints: 0,
+      preferredCategories: [],
+      isActive: true
+    }
+    
+    return await createCustomer(enhancedData)
+  } catch (error) {
+    console.error('Error creating customer account:', error)
+    throw error
+  }
+}
+
 export default app 

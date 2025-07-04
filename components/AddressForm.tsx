@@ -17,6 +17,7 @@ interface Address {
 
 interface AddressFormProps {
   initialPhone: string
+  initialData?: Partial<Address>
   onSubmit: (address: Address) => void
   onBack: () => void
 }
@@ -31,26 +32,25 @@ const indianStates = [
   'Jammu and Kashmir', 'Ladakh', 'Lakshadweep', 'Andaman and Nicobar Islands'
 ]
 
-export default function AddressForm({ initialPhone, onSubmit, onBack }: AddressFormProps) {
+export default function AddressForm({ initialPhone, initialData, onSubmit, onBack }: AddressFormProps) {
   const [formData, setFormData] = useState<Address>({
-    fullName: '',
-    phoneNumber: initialPhone.replace('+91', ''),
-    addressLine1: '',
-    addressLine2: '',
-    city: '',
-    state: '',
-    pincode: '',
-    landmark: ''
+    fullName: initialData?.fullName || '',
+    phoneNumber: initialData?.phoneNumber || initialPhone,
+    addressLine1: initialData?.addressLine1 || '',
+    addressLine2: initialData?.addressLine2 || '',
+    city: initialData?.city || '',
+    state: initialData?.state || '',
+    pincode: initialData?.pincode || '',
+    landmark: initialData?.landmark || ''
   })
   const [errors, setErrors] = useState<Partial<Address>>({})
   const [loading, setLoading] = useState(false)
 
-  const handleInputChange = (field: keyof Address, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }))
-    }
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    })
   }
 
   const validateForm = () => {
@@ -128,12 +128,14 @@ export default function AddressForm({ initialPhone, onSubmit, onBack }: AddressF
             </label>
             <input
               type="text"
+              name="fullName"
               value={formData.fullName}
-              onChange={(e) => handleInputChange('fullName', e.target.value)}
+              onChange={handleChange}
               placeholder="Enter your full name"
               className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none ${
                 errors.fullName ? 'border-red-300' : 'border-gray-300'
               }`}
+              required
             />
             {errors.fullName && (
               <p className="text-red-500 text-xs mt-1">{errors.fullName}</p>
@@ -151,16 +153,15 @@ export default function AddressForm({ initialPhone, onSubmit, onBack }: AddressF
               </div>
               <input
                 type="tel"
+                name="phoneNumber"
                 value={formData.phoneNumber}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, '').slice(0, 10)
-                  handleInputChange('phoneNumber', value)
-                }}
+                onChange={handleChange}
                 placeholder="Enter 10-digit number"
                 className={`flex-1 px-4 py-3 border rounded-r-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none ${
                   errors.phoneNumber ? 'border-red-300' : 'border-gray-300'
                 }`}
                 maxLength={10}
+                required
               />
             </div>
             {errors.phoneNumber && (
@@ -175,12 +176,14 @@ export default function AddressForm({ initialPhone, onSubmit, onBack }: AddressF
             </label>
             <input
               type="text"
+              name="addressLine1"
               value={formData.addressLine1}
-              onChange={(e) => handleInputChange('addressLine1', e.target.value)}
+              onChange={handleChange}
               placeholder="House/Flat No., Building Name, Street"
               className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none ${
                 errors.addressLine1 ? 'border-red-300' : 'border-gray-300'
               }`}
+              required
             />
             {errors.addressLine1 && (
               <p className="text-red-500 text-xs mt-1">{errors.addressLine1}</p>
@@ -194,8 +197,9 @@ export default function AddressForm({ initialPhone, onSubmit, onBack }: AddressF
             </label>
             <input
               type="text"
+              name="addressLine2"
               value={formData.addressLine2}
-              onChange={(e) => handleInputChange('addressLine2', e.target.value)}
+              onChange={handleChange}
               placeholder="Area, Locality"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
             />
@@ -209,12 +213,14 @@ export default function AddressForm({ initialPhone, onSubmit, onBack }: AddressF
               </label>
               <input
                 type="text"
+                name="city"
                 value={formData.city}
-                onChange={(e) => handleInputChange('city', e.target.value)}
+                onChange={handleChange}
                 placeholder="City"
                 className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none ${
                   errors.city ? 'border-red-300' : 'border-gray-300'
                 }`}
+                required
               />
               {errors.city && (
                 <p className="text-red-500 text-xs mt-1">{errors.city}</p>
@@ -226,11 +232,13 @@ export default function AddressForm({ initialPhone, onSubmit, onBack }: AddressF
                 State *
               </label>
               <select
+                name="state"
                 value={formData.state}
-                onChange={(e) => handleInputChange('state', e.target.value)}
+                onChange={handleChange}
                 className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none ${
                   errors.state ? 'border-red-300' : 'border-gray-300'
                 }`}
+                required
               >
                 <option value="">Select State</option>
                 {indianStates.map(state => (
@@ -251,16 +259,15 @@ export default function AddressForm({ initialPhone, onSubmit, onBack }: AddressF
               </label>
               <input
                 type="text"
+                name="pincode"
                 value={formData.pincode}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, '').slice(0, 6)
-                  handleInputChange('pincode', value)
-                }}
+                onChange={handleChange}
                 placeholder="123456"
                 className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none ${
                   errors.pincode ? 'border-red-300' : 'border-gray-300'
                 }`}
                 maxLength={6}
+                required
               />
               {errors.pincode && (
                 <p className="text-red-500 text-xs mt-1">{errors.pincode}</p>
@@ -273,8 +280,9 @@ export default function AddressForm({ initialPhone, onSubmit, onBack }: AddressF
               </label>
               <input
                 type="text"
+                name="landmark"
                 value={formData.landmark}
-                onChange={(e) => handleInputChange('landmark', e.target.value)}
+                onChange={handleChange}
                 placeholder="Near..."
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
               />
