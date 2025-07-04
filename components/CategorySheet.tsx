@@ -108,7 +108,7 @@ export default function CategorySheet({ open, onClose }: CategorySheetProps) {
                     )}
                     <div className="text-green-700 font-bold text-sm mt-1">9{product.price.toFixed(2)}</div>
                     <div className="flex gap-2 mt-2">
-                      <WishlistButton product={{ id: product.id, name: product.name, price: product.price, image: product.image }} />
+                      <WishlistButton product={{ id: String(product.id), name: product.name, price: product.price, image: product.image }} />
                       <button className="w-8 h-8 rounded-full bg-green-500 hover:bg-green-600 flex items-center justify-center text-white shadow transition-all duration-200">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" /><path d="M1 1h4l.89 4.44a2 2 0 0 0 2 1.56h9.72a2 2 0 0 0 2-1.56L23 6H6" /></svg>
                       </button>
