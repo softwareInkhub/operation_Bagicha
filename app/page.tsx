@@ -146,7 +146,7 @@ export default function Home() {
 
       {/* Regular Footer */}
       <Footer />
-      
+
       {/* Sticky Footer */}
       <StickyFooter />
     </div>

@@ -187,7 +187,7 @@ export default function Footer() {
                 <Users className="w-5 h-5 text-green-400" />
                 <h3 className="text-lg font-semibold">Contact Info</h3>
               </div>
-              <div className="space-y-4">
+            <div className="space-y-4">
                 <div className="flex items-start space-x-3 group">
                   <div className="w-8 h-8 bg-gray-800 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-green-600 transition-colors">
                     <MapPin className="w-4 h-4 text-green-400 group-hover:text-white transition-colors" />
@@ -195,7 +195,7 @@ export default function Footer() {
                   <div>
                     <p className="text-sm text-gray-300 font-medium">Address</p>
                     <p className="text-xs text-gray-400 mt-1">
-                      123 Grocery Street, Fresh City, FC 12345
+                    123 Grocery Street, Fresh City, FC 12345
                     </p>
                   </div>
                 </div>
@@ -228,7 +228,7 @@ export default function Footer() {
             <div className="flex items-center space-x-2">
               <Heart className="w-4 h-4 text-green-400" />
               <span className="text-sm text-gray-400">
-                © 2024 Bagicha. All rights reserved.
+              © 2024 Bagicha. All rights reserved.
               </span>
             </div>
             {config.showLegalLinks && (

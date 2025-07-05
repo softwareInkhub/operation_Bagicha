@@ -156,13 +156,13 @@ export default function ProductDetails({ product, onClose, products, currentInde
                 <span className="text-xs font-semibold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">{product.badge}</span>
               )}
               <span className="text-lg font-bold text-white text-center leading-tight drop-shadow">{product.name}</span>
-            </div>
+        </div>
             <div className="flex items-center gap-1">
-              <div className="flex items-center gap-0.5">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className={`w-3 h-3 ${i < Math.floor(product.rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
-                ))}
-              </div>
+          <div className="flex items-center gap-0.5">
+            {[...Array(5)].map((_, i) => (
+              <Star key={i} className={`w-3 h-3 ${i < Math.floor(product.rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
+            ))}
+          </div>
               <span className="text-xs text-gray-100">{product.rating} ({product.reviews})</span>
             </div>
             <div className="flex items-center gap-2 mt-1">
@@ -184,67 +184,67 @@ export default function ProductDetails({ product, onClose, products, currentInde
               >
                 <Heart className={`w-4 h-4 ${isInWishlist(productId) ? 'fill-white' : ''}`} />
               </motion.button>
-            </div>
+        </div>
           </div>
         </div>
         {/* Details Section */}
         <div className="px-4 pt-4 pb-2 flex-1 flex flex-col">
-          {/* Stock & Delivery */}
-          <div className="flex flex-col gap-1 mb-2">
-            <div className="flex items-center gap-1.5 text-xs">
-              {inStock ? (
-                <CheckCircle className="w-3 h-3 text-green-600" />
-              ) : (
-                <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
-              )}
-              <span className={inStock ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}>
-                {inStock ? 'In Stock' : 'Out of Stock'}
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5 text-xs text-gray-600">
-              <Truck className="w-3 h-3" />
-              <span>{delivery}</span>
-            </div>
+        {/* Stock & Delivery */}
+        <div className="flex flex-col gap-1 mb-2">
+          <div className="flex items-center gap-1.5 text-xs">
+            {inStock ? (
+              <CheckCircle className="w-3 h-3 text-green-600" />
+            ) : (
+              <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
+            )}
+            <span className={inStock ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}>
+              {inStock ? 'In Stock' : 'Out of Stock'}
+            </span>
           </div>
-          {/* About this item */}
-          {product.description && (
-            <div className="mb-2">
+          <div className="flex items-center gap-1.5 text-xs text-gray-600">
+            <Truck className="w-3 h-3" />
+            <span>{delivery}</span>
+          </div>
+        </div>
+        {/* About this item */}
+        {product.description && (
+          <div className="mb-2">
               <h3 className="font-semibold text-gray-900 mb-1 text-xs">About this item:</h3>
               <p className="text-gray-600 text-xs leading-relaxed">{product.description}</p>
-            </div>
-          )}
-          {/* Features */}
-          {product.features && product.features.length > 0 && (
-            <div className="mb-2">
-              <h3 className="font-semibold text-gray-900 mb-1 text-xs">Key Features:</h3>
-              <ul className="space-y-0.5">
-                {product.features.map((feature, index) => (
-                  <li key={index} className="flex items-start gap-1 text-xs text-gray-600">
-                    <div className="w-1 h-1 bg-green-500 rounded-full mt-1 flex-shrink-0"></div>
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          {/* Care Instructions */}
-          {product.details && product.details.length > 0 && (
-            <div className="mb-2">
-              <h3 className="font-semibold text-gray-900 mb-1 text-xs">Care Instructions:</h3>
-              <ul className="space-y-0.5">
-                {product.details.map((detail, index) => (
-                  <li key={index} className="flex items-start gap-1 text-xs text-gray-600">
-                    <div className="w-1 h-1 bg-blue-500 rounded-full mt-1 flex-shrink-0"></div>
-                    <span>{detail}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          {/* Brand */}
-          <div className="text-xs text-gray-500 mb-3 text-center">
-            Brand: <span className="font-semibold text-gray-700">{brand}</span>
           </div>
+        )}
+        {/* Features */}
+        {product.features && product.features.length > 0 && (
+          <div className="mb-2">
+              <h3 className="font-semibold text-gray-900 mb-1 text-xs">Key Features:</h3>
+            <ul className="space-y-0.5">
+                {product.features.map((feature, index) => (
+                <li key={index} className="flex items-start gap-1 text-xs text-gray-600">
+                  <div className="w-1 h-1 bg-green-500 rounded-full mt-1 flex-shrink-0"></div>
+                    <span>{feature}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+          {/* Care Instructions */}
+        {product.details && product.details.length > 0 && (
+          <div className="mb-2">
+              <h3 className="font-semibold text-gray-900 mb-1 text-xs">Care Instructions:</h3>
+            <ul className="space-y-0.5">
+                {product.details.map((detail, index) => (
+                <li key={index} className="flex items-start gap-1 text-xs text-gray-600">
+                  <div className="w-1 h-1 bg-blue-500 rounded-full mt-1 flex-shrink-0"></div>
+                    <span>{detail}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {/* Brand */}
+        <div className="text-xs text-gray-500 mb-3 text-center">
+          Brand: <span className="font-semibold text-gray-700">{brand}</span>
+        </div>
         </div>
         {/* Action Buttons */}
         <div className="flex gap-1.5 mb-1.5 px-4">

@@ -82,7 +82,7 @@ export default function ProductModal({ isOpen, onClose, title, icon, items, onPr
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
               onClick={e => e.stopPropagation()}
             >
-                            <motion.button 
+              <motion.button 
                 className="absolute top-3 right-3 text-white hover:text-gray-200 w-8 h-8 rounded-full hover:bg-black/30 z-30 bg-black/50 backdrop-blur-sm flex items-center justify-center shadow-lg border border-white/20 transition-all duration-200"
                 onClick={onClose}
                 whileHover={{ scale: 1.1, rotate: 90 }}
@@ -94,15 +94,15 @@ export default function ProductModal({ isOpen, onClose, title, icon, items, onPr
               </motion.button>
               
               <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 z-10">
-                <motion.h3 
+              <motion.h3 
                   className="text-lg font-semibold text-gray-900 flex items-center gap-2"
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                >
-                  <span>{icon}</span>
-                  {title}
-                </motion.h3>
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+              >
+                <span>{icon}</span>
+                {title}
+              </motion.h3>
               </div>
               
               <div className="p-6 overflow-y-auto max-h-[calc(80vh-80px)]">
