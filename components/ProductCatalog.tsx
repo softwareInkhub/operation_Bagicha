@@ -38,7 +38,7 @@ export default function ProductCatalog() {
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
-  const [selectedProduct, setSelectedProduct] = useState(null)
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [modalProductList, setModalProductList] = useState<Product[]>([])
   const [modalProductIndex, setModalProductIndex] = useState<number | null>(null)
 
@@ -258,9 +258,10 @@ export default function ProductCatalog() {
           items={getModalItems()}
           onProductClick={(product) => {
             const categoryProducts = products.filter(p => p.category === selectedCategory);
+            const actualProduct = products.find(p => p.name === product.name && p.category === selectedCategory);
             setModalProductList(categoryProducts);
-            setModalProductIndex(categoryProducts.findIndex(p => p.id === product.id));
-            setSelectedProduct(product);
+            setModalProductIndex(categoryProducts.findIndex(p => p.id === actualProduct?.id));
+            setSelectedProduct(actualProduct || null);
             setModalOpen(false);
           }}
         />

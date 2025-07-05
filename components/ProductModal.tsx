@@ -7,6 +7,7 @@ import { useState } from 'react'
 import WishlistButton from './WishlistButton'
 
 interface ProductItem {
+  id?: string
   name: string
   image: string
   price: number

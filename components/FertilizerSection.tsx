@@ -127,7 +127,7 @@ export default function FertilizerSection() {
     setModalOpen(true);
   };
 
-  const handleProductClick = (product: FertilizerProduct, productList: FertilizerProduct[]) => {
+  const handleProductClick = (product: any, productList: FertilizerProduct[]) => {
     setModalProductList(productList)
     setModalProductIndex(productList.findIndex(p => p.id === product.id))
     setSelectedProduct(product)
@@ -155,7 +155,7 @@ export default function FertilizerSection() {
 
   const getModalItems = () => {
     if (!selectedCategory) return [];
-    const categoryItems = grouped[selectedCategory] || [];
+    const categoryItems = grouped[selectedCategory || ''] || [];
     return categoryItems.map((item) => ({
       ...item,
       wishlistButton: <WishlistButton product={{ 
@@ -297,7 +297,7 @@ export default function FertilizerSection() {
             title={selectedCategory || ''}
             icon="🪨"
             items={getModalItems()}
-            onProductClick={(product) => handleProductClick(product, grouped[selectedCategory] || [])}
+            onProductClick={(product) => handleProductClick(product, grouped[selectedCategory || ''] || [])}
           />
         )}
 

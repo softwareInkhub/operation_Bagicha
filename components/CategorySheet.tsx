@@ -11,18 +11,37 @@ interface CategorySheetProps {
   onClose: () => void;
 }
 
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  image: string;
+  category: string;
+  badge?: string;
+  rating?: number;
+  reviews?: number;
+  [key: string]: any;
+}
+
+interface Category {
+  id?: string;
+  name: string;
+  icon: string;
+  [key: string]: any;
+}
+
 export default function CategorySheet({ open, onClose }: CategorySheetProps) {
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [products, setProducts] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [categories, setCategories] = useState([{ name: 'All', icon: '🌱' }]);
+  const [categories, setCategories] = useState<Category[]>([{ name: 'All', icon: '🌱' }]);
   const [catLoading, setCatLoading] = useState(true);
-  const [modalProductList, setModalProductList] = useState([]);
-  const [modalProductIndex, setModalProductIndex] = useState(null);
+  const [modalProductList, setModalProductList] = useState<Product[]>([]);
+  const [modalProductIndex, setModalProductIndex] = useState<number | null>(null);
 
   // Default static categories with icons
-  const staticCategories = [
+  const staticCategories: Category[] = [
     { name: 'All', icon: '🌱' },
     { name: 'Offers', icon: '🎁' },
     { name: 'Indoor Plants', icon: '🪴' },
@@ -37,7 +56,7 @@ export default function CategorySheet({ open, onClose }: CategorySheetProps) {
       setLoading(true);
       try {
         const allProducts = await getProducts();
-        setProducts(allProducts);
+        setProducts(allProducts as Product[]);
       } catch (e) {
         setProducts([]);
       }
@@ -57,7 +76,7 @@ export default function CategorySheet({ open, onClose }: CategorySheetProps) {
           ...allCategories.filter(
             (cat: any) => !staticCategories.some(staticCat => staticCat.name === cat.name)
           ),
-        ];
+        ] as Category[];
         setCategories(merged);
       } catch (e) {
         setCategories(staticCategories);
@@ -195,9 +214,17 @@ export default function CategorySheet({ open, onClose }: CategorySheetProps) {
       {selectedProduct && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40">
           <ProductDetails
-            product={selectedProduct}
+            product={{
+              ...selectedProduct,
+              rating: selectedProduct.rating || 4.5,
+              reviews: selectedProduct.reviews || 128
+            }}
             onClose={() => setSelectedProduct(null)}
-            products={modalProductList}
+            products={modalProductList.map(p => ({
+              ...p,
+              rating: p.rating || 4.5,
+              reviews: p.reviews || 128
+            }))}
             currentIndex={modalProductIndex ?? 0}
             onNavigate={direction => {
               if (!modalProductList.length || modalProductIndex === null) return;
