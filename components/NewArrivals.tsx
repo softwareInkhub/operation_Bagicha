@@ -250,7 +250,11 @@ export default function NewArrivals() {
             wishlistButton: <WishlistButton product={product} />,
             onAddToCart: (e: React.MouseEvent) => { e.stopPropagation(); handleAddToCart(product); }
           }))}
-          onProductClick={product => { setSelectedProduct(product); setShowCategoryModal(false); }}
+          onProductClick={product => {
+            const found = newProducts.find(p => p.name === product.name);
+            if (found) setSelectedProduct(found);
+            setShowCategoryModal(false);
+          }}
         />
       )}
     </motion.section>
