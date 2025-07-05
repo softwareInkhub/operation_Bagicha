@@ -24,7 +24,9 @@ export default function BestsellerSection() {
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
-  const [selectedProduct, setSelectedProduct] = useState(null)
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  const [modalProductList, setModalProductList] = useState<Product[]>([])
+  const [modalProductIndex, setModalProductIndex] = useState<number | null>(null)
 
   useEffect(() => {
     loadProducts()
@@ -109,12 +111,28 @@ export default function BestsellerSection() {
   }
 
   const handleProductClick = (product: any) => {
+    // Find the product list and index for navigation
+    const items = getModalItems()
+    const index = items.findIndex((p) => p.id === product.id)
+    setModalProductList(items)
+    setModalProductIndex(index)
     setSelectedProduct(product)
     setModalOpen(false)
   }
 
   const closeProductDetails = () => {
     setSelectedProduct(null)
+    setModalProductList([])
+    setModalProductIndex(null)
+  }
+
+  const handleNavigateProduct = (direction: 'prev' | 'next') => {
+    if (modalProductList.length === 0 || modalProductIndex === null) return
+    let newIndex = modalProductIndex
+    if (direction === 'prev' && modalProductIndex > 0) newIndex--
+    if (direction === 'next' && modalProductIndex < modalProductList.length - 1) newIndex++
+    setSelectedProduct(modalProductList[newIndex])
+    setModalProductIndex(newIndex)
   }
 
   const bestsellers = getBestsellersByCategory()
@@ -244,7 +262,13 @@ export default function BestsellerSection() {
       {/* Product Details Modal */}
       {selectedProduct && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-40 p-4 pt-20">
-          <ProductDetails product={selectedProduct} onClose={closeProductDetails} />
+          <ProductDetails
+            product={selectedProduct}
+            onClose={closeProductDetails}
+            products={modalProductList}
+            currentIndex={modalProductIndex ?? 0}
+            onNavigate={handleNavigateProduct}
+          />
         </div>
       )}
     </motion.section>

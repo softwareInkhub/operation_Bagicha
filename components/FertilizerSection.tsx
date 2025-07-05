@@ -30,6 +30,8 @@ export default function FertilizerSection() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [showCartSuccess, setShowCartSuccess] = useState<string | null>(null);
+  const [modalProductList, setModalProductList] = useState<FertilizerProduct[]>([])
+  const [modalProductIndex, setModalProductIndex] = useState<number | null>(null)
 
   useEffect(() => {
     loadFertilizers();
@@ -125,13 +127,16 @@ export default function FertilizerSection() {
     setModalOpen(true);
   };
 
-  const handleProductClick = (product: any) => {
-    setSelectedProduct(product);
-    setModalOpen(false);
+  const handleProductClick = (product: FertilizerProduct, productList: FertilizerProduct[]) => {
+    setModalProductList(productList)
+    setModalProductIndex(productList.findIndex(p => p.id === product.id))
+    setSelectedProduct(product)
   };
 
   const closeProductDetails = () => {
-    setSelectedProduct(null);
+    setSelectedProduct(null)
+    setModalProductList([])
+    setModalProductIndex(null)
   };
 
   const handleAddToCart = (product: any, e: React.MouseEvent) => {
@@ -292,14 +297,27 @@ export default function FertilizerSection() {
             title={selectedCategory || ''}
             icon="🪨"
             items={getModalItems()}
-            onProductClick={handleProductClick}
+            onProductClick={(product) => handleProductClick(product, grouped[selectedCategory] || [])}
           />
         )}
 
         {/* Product Details Modal */}
         {selectedProduct && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-40 p-4 pt-20">
-            <ProductDetails product={selectedProduct} onClose={closeProductDetails} />
+            <ProductDetails
+              product={selectedProduct}
+              onClose={closeProductDetails}
+              products={modalProductList}
+              currentIndex={modalProductIndex ?? 0}
+              onNavigate={direction => {
+                if (!modalProductList.length || modalProductIndex === null) return;
+                let newIndex = modalProductIndex;
+                if (direction === 'prev' && modalProductIndex > 0) newIndex--;
+                if (direction === 'next' && modalProductIndex < modalProductList.length - 1) newIndex++;
+                setSelectedProduct(modalProductList[newIndex]);
+                setModalProductIndex(newIndex);
+              }}
+            />
           </div>
         )}
 

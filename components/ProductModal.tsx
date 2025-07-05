@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ShoppingCart, Star, Trash2 } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { useState } from 'react'
+import WishlistButton from './WishlistButton'
 
 interface ProductItem {
   name: string
@@ -74,57 +75,77 @@ export default function ProductModal({ isOpen, onClose, title, icon, items, onPr
             onClick={onClose}
           >
             <motion.div 
-              className="bg-white rounded-xl shadow-lg p-6 w-80 max-w-full relative max-h-[80vh] overflow-y-auto"
+              className="bg-white rounded-xl shadow-lg w-80 max-w-full relative max-h-[80vh] overflow-hidden"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
               onClick={e => e.stopPropagation()}
             >
-              <motion.button 
-                className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-xl p-1 rounded-full hover:bg-gray-100"
+                            <motion.button 
+                className="absolute top-3 right-3 text-white hover:text-gray-200 w-8 h-8 rounded-full hover:bg-black/30 z-30 bg-black/50 backdrop-blur-sm flex items-center justify-center shadow-lg border border-white/20 transition-all duration-200"
                 onClick={onClose}
-                whileHover={{ scale: 1.1 }}
+                whileHover={{ scale: 1.1, rotate: 90 }}
                 whileTap={{ scale: 0.9 }}
               >
-                ×
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </motion.button>
               
-              <motion.h3 
-                className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-              >
-                <span>{icon}</span>
-                {title}
-              </motion.h3>
+              <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 z-10">
+                <motion.h3 
+                  className="text-lg font-semibold text-gray-900 flex items-center gap-2"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                >
+                  <span>{icon}</span>
+                  {title}
+                </motion.h3>
+              </div>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="p-6 overflow-y-auto max-h-[calc(80vh-80px)]">
+              
+              <div className="grid grid-cols-2 gap-1.5">
                 {items.map((item, idx) => (
                   <motion.div 
                     key={item.name} 
-                    className="flex flex-col items-center bg-gray-50 rounded-lg p-3 shadow-sm hover:shadow-md transition-all duration-200 relative cursor-pointer"
+                    className="bg-white border border-gray-200 rounded-lg p-2 hover:border-green-300 hover:shadow-md transition-all duration-200 relative cursor-pointer"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.1 }}
                     whileHover={{ scale: 1.02 }}
                     onClick={() => onProductClick && onProductClick(item)}
                   >
-                    {item.wishlistButton}
-                    <img src={item.image} alt={item.name} className="w-14 h-14 object-cover rounded mb-2" />
-                    <span className="text-xs font-medium text-gray-800 text-center mb-1">{item.name}</span>
-                    
-                    <div className="flex items-center gap-1 mb-2">
-                      <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                      <span className="text-xs text-gray-600">{item.rating}</span>
-                      <span className="text-xs text-gray-400">({item.reviews})</span>
+                    <div className="absolute top-1 right-1 z-10">
+                      <WishlistButton 
+                        product={{ 
+                          id: item.id || item.name, 
+                          name: item.name, 
+                          price: item.price, 
+                          image: item.image 
+                        }} 
+                        size="sm"
+                        className="w-6 h-6 bg-white/90 hover:bg-white shadow-sm hover:shadow-md border border-gray-100"
+                      />
                     </div>
                     
-                    <div className="text-sm font-bold text-green-600 mb-2">₹{item.price}</div>
+                    <div className="w-full h-20 bg-gray-50 rounded mb-2 overflow-hidden flex items-center justify-center">
+                      <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                    </div>
+                    <span className="text-xs font-medium text-gray-800 block mb-1 line-clamp-2">{item.name}</span>
+                    
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-1">
+                        <Star className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />
+                        <span className="text-[10px] text-gray-600">{item.rating}</span>
+                      </div>
+                      <div className="text-xs font-bold text-green-600">₹{item.price}</div>
+                    </div>
                     
                     <motion.button
-                      className="w-full bg-green-500 hover:bg-green-600 text-white text-xs font-semibold py-2 rounded-lg transition-all duration-200 flex items-center justify-center gap-1"
+                      className="w-full bg-green-500 hover:bg-green-600 text-white text-xs font-semibold py-1.5 rounded transition-all duration-200 flex items-center justify-center gap-1"
                       onClick={e => { e.stopPropagation(); handleAddToCart(item.name, item.image, item.price); }}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
@@ -134,6 +155,7 @@ export default function ProductModal({ isOpen, onClose, title, icon, items, onPr
                     </motion.button>
                   </motion.div>
                 ))}
+              </div>
               </div>
             </motion.div>
           </motion.div>

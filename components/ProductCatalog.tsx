@@ -39,6 +39,8 @@ export default function ProductCatalog() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState(null)
+  const [modalProductList, setModalProductList] = useState<Product[]>([])
+  const [modalProductIndex, setModalProductIndex] = useState<number | null>(null)
 
   useEffect(() => {
     loadData()
@@ -65,13 +67,16 @@ export default function ProductCatalog() {
     setModalOpen(true)
   }
 
-  const handleProductClick = (product: any) => {
+  const handleProductClick = (product: Product, productList: Product[]) => {
+    setModalProductList(productList)
+    setModalProductIndex(productList.findIndex(p => p.id === product.id))
     setSelectedProduct(product)
-    setModalOpen(false)
   }
 
   const closeProductDetails = () => {
     setSelectedProduct(null)
+    setModalProductList([])
+    setModalProductIndex(null)
   }
 
   const getCategoryIcon = (category: string) => {
@@ -227,7 +232,7 @@ export default function ProductCatalog() {
                 
                 {/* Product count badge */}
                 <div className="text-[10px] md:text-xs text-green-600 font-semibold mb-0.5 bg-green-50 px-1.5 py-0.5 rounded-full shadow-sm">
-                  {categoryProducts.length} product{categoryProducts.length !== 1 ? 's' : ''}
+                  {displayProducts.length} product{displayProducts.length !== 1 ? 's' : ''}
                 </div>
                 
                 {/* Category name */}
@@ -251,14 +256,33 @@ export default function ProductCatalog() {
           title={selectedCategory || ''}
           icon={getCategoryIcon(selectedCategory || '')}
           items={getModalItems()}
-          onProductClick={handleProductClick}
+          onProductClick={(product) => {
+            const categoryProducts = products.filter(p => p.category === selectedCategory);
+            setModalProductList(categoryProducts);
+            setModalProductIndex(categoryProducts.findIndex(p => p.id === product.id));
+            setSelectedProduct(product);
+            setModalOpen(false);
+          }}
         />
       )}
 
       {/* Product Details Modal */}
       {selectedProduct && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-40 p-4 pt-20">
-          <ProductDetails product={selectedProduct} onClose={closeProductDetails} />
+          <ProductDetails
+            product={selectedProduct}
+            onClose={closeProductDetails}
+            products={modalProductList}
+            currentIndex={modalProductIndex ?? 0}
+            onNavigate={(direction) => {
+              if (!modalProductList.length || modalProductIndex === null) return;
+              let newIndex = modalProductIndex;
+              if (direction === 'prev' && modalProductIndex > 0) newIndex--;
+              if (direction === 'next' && modalProductIndex < modalProductList.length - 1) newIndex++;
+              setSelectedProduct(modalProductList[newIndex]);
+              setModalProductIndex(newIndex);
+            }}
+          />
         </div>
       )}
     </motion.section>

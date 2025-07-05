@@ -50,7 +50,7 @@ export default function FloatingCartBar() {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="fixed right-40 z-50 flex items-center justify-center pointer-events-none"
+            className="fixed right-20 z-50 flex items-center justify-center pointer-events-none"
             style={{ bottom: isFooterVisible ? '80px' : '20px', transition: 'bottom 0.4s' }}
           >
             <button

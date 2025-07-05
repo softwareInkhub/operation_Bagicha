@@ -1,163 +1,20 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import ProductModal from './ProductModal'
 import ProductDetails from './ProductDetails'
 import WishlistButton from './WishlistButton'
 import { useComponentConfig } from '@/lib/useComponentConfig'
-
-const tools = [
-  {
-    id: '1',
-    name: 'Professional Pruner',
-    image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=300&h=300&fit=crop',
-    price: 599,
-    originalPrice: 799,
-    rating: 4.8,
-    reviews: 156,
-    icon: '✂️',
-    category: 'Cutting Tools',
-    features: ['Sharp Blades', 'Ergonomic Grip', 'Safety Lock']
-  },
-  {
-    id: '2',
-    name: 'Garden Trowel Set',
-    image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=300&h=300&fit=crop',
-    price: 299,
-    originalPrice: 399,
-    rating: 4.6,
-    reviews: 89,
-    icon: '🛠️',
-    category: 'Digging Tools',
-    features: ['Stainless Steel', '3 Sizes', 'Comfortable Handle']
-  },
-  {
-    id: '3',
-    name: 'Watering Can',
-    image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=300&h=300&fit=crop',
-    price: 449,
-    originalPrice: 599,
-    rating: 4.7,
-    reviews: 234,
-    icon: '💧',
-    category: 'Watering',
-    features: ['2L Capacity', 'Fine Rose', 'Ergonomic Design']
-  },
-  {
-    id: '4',
-    name: 'Garden Gloves',
-    image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=300&h=300&fit=crop',
-    price: 199,
-    originalPrice: 299,
-    rating: 4.5,
-    reviews: 167,
-    icon: '🧤',
-    category: 'Protection',
-    features: ['Leather Palm', 'Breathable', 'Touch Compatible']
-  },
-  {
-    id: '5',
-    name: 'Plant Mister',
-    image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=300&h=300&fit=crop',
-    price: 149,
-    originalPrice: 199,
-    rating: 4.4,
-    reviews: 98,
-    icon: '💧',
-    category: 'Watering',
-    features: ['Fine Mist', '500ml Capacity', 'Adjustable Nozzle']
-  },
-  {
-    id: '6',
-    name: 'Garden Fork',
-    image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=300&h=300&fit=crop',
-    price: 249,
-    originalPrice: 349,
-    rating: 4.3,
-    reviews: 76,
-    icon: '🛠️',
-    category: 'Digging Tools',
-    features: ['Sturdy Design', '4 Prongs', 'Wooden Handle']
-  },
-  {
-    id: '7',
-    name: 'Garden Rake',
-    image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=300&h=300&fit=crop',
-    price: 199,
-    originalPrice: 299,
-    rating: 4.2,
-    reviews: 54,
-    icon: '🛠️',
-    category: 'Raking Tools',
-    features: ['Wide Head', 'Lightweight', 'Durable']
-  },
-  {
-    id: '8',
-    name: 'Garden Shears',
-    image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=300&h=300&fit=crop',
-    price: 399,
-    originalPrice: 549,
-    rating: 4.6,
-    reviews: 112,
-    icon: '✂️',
-    category: 'Cutting Tools',
-    features: ['Sharp Blades', 'Spring Loaded', 'Safety Lock']
-  },
-  {
-    id: '9',
-    name: 'Garden Sprayer',
-    image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=300&h=300&fit=crop',
-    price: 349,
-    originalPrice: 449,
-    rating: 4.5,
-    reviews: 88,
-    icon: '💧',
-    category: 'Watering',
-    features: ['2L Capacity', 'Adjustable Spray', 'Pump Action']
-  },
-  {
-    id: '10',
-    name: 'Garden Apron',
-    image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=300&h=300&fit=crop',
-    price: 179,
-    originalPrice: 249,
-    rating: 4.4,
-    reviews: 67,
-    icon: '🧤',
-    category: 'Protection',
-    features: ['Waterproof', 'Multiple Pockets', 'Adjustable Straps']
-  },
-  {
-    id: '11',
-    name: 'Garden Hoe',
-    image: 'https://images.unsplash.com/photo-1464983953574-0892a716854b?w=300&h=300&fit=crop',
-    price: 299,
-    originalPrice: 399,
-    rating: 4.4,
-    reviews: 41,
-    icon: '🛠️',
-    category: 'Hoeing Tools',
-    features: ['Sharp Edge', 'Wooden Handle']
-  },
-  {
-    id: '12',
-    name: 'Leaf Blower',
-    image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=300&h=300&fit=crop',
-    price: 899,
-    originalPrice: 1099,
-    rating: 4.7,
-    reviews: 67,
-    icon: '🛠️',
-    category: 'Blowing Tools',
-    features: ['Electric', 'Lightweight']
-  }
-]
+import { getProducts } from '@/lib/firebase'
 
 export default function ToolsAndAccessories() {
+  const [tools, setTools] = useState<any[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<any>(null)
+  const [modalProductList, setModalProductList] = useState<any[]>([])
+  const [modalProductIndex, setModalProductIndex] = useState<number | null>(null)
 
   // Load admin configuration
   const { config } = useComponentConfig('tools-accessories', {
@@ -168,6 +25,27 @@ export default function ToolsAndAccessories() {
     enableHover: true,
     showBadges: true
   })
+
+  useEffect(() => {
+    async function fetchTools() {
+      try {
+        const allProducts = await getProducts();
+        // Filter for tools by category name
+        const toolCategories = [
+          'Cutting Tools', 'Digging Tools', 'Watering', 'Protection',
+          'Raking Tools', 'Hoeing Tools', 'Blowing Tools', 'Tools', 'Accessories'
+        ];
+        const filtered = (allProducts || []).filter((prod: any) => {
+          const cat = (prod.category || '').toLowerCase();
+          return toolCategories.some(tc => cat.includes(tc.toLowerCase())) || cat.includes('tool');
+        });
+        setTools(filtered);
+      } catch (e) {
+        setTools([]);
+      }
+    }
+    fetchTools();
+  }, []);
 
   // Filter tools based on maxItems setting
   const filteredTools = tools.slice(0, config.maxItems)
@@ -192,13 +70,16 @@ export default function ToolsAndAccessories() {
     setModalOpen(true)
   }
 
-  const handleProductClick = (product: any) => {
+  const handleProductClick = (product: any, productList: any[]) => {
+    setModalProductList(productList)
+    setModalProductIndex(productList.findIndex(p => p.id === product.id))
     setSelectedProduct(product)
-    setModalOpen(false)
   }
 
   const closeProductDetails = () => {
     setSelectedProduct(null)
+    setModalProductList([])
+    setModalProductIndex(null)
   }
 
   const getCategoryIcon = (category: string) => {
@@ -209,7 +90,9 @@ export default function ToolsAndAccessories() {
       'Protection': '🧤',
       'Raking Tools': '🛠️',
       'Hoeing Tools': '🛠️',
-      'Blowing Tools': '🛠️'
+      'Blowing Tools': '🛠️',
+      'Tools': '🛠️',
+      'Accessories': '🎍'
     }
     return icons[category] || '🛠️'
   }
@@ -303,14 +186,33 @@ export default function ToolsAndAccessories() {
           title={selectedCategory || ''}
           icon={selectedCategory ? getCategoryIcon(selectedCategory) : '🛠️'}
           items={getModalItems()}
-          onProductClick={handleProductClick}
+          onProductClick={(product) => {
+            const categoryTools = groupedTools[selectedCategory || ''] || [];
+            setModalProductList(categoryTools);
+            setModalProductIndex(categoryTools.findIndex(p => p.id === product.id));
+            setSelectedProduct(product);
+            setModalOpen(false);
+          }}
         />
       )}
 
       {/* Product Details Modal */}
       {selectedProduct && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-40 p-4 pt-20">
-          <ProductDetails product={selectedProduct} onClose={closeProductDetails} />
+          <ProductDetails
+            product={selectedProduct}
+            onClose={closeProductDetails}
+            products={modalProductList}
+            currentIndex={modalProductIndex ?? 0}
+            onNavigate={direction => {
+              if (!modalProductList.length || modalProductIndex === null) return;
+              let newIndex = modalProductIndex;
+              if (direction === 'prev' && modalProductIndex > 0) newIndex--;
+              if (direction === 'next' && modalProductIndex < modalProductList.length - 1) newIndex++;
+              setSelectedProduct(modalProductList[newIndex]);
+              setModalProductIndex(newIndex);
+            }}
+          />
         </div>
       )}
     </motion.section>

@@ -36,6 +36,8 @@ export default function NewArrivals() {
   const router = useRouter()
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [showCategoryModal, setShowCategoryModal] = useState(false)
+  const [modalProductList, setModalProductList] = useState<NewProduct[]>([])
+  const [modalProductIndex, setModalProductIndex] = useState<number | null>(null)
 
   useEffect(() => {
     loadNewArrivals()
@@ -88,11 +90,15 @@ export default function NewArrivals() {
   }
 
   const handleProductClick = (product: NewProduct) => {
+    setModalProductList(newProducts)
+    setModalProductIndex(newProducts.findIndex(p => p.id === product.id))
     setSelectedProduct(product)
   }
 
   const closeProductDetails = () => {
     setSelectedProduct(null)
+    setModalProductList([])
+    setModalProductIndex(null)
   }
 
   // --- HEADER (unchanged, as in the image) ---
@@ -235,7 +241,20 @@ export default function NewArrivals() {
       {/* Product Details Modal */}
       {selectedProduct && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-40 p-4 pt-20">
-          <ProductDetails product={selectedProduct} onClose={closeProductDetails} />
+          <ProductDetails
+            product={selectedProduct}
+            onClose={closeProductDetails}
+            products={modalProductList}
+            currentIndex={modalProductIndex ?? 0}
+            onNavigate={direction => {
+              if (!modalProductList.length || modalProductIndex === null) return;
+              let newIndex = modalProductIndex;
+              if (direction === 'prev' && modalProductIndex > 0) newIndex--;
+              if (direction === 'next' && modalProductIndex < modalProductList.length - 1) newIndex++;
+              setSelectedProduct(modalProductList[newIndex]);
+              setModalProductIndex(newIndex);
+            }}
+          />
         </div>
       )}
       {/* Category Modal for New Arrivals */}
@@ -252,7 +271,11 @@ export default function NewArrivals() {
           }))}
           onProductClick={product => {
             const found = newProducts.find(p => p.name === product.name);
-            if (found) setSelectedProduct(found);
+            if (found) {
+              setModalProductList(newProducts.filter(p => p.category === selectedCategory));
+              setModalProductIndex(newProducts.filter(p => p.category === selectedCategory).findIndex(p => p.id === found.id));
+              setSelectedProduct(found);
+            }
             setShowCategoryModal(false);
           }}
         />

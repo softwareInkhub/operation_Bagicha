@@ -11,6 +11,23 @@ interface Category {
   description?: string
 }
 
+let curatedCategories: Category[] = [
+  { id: 'all', name: 'All', icon: '🌱' },
+  { id: 'soil', name: 'Soil', icon: '🪨' },
+  { id: 'fertilizer', name: 'Fertilizer', icon: '🧪' },
+  { id: 'seeds', name: 'Seeds', icon: '🌾' },
+  { id: 'tools', name: 'Tools', icon: '🛠️' },
+  { id: 'accessories', name: 'Accessories', icon: '🎍' },
+  { id: 'offers', name: 'Offers', icon: '🎁' },
+  { id: 'wishlist', name: 'Wishlist', icon: '❤️' },
+]
+
+// Remove duplicates by name+icon and filter out 'wishlist'
+curatedCategories = curatedCategories.filter((cat, idx, arr) =>
+  cat.name.toLowerCase() !== 'wishlist' &&
+  arr.findIndex(c => c.name === cat.name && c.icon === cat.icon) === idx
+)
+
 export default function Categories() {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
@@ -73,9 +90,8 @@ export default function Categories() {
             View All
           </button>
         </div>
-
         <div className="flex flex-wrap gap-2 sm:gap-3 overflow-x-auto pb-2">
-          {categories.map((category, index) => (
+          {curatedCategories.map((category, index) => (
             <motion.div
               key={category.id}
               initial={{ opacity: 0, y: 20 }}
@@ -85,15 +101,7 @@ export default function Categories() {
             >
               <button className="flex flex-col items-center space-y-2 p-2 sm:p-4 rounded-xl hover:shadow-md transition-all duration-200 min-w-[70px] sm:min-w-[80px]">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-full flex items-center justify-center overflow-hidden">
-                  {(category as any).image ? (
-                    <img
-                      src={(category as any).image}
-                      alt={category.name}
-                      className="w-full h-full object-cover rounded-full"
-                    />
-                  ) : (
-                    <span className="text-xl sm:text-2xl">{category.icon}</span>
-                  )}
+                  <span className="text-xl sm:text-2xl">{category.icon}</span>
                 </div>
                 <span className="text-xs font-normal text-green-600">{category.name}</span>
               </button>

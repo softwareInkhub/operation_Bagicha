@@ -8,21 +8,41 @@ import FloatingWishlistBar from '../components/FloatingWishlistBar'
 
 const inter = Inter({ subsets: ['latin'] })
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://yourdomain.com'
+
 export const metadata: Metadata = {
-  metadataBase: new URL('http://localhost:3000'),
-  title: 'Bagicha - Fresh Gardening Delivered',
-  description: 'Get live plants, pots, soil, fertilizers, and gardening tools delivered to your doorstep.',
-  keywords: 'grocery delivery, fresh vegetables, fruits, household essentials, online grocery, Bagicha',
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: 'Bagicha - Fresh Gardening Delivered',
+    template: '%s | Bagicha'
+  },
+  description: 'Get live plants, pots, soil, fertilizers, and gardening tools delivered to your doorstep. India\'s leading online garden store.',
+  keywords: ['gardening', 'plants', 'garden tools', 'fertilizers', 'pots', 'online garden store', 'plant delivery', 'Bagicha'],
   authors: [{ name: 'Bagicha Team' }],
+  creator: 'Bagicha',
+  publisher: 'Bagicha',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
   manifest: '/manifest.json',
   icons: {
-    icon: '/favicon.ico',
-    apple: '/apple-touch-icon.png',
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
   },
   openGraph: {
+    type: 'website',
+    locale: 'en_IN',
+    url: siteUrl,
     title: 'Bagicha - Fresh Gardening Delivered',
     description: 'Get live plants, pots, soil, fertilizers, and gardening tools delivered to your doorstep.',
-    url: 'http://localhost:3000',
     siteName: 'Bagicha',
     images: [
       {
@@ -32,23 +52,37 @@ export const metadata: Metadata = {
         alt: 'Bagicha - Fresh Gardening',
       },
     ],
-    locale: 'en_US',
-    type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Bagicha - Fresh Gardening Delivered',
     description: 'Get live plants, pots, soil, fertilizers, and gardening tools delivered to your doorstep.',
     images: ['/og-image.jpg'],
+    creator: '@bagicha',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION,
   },
 }
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
-  themeColor: '#4CAF50',
+  maximumScale: 5,
+  userScalable: true,
+  themeColor: '#22c55e',
+  colorScheme: 'light',
 }
 
 export default function RootLayout({
@@ -65,6 +99,9 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-TileColor" content="#22c55e" />
         <meta name="msapplication-tap-highlight" content="no" />
+        <meta name="application-name" content="Bagicha" />
+        <meta name="theme-color" content="#22c55e" />
+        <link rel="canonical" href={siteUrl} />
       </head>
       <body className={inter.className}>
         <CartProvider>
@@ -76,8 +113,7 @@ export default function RootLayout({
             </div>
           </WishlistProvider>
         </CartProvider>
-        <div style={{height: '2000px'}} />
-        <div id="footer-observer-anchor" style={{ width: '100%', height: '20px', background: 'red' }} />
+        <div id="footer-observer-anchor" style={{ width: '100%', height: '20px' }} />
       </body>
     </html>
   )

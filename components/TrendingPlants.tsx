@@ -27,6 +27,8 @@ export default function TrendingPlants() {
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<any>(null)
+  const [modalProductList, setModalProductList] = useState<Product[]>([])
+  const [modalProductIndex, setModalProductIndex] = useState<number | null>(null)
 
   useEffect(() => {
     loadTrendingProducts()
@@ -100,13 +102,16 @@ export default function TrendingPlants() {
     setModalOpen(true)
   }
 
-  const handleProductClick = (product: any) => {
+  const handleProductClick = (product: Product, productList: Product[]) => {
+    setModalProductList(productList)
+    setModalProductIndex(productList.findIndex(p => p.id === product.id))
     setSelectedProduct(product)
-    setModalOpen(false)
   }
 
   const closeProductDetails = () => {
     setSelectedProduct(null)
+    setModalProductList([])
+    setModalProductIndex(null)
   }
 
   const getCategoryIcon = (badge: string) => {
@@ -266,14 +271,33 @@ export default function TrendingPlants() {
           title={selectedCategory || ''}
           icon={selectedCategory ? getCategoryIcon(selectedCategory) : '🌱'}
           items={getModalItems()}
-          onProductClick={handleProductClick}
+          onProductClick={(product) => {
+            const categoryProducts = groupedPlants[selectedCategory || ''] || [];
+            setModalProductList(categoryProducts);
+            setModalProductIndex(categoryProducts.findIndex(p => p.id === product.id));
+            setSelectedProduct(product);
+            setModalOpen(false);
+          }}
         />
       )}
 
       {/* Product Details Modal */}
       {selectedProduct && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-40 p-4 pt-20">
-          <ProductDetails product={selectedProduct} onClose={closeProductDetails} />
+          <ProductDetails
+            product={selectedProduct}
+            onClose={closeProductDetails}
+            products={modalProductList}
+            currentIndex={modalProductIndex ?? 0}
+            onNavigate={direction => {
+              if (!modalProductList.length || modalProductIndex === null) return;
+              let newIndex = modalProductIndex;
+              if (direction === 'prev' && modalProductIndex > 0) newIndex--;
+              if (direction === 'next' && modalProductIndex < modalProductList.length - 1) newIndex++;
+              setSelectedProduct(modalProductList[newIndex]);
+              setModalProductIndex(newIndex);
+            }}
+          />
         </div>
       )}
     </motion.section>

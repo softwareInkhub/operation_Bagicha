@@ -16,9 +16,11 @@ import FloatingCartBar from '../components/FloatingCartBar'
 import BottomNavigation from '../components/BottomNavigation'
 import { Gift, Sparkles } from 'lucide-react'
 import StickyFooter from '../components/StickyFooter'
+import Footer from '../components/Footer'
 import VideoTutorials from '../components/VideoTutorials'
 import FertilizerSection from '../components/FertilizerSection'
 import Link from 'next/link'
+import GiftBannerSlider from "@/components/GiftBannerSlider"
 
 export default function Home() {
   return (
@@ -46,49 +48,8 @@ export default function Home() {
           <Hero />
         </motion.div>
 
-        {/* Gift a Plant Campaign Banner */}
-        <motion.div
-          id="offers-section"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.25 }}
-          className="px-4 py-6"
-        >
-          <div className="bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 rounded-2xl p-6 text-white relative overflow-hidden">
-            {/* Background Pattern */}
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute top-4 right-4 w-20 h-20 bg-white rounded-full"></div>
-              <div className="absolute bottom-4 left-4 w-16 h-16 bg-white rounded-full"></div>
-              <div className="absolute top-1/2 left-1/3 w-12 h-12 bg-white rounded-full"></div>
-            </div>
-            
-            <div className="relative z-10 flex items-center justify-between">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <Sparkles className="w-5 h-5" />
-                  <span className="text-sm font-medium bg-white/20 px-2 py-1 rounded-full">Limited Time</span>
-                </div>
-                <h2 className="text-2xl font-bold mb-2">Gift a Plant, Spread Joy! 🌱</h2>
-                <p className="text-orange-100 mb-4">Perfect gifts for plant lovers. Free gift wrapping + care guide included!</p>
-                <Link href="/auth/login">
-                  <motion.button
-                    className="bg-white text-orange-600 px-6 py-3 rounded-xl font-semibold flex items-center gap-2 hover:bg-orange-50 transition-colors"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Gift className="w-5 h-5" />
-                    Shop Gift Plants
-                  </motion.button>
-                </Link>
-              </div>
-              <div className="hidden md:block">
-                <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center">
-                  <Gift className="w-12 h-12 text-white" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </motion.div>
+        {/* Gift Banner Slider - moved here to appear after Hero */}
+        <GiftBannerSlider />
 
         {/* Bestseller Section */}
         <motion.div
@@ -183,6 +144,9 @@ export default function Home() {
       {/* Bottom Navigation */}
       {/* <BottomNavigation /> */}
 
+      {/* Regular Footer */}
+      <Footer />
+      
       {/* Sticky Footer */}
       <StickyFooter />
     </div>

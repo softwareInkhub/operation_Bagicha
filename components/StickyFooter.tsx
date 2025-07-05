@@ -1,6 +1,37 @@
 import { useEffect, useState, useContext, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Home, User, Heart, ShoppingCart, X, Package, Grid, MessageCircle, Send, HelpCircle, Phone, Mail, MessageSquare } from 'lucide-react'
+import { 
+  Home, 
+  User, 
+  Heart, 
+  ShoppingCart, 
+  X, 
+  Package, 
+  Grid, 
+  MessageCircle, 
+  Send, 
+  HelpCircle, 
+  Phone, 
+  Mail, 
+  MessageSquare,
+  Sparkles,
+  Leaf,
+  ShoppingBag,
+  FileText,
+  Clock,
+  Star,
+  Zap,
+  Shield,
+  Gift,
+  ChevronRight,
+  ExternalLink,
+  Bot,
+  Lightbulb,
+  Headphones,
+  Calendar,
+  Settings,
+  Bell
+} from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { CartContext } from '../context/CartContext'
 import { useWishlist } from '../context/WishlistContext'
@@ -16,11 +47,31 @@ type ChatMessage = {
 }
 
 const quickQuestions = [
-  "How do I care for succulents?",
-  "What's the best soil for indoor plants?",
-  "How often should I water my plants?",
-  "My plant has yellow leaves, what should I do?",
-  "What plants are good for beginners?"
+  {
+    question: "How do I care for succulents?",
+    icon: Leaf,
+    color: "text-green-500"
+  },
+  {
+    question: "What's the best soil for indoor plants?",
+    icon: Sparkles,
+    color: "text-brown-500"
+  },
+  {
+    question: "How often should I water my plants?",
+    icon: Zap,
+    color: "text-blue-500"
+  },
+  {
+    question: "My plant has yellow leaves, what should I do?",
+    icon: Lightbulb,
+    color: "text-yellow-500"
+  },
+  {
+    question: "What plants are good for beginners?",
+    icon: Star,
+    color: "text-purple-500"
+  }
 ]
 
 const supportOptions = [
@@ -28,19 +79,25 @@ const supportOptions = [
     icon: Phone,
     title: "Call Us",
     subtitle: "Speak to an expert",
-    action: "+91 98765 43210"
+    action: "+91 98765 43210",
+    color: "bg-green-100 text-green-600",
+    bgColor: "bg-green-50"
   },
   {
     icon: Mail,
     title: "Email Support",
     subtitle: "Get detailed help",
-    action: "support@bagicha.com"
+    action: "support@bagicha.com",
+    color: "bg-blue-100 text-blue-600",
+    bgColor: "bg-blue-50"
   },
   {
-    icon: MessageSquare,
+    icon: Headphones,
     title: "Live Chat",
     subtitle: "Instant assistance",
-    action: "Start Chat"
+    action: "Start Chat",
+    color: "bg-purple-100 text-purple-600",
+    bgColor: "bg-purple-50"
   }
 ]
 
@@ -68,13 +125,13 @@ export default function StickyFooter() {
     }
   ])
   
-  // Remove search icon, add search bar
+  // Enhanced navigation with modern icons and badges
   const nav = [
-    { name: 'Home', icon: Home, badge: null },
-    { name: 'Categories', icon: Grid, badge: null },
-    { name: 'Orders', icon: Package, badge: null },
-    { name: 'Chat', icon: MessageCircle, badge: null },
-    { name: 'Profile', icon: User, badge: null },
+    { name: 'Home', icon: Home, badge: null, color: 'text-blue-500' },
+    { name: 'Categories', icon: Leaf, badge: null, color: 'text-green-500' },
+    { name: 'Orders', icon: ShoppingBag, badge: null, color: 'text-orange-500' },
+    { name: 'Chat', icon: MessageCircle, badge: null, color: 'text-purple-500' },
+    { name: 'Profile', icon: User, badge: null, color: 'text-indigo-500' },
   ]
   
   useEffect(() => {
@@ -147,11 +204,11 @@ export default function StickyFooter() {
     }, 1000)
   }
 
-  const handleQuickQuestion = (question: string) => {
+  const handleQuickQuestion = (questionObj: any) => {
     const userMessage: ChatMessage = {
       id: chatMessages.length + 1,
       type: 'user',
-      message: question,
+      message: questionObj.question,
       timestamp: new Date()
     }
 
@@ -200,13 +257,13 @@ export default function StickyFooter() {
         {show && (
           <motion.footer 
             ref={footerRef}
-            className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md shadow-lg border-t border-gray-200"
+            className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md shadow-xl border-t border-gray-200"
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
           >
-            <div className="flex flex-col w-full px-2 pt-1 pb-1 gap-1">
+            <div className="flex flex-col w-full px-2 pt-0.5 pb-0.5 gap-1">
               <nav className="flex justify-around items-center py-1 px-0">
                 {nav.map((item, idx) => (
                   <motion.button
@@ -215,7 +272,7 @@ export default function StickyFooter() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: idx * 0.1 }}
                     onClick={() => handleNavigation(item.name)}
-                    className={`relative flex flex-col items-center text-[10px] transition-all duration-300 min-w-[48px] min-h-[40px] py-0 px-0 ${
+                    className={`relative flex flex-col items-center text-[10px] transition-all duration-300 min-w-[48px] min-h-[44px] py-0 px-0 ${
                       active === item.name 
                         ? 'text-green-600 font-semibold' 
                         : 'text-gray-500 hover:text-green-500'
@@ -223,18 +280,18 @@ export default function StickyFooter() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <div className={`relative w-7 h-7 rounded-full flex items-center justify-center mb-0 transition-all duration-300 ${
+                    <div className={`relative w-8 h-8 rounded-xl flex items-center justify-center mb-1 transition-all duration-300 ${
                       active === item.name 
-                        ? 'bg-green-50' 
+                        ? 'bg-gradient-to-br from-green-50 to-emerald-50 shadow-sm' 
                         : 'hover:bg-gray-50'
                     }`}>
                       <item.icon 
-                        className={`w-4 h-4 ${active === item.name ? 'text-green-600' : 'text-gray-500'}`} 
+                        className={`w-5 h-5 ${active === item.name ? item.color : 'text-gray-500'}`} 
                       />
                       {/* Badge for cart/wishlist */}
                       {item.badge && (
                         <motion.div
-                          className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold"
+                          className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold shadow-sm"
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                           transition={{ delay: 0.5 + idx * 0.1, type: "spring" }}
@@ -243,11 +300,11 @@ export default function StickyFooter() {
                         </motion.div>
                       )}
                     </div>
-                    <span className="text-[10px] font-medium mt-0.5 leading-none">{item.name}</span>
+                    <span className="text-[10px] font-medium leading-none">{item.name}</span>
                     {/* Active indicator */}
                     {active === item.name && (
                       <motion.div
-                        className="absolute -bottom-0.5 w-1 h-1 bg-green-600 rounded-full"
+                        className="absolute -bottom-1 w-2 h-1 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full"
                         layoutId="activeIndicator"
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
@@ -289,39 +346,39 @@ export default function StickyFooter() {
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
           >
               {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b border-gray-100">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                    <HelpCircle className="w-4 h-4 text-green-600" />
+              <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gradient-to-r from-green-50 to-emerald-50">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-sm">
+                    <Bot className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">Need Help?</h3>
-                    <p className="text-xs text-gray-500">We're here to help!</p>
+                    <h3 className="font-bold text-gray-900">Garden Assistant</h3>
+                    <p className="text-xs text-gray-600">Your plant care expert! 🌱</p>
                   </div>
                 </div>
                 <motion.button
-                  className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center"
+                  className="w-8 h-8 rounded-full hover:bg-white/80 flex items-center justify-center transition-colors"
                   onClick={() => setIsChatOpen(false)}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                 >
-                  <X className="w-4 h-4 text-gray-500" />
+                  <X className="w-4 h-4 text-gray-600" />
                 </motion.button>
               </div>
 
               {/* Tabs */}
-              <div className="flex border-b border-gray-100">
+              <div className="flex border-b border-gray-100 bg-white">
                 {[
-                  { key: 'chat', label: 'Chat', icon: MessageCircle },
-                  { key: 'faq', label: 'Quick Help', icon: HelpCircle },
-                  { key: 'support', label: 'Contact', icon: Phone }
+                  { key: 'chat', label: 'Chat', icon: MessageCircle, color: 'text-purple-500' },
+                  { key: 'faq', label: 'Quick Help', icon: Lightbulb, color: 'text-yellow-500' },
+                  { key: 'support', label: 'Contact', icon: Headphones, color: 'text-blue-500' }
                 ].map((tab) => (
                   <button
                     key={tab.key}
-                    className={`flex-1 flex items-center justify-center gap-1 py-3 text-sm font-medium transition-colors ${
+                    className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium transition-all duration-200 ${
                       activeTab === tab.key
-                        ? 'text-green-600 border-b-2 border-green-600'
-                        : 'text-gray-500 hover:text-gray-700'
+                        ? `${tab.color} border-b-2 border-current shadow-sm`
+                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                     }`}
                     onClick={() => setActiveTab(tab.key as 'chat' | 'faq' | 'support')}
                   >
@@ -362,50 +419,69 @@ export default function StickyFooter() {
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                        placeholder="Type your message..."
-                        className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                        placeholder="Ask about plant care..."
+                        className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-300 transition-all"
                       />
-                      <button
+                      <motion.button
                         onClick={handleSendMessage}
-                        className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                        className="px-4 py-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all shadow-sm"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                       >
                         <Send className="w-4 h-4" />
-                      </button>
+                      </motion.button>
                     </div>
                   </div>
                 )}
 
                 {activeTab === 'faq' && (
                   <div className="space-y-3">
-                    <h4 className="font-medium text-gray-900 mb-3">Quick Questions</h4>
-                    {quickQuestions.map((question, index) => (
-                      <button
+                    <div className="flex items-center gap-2 mb-4">
+                      <Lightbulb className="w-5 h-5 text-yellow-500" />
+                      <h4 className="font-bold text-gray-900">Quick Questions</h4>
+                    </div>
+                    {quickQuestions.map((questionObj, index) => (
+                      <motion.button
                         key={index}
-                        onClick={() => handleQuickQuestion(question)}
-                        className="w-full p-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg text-sm transition-colors"
+                        onClick={() => handleQuickQuestion(questionObj)}
+                        className="w-full p-4 text-left bg-gradient-to-r from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 rounded-xl text-sm transition-all duration-200 border border-gray-200 hover:border-gray-300"
+                        whileHover={{ scale: 1.02, x: 2 }}
+                        whileTap={{ scale: 0.98 }}
                       >
-                        {question}
-                      </button>
+                        <div className="flex items-center gap-3">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${questionObj.color.replace('text-', 'bg-')} bg-opacity-10`}>
+                            <questionObj.icon className={`w-4 h-4 ${questionObj.color}`} />
+                          </div>
+                          <span className="font-medium text-gray-800">{questionObj.question}</span>
+                        </div>
+                      </motion.button>
                     ))}
                   </div>
                 )}
 
                 {activeTab === 'support' && (
                   <div className="space-y-4">
-                    <h4 className="font-medium text-gray-900 mb-3">Contact Options</h4>
+                    <div className="flex items-center gap-2 mb-4">
+                      <Headphones className="w-5 h-5 text-blue-500" />
+                      <h4 className="font-bold text-gray-900">Contact Options</h4>
+                    </div>
                     {supportOptions.map((option, index) => (
-                      <div
+                      <motion.div
                         key={index}
-                        className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                        className={`flex items-center gap-4 p-4 ${option.bgColor} rounded-xl hover:shadow-md transition-all duration-200 cursor-pointer border border-gray-200`}
+                        whileHover={{ scale: 1.02, x: 2 }}
+                        whileTap={{ scale: 0.98 }}
                       >
-                        <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                          <option.icon className="w-5 h-5 text-green-600" />
+                        <div className={`w-12 h-12 ${option.color.replace('text-', 'bg-').replace('bg-blue-100', 'bg-blue-100').replace('bg-green-100', 'bg-green-100').replace('bg-purple-100', 'bg-purple-100')} rounded-xl flex items-center justify-center shadow-sm`}>
+                          <option.icon className="w-6 h-6" />
                         </div>
                         <div className="flex-1">
-                          <div className="font-medium text-sm text-gray-900">{option.title}</div>
-                          <div className="text-xs text-gray-500">{option.subtitle}</div>
+                          <div className="font-bold text-sm text-gray-900">{option.title}</div>
+                          <div className="text-xs text-gray-600 mb-1">{option.subtitle}</div>
+                          <div className="text-xs font-medium text-gray-700">{option.action}</div>
                         </div>
-                      </div>
+                        <ChevronRight className="w-4 h-4 text-gray-400" />
+                      </motion.div>
                     ))}
                   </div>
                 )}
@@ -418,12 +494,13 @@ export default function StickyFooter() {
       {/* Cart Success Message */}
       {showCartSuccess && (
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          className="fixed top-20 left-1/2 transform -translate-x-1/2 z-[70] bg-green-100 text-green-800 px-4 py-2 rounded-lg text-sm font-semibold shadow-lg border border-green-200"
+          initial={{ opacity: 0, y: -20, scale: 0.9 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -20, scale: 0.9 }}
+          className="fixed top-20 left-1/2 transform -translate-x-1/2 z-[70] bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-3 rounded-xl text-sm font-bold shadow-xl border border-green-400 flex items-center gap-2"
         >
-          ✓ Added "{showCartSuccess}" to cart!
+          <Sparkles className="w-4 h-4" />
+          Added "{showCartSuccess}" to cart!
         </motion.div>
       )}
     </>

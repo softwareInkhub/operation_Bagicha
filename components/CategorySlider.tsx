@@ -27,6 +27,11 @@ export default function CategorySlider() {
       // Add default categories that are essential for navigation
       const defaultCategories: Category[] = [
         { name: 'All', icon: '🌱', sectionId: 'top' },
+        { name: 'Soil', icon: '🪨', sectionId: 'fertilizer-section' },
+        { name: 'Fertilizer', icon: '🧪', sectionId: 'fertilizer-section' },
+        { name: 'Seeds', icon: '🌾', sectionId: 'product-catalog' },
+        { name: 'Tools', icon: '🛠️', sectionId: 'tools-and-accessories' },
+        { name: 'Accessories', icon: '🎍', sectionId: 'tools-and-accessories' },
         { name: 'Offers', icon: '🎁', sectionId: 'offers-section' },
         { name: 'Wishlist', icon: '❤️', sectionId: 'wishlist' },
       ]
@@ -45,13 +50,15 @@ export default function CategorySlider() {
       // Fallback to default categories if Firebase fails
       const defaultCategories: Category[] = [
         { name: 'All', icon: '🌱', sectionId: 'top' },
-        { name: 'Offers', icon: '🎁', sectionId: 'offers-section' },
-        { name: 'Wishlist', icon: '❤️', sectionId: 'wishlist' },
-        { name: 'Indoor Plants', icon: '🪴', sectionId: 'trending-plants' },
-        { name: 'Flowering Plants', icon: '🌸', sectionId: 'bestseller-section' },
-        { name: 'Pots & Planters', icon: '🏺', sectionId: 'product-catalog' },
+        { name: 'Plants', icon: '🪴', sectionId: 'trending-plants' },
+        { name: 'Planters', icon: '🏺', sectionId: 'product-catalog' },
+        { name: 'Soil', icon: '🪨', sectionId: 'fertilizer-section' },
+        { name: 'Fertilizer', icon: '🧪', sectionId: 'fertilizer-section' },
         { name: 'Seeds', icon: '🌾', sectionId: 'product-catalog' },
         { name: 'Tools', icon: '🛠️', sectionId: 'tools-and-accessories' },
+        { name: 'Accessories', icon: '🎍', sectionId: 'tools-and-accessories' },
+        { name: 'Offers', icon: '🎁', sectionId: 'offers-section' },
+        { name: 'Wishlist', icon: '❤️', sectionId: 'wishlist' },
       ]
       setCategories(defaultCategories)
     } finally {
