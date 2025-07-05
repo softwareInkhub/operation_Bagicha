@@ -12,7 +12,7 @@ import NewArrivals from '../components/NewArrivals'
 import CustomerReviews from '../components/CustomerReviews'
 import GardeningBlogs from '../components/GardeningBlogs'
 import ProductCatalog from '../components/ProductCatalog'
-import FloatingHelpButton from '../components/FloatingHelpButton'
+import FloatingCartBar from '../components/FloatingCartBar'
 import BottomNavigation from '../components/BottomNavigation'
 import { Gift, Sparkles } from 'lucide-react'
 import StickyFooter from '../components/StickyFooter'
@@ -177,8 +177,8 @@ export default function Home() {
         <VideoTutorials />
       </main>
 
-      {/* Floating Help Button */}
-      <FloatingHelpButton />
+      {/* Floating Cart Bar */}
+      <FloatingCartBar />
 
       {/* Bottom Navigation */}
       {/* <BottomNavigation /> */}

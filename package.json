@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "echo \"Your IP Address: $(ifconfig | grep 'inet ' | grep -v 127.0.0.1 | head -1 | awk '{print $2}')\" && next dev -H 0.0.0.0",
+    "dev": "next dev -H 0.0.0.0 & node ./show-ip.js",
     "dev:ip": "echo \"Your IP Address: $(ifconfig | grep 'inet ' | grep -v 127.0.0.1 | head -1 | awk '{print $2}')\" && next dev -H 0.0.0.0",
     "dev:custom": "next dev -p 4000 -H 0.0.0.0",
     "build": "next build",

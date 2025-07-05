@@ -125,7 +125,7 @@ export default function ProductModal({ isOpen, onClose, title, icon, items, onPr
                     
                     <motion.button
                       className="w-full bg-green-500 hover:bg-green-600 text-white text-xs font-semibold py-2 rounded-lg transition-all duration-200 flex items-center justify-center gap-1"
-                      onClick={() => handleAddToCart(item.name, item.image, item.price)}
+                      onClick={e => { e.stopPropagation(); handleAddToCart(item.name, item.image, item.price); }}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >

@@ -8,7 +8,7 @@ import {
   Plus, Edit, ChevronRight, ShoppingCart, Clock,
   Phone, Mail, Calendar, Award, Zap, Target
 } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { getCurrentCustomer, clearCurrentCustomer, isCustomerLoggedIn, getCustomerOrders } from '@/lib/firebase'
 import { useWishlist } from '@/context/WishlistContext'
@@ -24,6 +24,7 @@ interface Order {
 
 export default function AccountPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState('profile')
   const [customer, setCustomer] = useState<any>(null)
   const [orders, setOrders] = useState<Order[]>([])
@@ -42,6 +43,14 @@ export default function AccountPage() {
   useEffect(() => {
     checkAuth()
   }, [])
+
+  useEffect(() => {
+    // Set active tab based on URL parameter
+    const tabParam = searchParams.get('tab')
+    if (tabParam && tabs.some(tab => tab.id === tabParam)) {
+      setActiveTab(tabParam)
+    }
+  }, [searchParams])
 
   const checkAuth = async () => {
     const isLoggedIn = isCustomerLoggedIn()

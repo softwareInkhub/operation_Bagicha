@@ -7,6 +7,8 @@ interface CartItem {
   image: string;
   price: number;
   qty: number;
+  category?: string; // optional for backward compatibility
+  description?: string; // optional for backward compatibility
 }
 
 interface CartContextType {

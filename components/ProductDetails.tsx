@@ -18,6 +18,7 @@ interface ProductItem {
   inStock?: boolean
   deliveryEstimate?: string
   details?: string[]
+  category?: string
 }
 
 interface ProductDetailsProps {
@@ -46,7 +47,9 @@ export default function ProductDetails({ product, onClose }: ProductDetailsProps
       name: product.name,
       image: product.image,
       price: product.price,
-      qty: 1
+      qty: 1,
+      category: product.category,
+      description: product.description
     })
     
     setShowCartSuccess(true)

@@ -47,6 +47,7 @@ export default function FloatingHelpButton() {
   const [activeTab, setActiveTab] = useState<'chat' | 'faq' | 'support'>('chat')
   const [message, setMessage] = useState('')
   const [isVisible, setIsVisible] = useState(true)
+  const [isFooterVisible, setIsFooterVisible] = useState(false)
   
   // Load admin configuration
   const { config } = useComponentConfig('floating-help-button', {
@@ -89,6 +90,15 @@ export default function FloatingHelpButton() {
       return () => clearTimeout(timer)
     }
   }, [config.autoExpand])
+
+  useEffect(() => {
+    const handler = (e: any) => {
+      console.log('FloatingHelpButton received footer-visibility:', e.detail.visible);
+      setIsFooterVisible(e.detail.visible);
+    };
+    window.addEventListener('footer-visibility', handler);
+    return () => window.removeEventListener('footer-visibility', handler);
+  }, []);
 
   // Position classes based on config
   const getPositionClasses = () => {
@@ -161,7 +171,8 @@ export default function FloatingHelpButton() {
     <>
       {/* Floating Help Button */}
       <motion.button
-        className={`fixed ${getPositionClasses()} w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full shadow-lg z-40 flex items-center justify-center`}
+        className={`fixed ${getPositionClasses()} w-12 h-12 bg-green-500 hover:bg-green-600 text-white rounded-full shadow-lg z-40 flex items-center justify-center`}
+        style={{ bottom: isFooterVisible ? '80px' : '20px', transition: 'bottom 0.4s' }}
         onClick={() => setIsOpen(true)}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
@@ -169,7 +180,7 @@ export default function FloatingHelpButton() {
         animate={{ scale: 1 }}
         transition={{ delay: 2, type: "spring" }}
       >
-        <MessageCircle className="w-6 h-6" />
+        <MessageCircle className="w-5 h-5" />
         {config.showUnreadCount && (
           <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
             3

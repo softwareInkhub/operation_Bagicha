@@ -269,8 +269,12 @@ export default function ToolsAndAccessories() {
                         key={tool.id}
                         src={tool.image}
                         alt={tool.name}
-                        className="w-8 h-8 md:w-10 md:h-10 object-cover rounded bg-gray-50 border border-gray-100 mx-auto"
+                        className="w-full h-full aspect-square object-cover rounded bg-gray-50 border border-gray-100"
                       />
+                    ))}
+                    {/* Fill empty slots if less than 4 products */}
+                    {Array.from({ length: Math.max(0, 4 - categoryTools.length) }).map((_, idx) => (
+                      <div key={`empty-${idx}`} className="w-full h-full aspect-square rounded bg-gray-100 border border-gray-200" />
                     ))}
                   </div>
                   {/* +X more badge */}

@@ -3,6 +3,8 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { CartProvider } from '../context/CartContext'
 import { WishlistProvider } from '../context/WishlistContext'
+import FloatingCartBar from '../components/FloatingCartBar'
+import FloatingWishlistBar from '../components/FloatingWishlistBar'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -68,10 +70,14 @@ export default function RootLayout({
         <CartProvider>
           <WishlistProvider>
             <div className="min-h-screen bg-gray-50">
+              <FloatingCartBar />
+              <FloatingWishlistBar />
               {children}
             </div>
           </WishlistProvider>
         </CartProvider>
+        <div style={{height: '2000px'}} />
+        <div id="footer-observer-anchor" style={{ width: '100%', height: '20px', background: 'red' }} />
       </body>
     </html>
   )
