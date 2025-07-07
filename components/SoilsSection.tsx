@@ -9,7 +9,7 @@ import PlaceholderImage from './PlaceholderImage';
 import { useCart } from '../context/CartContext';
 import { getProducts } from '@/lib/firebase';
 
-interface FertilizerProduct {
+interface SoilProduct {
   id: string;
   name: string;
   image: string;
@@ -23,99 +23,97 @@ interface FertilizerProduct {
   features: string[];
 }
 
-export default function FertilizerSection() {
+export default function SoilsSection() {
   const { addToCart } = useCart();
-  const [fertilizers, setFertilizers] = useState<FertilizerProduct[]>([]);
+  const [soils, setSoils] = useState<SoilProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [showCartSuccess, setShowCartSuccess] = useState<string | null>(null);
-  const [modalProductList, setModalProductList] = useState<FertilizerProduct[]>([])
+  const [modalProductList, setModalProductList] = useState<SoilProduct[]>([])
   const [modalProductIndex, setModalProductIndex] = useState<number | null>(null)
 
   useEffect(() => {
-    loadFertilizers();
+    loadSoils();
   }, []);
 
-  const loadFertilizers = async () => {
+  const loadSoils = async () => {
     try {
-      const allProducts = await getProducts() as FertilizerProduct[];
+      const allProducts = await getProducts() as SoilProduct[];
       
-      // Filter products that are fertilizers only (exclude soil)
-      const fertilizerProducts = allProducts
+      // Filter products that are soil related
+      const soilProducts = allProducts
         .filter(product => 
-          (product.category?.toLowerCase().includes('fertilizer') ||
-          product.category?.toLowerCase().includes('compost') ||
-          product.category?.toLowerCase().includes('organic') ||
-          product.name?.toLowerCase().includes('fertilizer') ||
-          product.name?.toLowerCase().includes('compost') ||
-          product.name?.toLowerCase().includes('manure') ||
-          product.name?.toLowerCase().includes('npk') ||
-          product.name?.toLowerCase().includes('vermi')) &&
-          !product.category?.toLowerCase().includes('soil') &&
-          !product.name?.toLowerCase().includes('soil')
+          product.category?.toLowerCase().includes('soil') ||
+          product.name?.toLowerCase().includes('soil') ||
+          product.name?.toLowerCase().includes('potting mix') ||
+          product.name?.toLowerCase().includes('garden soil') ||
+          product.name?.toLowerCase().includes('topsoil') ||
+          product.name?.toLowerCase().includes('loam') ||
+          product.name?.toLowerCase().includes('peat') ||
+          product.name?.toLowerCase().includes('coco peat') ||
+          product.name?.toLowerCase().includes('vermiculite') ||
+          product.name?.toLowerCase().includes('perlite')
         )
         .map(product => ({
           ...product,
-          badge: getFertilizerBadge(product),
+          badge: getSoilBadge(product),
           badgeColor: getBadgeColor(product)
         }));
 
-      setFertilizers(fertilizerProducts);
+      setSoils(soilProducts);
     } catch (error) {
-      console.error('Error loading fertilizers:', error);
+      console.error('Error loading soils:', error);
       // Fallback to empty array if Firebase fails
-      setFertilizers([]);
+      setSoils([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const getFertilizerBadge = (product: FertilizerProduct) => {
+  const getSoilBadge = (product: SoilProduct) => {
     const name = product.name?.toLowerCase() || '';
     const category = product.category?.toLowerCase() || '';
     
+    if (name.includes('potting mix') || name.includes('potting soil')) return 'Potting Mix';
+    if (name.includes('garden soil') || name.includes('topsoil')) return 'Garden Soil';
+    if (name.includes('coco peat') || name.includes('coconut')) return 'Coco Peat';
+    if (name.includes('vermiculite')) return 'Vermiculite';
+    if (name.includes('perlite')) return 'Perlite';
+    if (name.includes('peat moss') || name.includes('peat')) return 'Peat Moss';
+    if (name.includes('loam') || name.includes('clay')) return 'Loam Soil';
     if (name.includes('organic') || category.includes('organic')) return 'Organic';
-    if (name.includes('npk') || name.includes('19:19:19')) return 'Balanced';
-    if (name.includes('vermi') || name.includes('compost')) return 'Compost';
-    if (name.includes('bone') || name.includes('phosphorus')) return 'Phosphorus Rich';
-    if (name.includes('potash') || name.includes('potassium')) return 'Potassium';
-    if (name.includes('nitrogen') || name.includes('urea')) return 'Nitrogen';
-    if (name.includes('calcium')) return 'Calcium';
-    if (name.includes('magnesium') || name.includes('epsom')) return 'Magnesium';
-    if (name.includes('seaweed') || name.includes('kelp')) return 'Growth Booster';
-    if (name.includes('neem')) return 'Pest Repellent';
-    if (name.includes('fish')) return 'Organic Liquid';
+    if (name.includes('acidic') || name.includes('acid')) return 'Acidic';
+    if (name.includes('alkaline') || name.includes('basic')) return 'Alkaline';
     return 'General';
   };
 
-  const getBadgeColor = (product: FertilizerProduct) => {
-    const badge = getFertilizerBadge(product);
+  const getBadgeColor = (product: SoilProduct) => {
+    const badge = getSoilBadge(product);
     const colorMap: { [key: string]: string } = {
-      'Organic': 'bg-green-500',
-      'Balanced': 'bg-orange-500',
-      'Compost': 'bg-brown-500',
-      'Phosphorus Rich': 'bg-blue-500',
-      'Potassium': 'bg-pink-500',
-      'Nitrogen': 'bg-lime-500',
-      'Calcium': 'bg-gray-400',
-      'Magnesium': 'bg-cyan-500',
-      'Growth Booster': 'bg-indigo-500',
-      'Pest Repellent': 'bg-yellow-500',
-      'Organic Liquid': 'bg-blue-400',
+      'Potting Mix': 'bg-green-500',
+      'Garden Soil': 'bg-brown-500',
+      'Coco Peat': 'bg-orange-500',
+      'Vermiculite': 'bg-gray-400',
+      'Perlite': 'bg-white text-gray-800 border border-gray-300',
+      'Peat Moss': 'bg-amber-500',
+      'Loam Soil': 'bg-yellow-600',
+      'Organic': 'bg-emerald-500',
+      'Acidic': 'bg-red-500',
+      'Alkaline': 'bg-blue-500',
       'General': 'bg-purple-500'
     };
     return colorMap[badge] || 'bg-gray-500';
   };
 
   // Group by badge for slider rows
-  const grouped = fertilizers.reduce((acc, fert) => {
-    const badge = fert.badge || 'General';
+  const grouped = soils.reduce((acc, soil) => {
+    const badge = soil.badge || 'General';
     if (!acc[badge]) acc[badge] = [];
-    acc[badge].push(fert);
+    acc[badge].push(soil);
     return acc;
-  }, {} as { [badge: string]: FertilizerProduct[] });
+  }, {} as { [badge: string]: SoilProduct[] });
 
   const cardEntries = Object.entries(grouped);
   const cardsPerRow = Math.ceil(cardEntries.length / 2);
@@ -129,7 +127,7 @@ export default function FertilizerSection() {
     setModalOpen(true);
   };
 
-  const handleProductClick = (product: any, productList: FertilizerProduct[]) => {
+  const handleProductClick = (product: any, productList: SoilProduct[]) => {
     setModalProductList(productList)
     setModalProductIndex(productList.findIndex(p => p.id === product.id))
     setSelectedProduct(product)
@@ -179,7 +177,7 @@ export default function FertilizerSection() {
       >
         <div className="px-4">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-900">Fertilizers</h2>
+            <h2 className="text-xl font-bold text-gray-900">Soils</h2>
           </div>
           <div className="space-y-4">
             {[0, 1].map(rowIdx => (
@@ -205,7 +203,7 @@ export default function FertilizerSection() {
     );
   }
 
-  if (fertilizers.length === 0) {
+  if (soils.length === 0) {
     return (
       <motion.section 
         className="mt-0 pt-0 mb-6"
@@ -215,11 +213,11 @@ export default function FertilizerSection() {
       >
         <div className="px-4">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-900">Fertilizers</h2>
+            <h2 className="text-xl font-bold text-gray-900">Soils</h2>
           </div>
           <div className="text-center py-8 bg-white rounded-lg shadow-sm">
-            <p className="text-gray-500">No fertilizers available at the moment.</p>
-            <p className="text-sm text-gray-400 mt-2">Please check back later or contact admin to add fertilizer products.</p>
+            <p className="text-gray-500">No soils available at the moment.</p>
+            <p className="text-sm text-gray-400 mt-2">Please check back later or contact admin to add soil products.</p>
           </div>
         </div>
       </motion.section>
@@ -235,7 +233,7 @@ export default function FertilizerSection() {
     >
       <div className="px-4">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-gray-900">Fertilizers</h2>
+          <h2 className="text-xl font-bold text-gray-900">Soils</h2>
         </div>
         {/* Two-row horizontal slider */}
         <div className="space-y-4">
@@ -279,7 +277,7 @@ export default function FertilizerSection() {
                       <span>({items[0].reviews || 0})</span>
                     </div>
                     <p className="text-[10px] text-gray-700 mb-2 line-clamp-2">
-                      {items[0].features?.join(', ') || 'Quality fertilizer for better growth'}
+                      {items[0].features?.join(', ') || 'Quality soil for better plant growth'}
                     </p>
                     <span className="text-sm font-bold text-green-600 mb-1">₹{items[0].price}</span>
                     {items[0].originalPrice && items[0].originalPrice > items[0].price && (

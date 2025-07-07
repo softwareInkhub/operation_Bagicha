@@ -19,6 +19,9 @@ import StickyFooter from '../components/StickyFooter'
 import Footer from '../components/Footer'
 import VideoTutorials from '../components/VideoTutorials'
 import FertilizerSection from '../components/FertilizerSection'
+import SoilsSection from '../components/SoilsSection'
+import SeedsSection from '../components/SeedsSection'
+import PlantersSection from '../components/PlantersSection'
 import Link from 'next/link'
 import GiftBannerSlider from "@/components/GiftBannerSlider"
 
@@ -71,6 +74,16 @@ export default function Home() {
           <TrendingPlants />
         </motion.div>
 
+        {/* Planters Section */}
+        <motion.div
+          id="planters-section"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.45 }}
+        >
+          <PlantersSection />
+        </motion.div>
+
         {/* New Arrivals */}
         <motion.div
           id="new-arrivals"
@@ -102,7 +115,34 @@ export default function Home() {
         </motion.div>
 
         {/* Fertilizer Section */}
-        <FertilizerSection />
+        <motion.div
+          id="fertilizer-section"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.7 }}
+        >
+          <FertilizerSection />
+        </motion.div>
+
+        {/* Soils Section */}
+        <motion.div
+          id="soils-section"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.75 }}
+        >
+          <SoilsSection />
+        </motion.div>
+
+        {/* Seeds Section */}
+        <motion.div
+          id="seeds-section"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.8 }}
+        >
+          <SeedsSection />
+        </motion.div>
 
         {/* Customer Reviews */}
         <motion.div

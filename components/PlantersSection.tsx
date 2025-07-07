@@ -1,104 +1,129 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import ProductModal from './ProductModal'
-import WishlistButton from './WishlistButton'
-import ProductDetails from './ProductDetails'
-import PlaceholderImage from './PlaceholderImage'
-import { getProducts } from '@/lib/firebase'
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import ProductModal from './ProductModal';
+import ProductDetails from './ProductDetails';
+import WishlistButton from './WishlistButton';
+import PlaceholderImage from './PlaceholderImage';
+import { useCart } from '../context/CartContext';
+import { getProducts } from '@/lib/firebase';
 
-interface Product {
-  id: string
-  name: string
-  category: string
-  price: number
-  rating: number
-  reviews: number
-  image: string
-  badge?: string
-  inStock: boolean
+interface PlanterProduct {
+  id: string;
+  name: string;
+  image: string;
+  price: number;
+  originalPrice?: number;
+  rating: number;
+  reviews: number;
+  badge?: string;
+  badgeColor?: string;
+  category: string;
+  subcategory: string;
+  features: string[];
 }
 
-export default function BestsellerSection() {
-  const [products, setProducts] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const [modalOpen, setModalOpen] = useState(false)
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
-  const [modalProductList, setModalProductList] = useState<Product[]>([])
+export default function PlantersSection() {
+  const { addToCart } = useCart();
+  const [planters, setPlanters] = useState<PlanterProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [showCartSuccess, setShowCartSuccess] = useState<string | null>(null);
+  const [modalProductList, setModalProductList] = useState<PlanterProduct[]>([])
   const [modalProductIndex, setModalProductIndex] = useState<number | null>(null)
 
   useEffect(() => {
-    loadProducts()
-  }, [])
+    loadPlanters();
+  }, []);
 
-  const loadProducts = async () => {
+  const loadPlanters = async () => {
     try {
-      const productsData = await getProducts() as Product[]
-      setProducts(productsData)
+      const allProducts = await getProducts() as PlanterProduct[];
+      
+      // Filter products that are planter related
+      const planterProducts = allProducts
+        .filter(product => {
+          const category = product.category?.toLowerCase() || '';
+          const name = product.name?.toLowerCase() || '';
+          const subcategory = product.subcategory?.toLowerCase() || '';
+          
+          // Check if any field contains planter-related keywords
+          const planterKeywords = [
+            'planter', 'planters', 'pot', 'pots', 'container', 'vase', 'urn',
+            'planter pot', 'flower pot', 'garden pot', 'ceramic pot', 'plastic pot',
+            'terracotta', 'hanging', 'self-watering', 'decorative pot'
+          ];
+          
+          return planterKeywords.some(keyword => 
+            category.includes(keyword) || 
+            name.includes(keyword) || 
+            subcategory.includes(keyword)
+          );
+        });
+
+      setPlanters(planterProducts);
     } catch (error) {
-      console.error('Error loading products:', error)
+      console.error('Error loading planters:', error);
+      // Fallback to empty array if Firebase fails
+      setPlanters([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  // Group products by category and select top-rated ones
-  const getBestsellersByCategory = () => {
-    const categoryGroups: { [key: string]: Product[] } = {}
+  // Group planters by subcategory and select top-rated ones
+  const getPlantersBySubcategory = () => {
+    const subcategoryGroups: { [key: string]: PlanterProduct[] } = {};
     
-    products.forEach(product => {
-      if (!categoryGroups[product.category]) {
-        categoryGroups[product.category] = []
+    planters.forEach(product => {
+      const subcategory = product.subcategory || 'General Planters';
+      if (!subcategoryGroups[subcategory]) {
+        subcategoryGroups[subcategory] = [];
       }
-      categoryGroups[product.category].push(product)
-    })
+      subcategoryGroups[subcategory].push(product);
+    });
 
-    // For each category, sort by rating and take top 4
-    const bestsellers = Object.entries(categoryGroups).map(([categoryName, categoryProducts]) => {
-      const sortedProducts = categoryProducts
+    // For each subcategory, sort by rating and take top 4
+    const planterCategories = Object.entries(subcategoryGroups).map(([subcategoryName, subcategoryProducts]) => {
+      const sortedProducts = subcategoryProducts
         .sort((a, b) => (b.rating || 0) - (a.rating || 0))
-        .slice(0, 4)
+        .slice(0, 4);
 
       return {
-        title: categoryName,
-        icon: getCategoryIcon(categoryName),
+        title: subcategoryName,
+        icon: getSubcategoryIcon(subcategoryName),
         items: sortedProducts
-      }
-    })
+      };
+    });
 
-    return bestsellers
-  }
+    return planterCategories;
+  };
 
-  const getCategoryIcon = (category: string) => {
+  const getSubcategoryIcon = (subcategory: string) => {
     const iconMap: { [key: string]: string } = {
-      'Indoor Plants': '🪴',
-      'Outdoor Plants': '🌿',
-      'Flowering Plants': '🌸',
-      'Medicinal Plants': '🌿',
-      'Air Purifying': '💨',
-      'Lucky Plants': '🍀',
-      'Succulents': '🌵',
-      'Tools': '🛠️',
-      'Soil & Fertilizer': '🪨',
-      'Pots & Planters': '🏺',
-      'Seeds': '🌾',
-      'Fertilizers': '🧪',
-      'Gardening Tools': '🛠️'
-    }
-    return iconMap[category] || '🌱'
-  }
+      'Ceramic Pots': '🏺',
+      'Plastic Planters': '🪴',
+      'Terracotta Pots': '🏺',
+      'Hanging Planters': '🪝',
+      'Self-Watering': '💧',
+      'Decorative Pots': '✨',
+      'General Planters': '🏺'
+    };
+    return iconMap[subcategory] || '🏺';
+  };
 
   const handleCardClick = (category: string) => {
-    setSelectedCategory(category)
-    setModalOpen(true)
-  }
+    setSelectedCategory(category);
+    setModalOpen(true);
+  };
 
   const getModalItems = () => {
-    if (!selectedCategory) return []
+    if (!selectedCategory) return [];
     
-    const categoryProducts = products.filter(product => product.category === selectedCategory)
+    const categoryProducts = planters.filter(product => product.subcategory === selectedCategory);
     
     return categoryProducts.map((product) => ({
       ...product,
@@ -108,35 +133,35 @@ export default function BestsellerSection() {
         price: product.price, 
         image: product.image 
       }} />
-    }))
-  }
+    }));
+  };
 
   const handleProductClick = (product: any) => {
     // Find the product list and index for navigation
-    const items = getModalItems()
-    const index = items.findIndex((p) => p.id === product.id)
-    setModalProductList(items)
-    setModalProductIndex(index)
-    setSelectedProduct(product)
-    setModalOpen(false)
-  }
+    const items = getModalItems();
+    const index = items.findIndex((p) => p.id === product.id);
+    setModalProductList(items);
+    setModalProductIndex(index);
+    setSelectedProduct(product);
+    setModalOpen(false);
+  };
 
   const closeProductDetails = () => {
-    setSelectedProduct(null)
-    setModalProductList([])
-    setModalProductIndex(null)
-  }
+    setSelectedProduct(null);
+    setModalProductList([]);
+    setModalProductIndex(null);
+  };
 
   const handleNavigateProduct = (direction: 'prev' | 'next') => {
-    if (modalProductList.length === 0 || modalProductIndex === null) return
-    let newIndex = modalProductIndex
-    if (direction === 'prev' && modalProductIndex > 0) newIndex--
-    if (direction === 'next' && modalProductIndex < modalProductList.length - 1) newIndex++
-    setSelectedProduct(modalProductList[newIndex])
-    setModalProductIndex(newIndex)
-  }
+    if (modalProductList.length === 0 || modalProductIndex === null) return;
+    let newIndex = modalProductIndex;
+    if (direction === 'prev' && modalProductIndex > 0) newIndex--;
+    if (direction === 'next' && modalProductIndex < modalProductList.length - 1) newIndex++;
+    setSelectedProduct(modalProductList[newIndex]);
+    setModalProductIndex(newIndex);
+  };
 
-  const bestsellers = getBestsellersByCategory()
+  const planterCategories = getPlantersBySubcategory();
 
   if (loading) {
     return (
@@ -147,7 +172,7 @@ export default function BestsellerSection() {
         transition={{ duration: 0.6 }}
       >
         <h2 className="text-lg font-semibold text-gray-900 px-4 pt-4 pb-2">
-          🌟 Bestsellers
+          🏺 Planters & Pots
         </h2>
         <div className="relative flex items-center">
           <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 md:gap-5 px-2 md:px-10 scrollbar-none w-full">
@@ -168,10 +193,10 @@ export default function BestsellerSection() {
           </div>
         </div>
       </motion.section>
-    )
+    );
   }
 
-  if (bestsellers.length === 0) {
+  if (planterCategories.length === 0) {
     return (
       <motion.section 
         className="mt-0 pt-0 mb-6"
@@ -180,14 +205,14 @@ export default function BestsellerSection() {
         transition={{ duration: 0.6 }}
       >
         <h2 className="text-lg font-semibold text-gray-900 px-4 pt-4 pb-2">
-          🌟 Bestsellers
+          🏺 Planters & Pots
         </h2>
         <div className="text-center py-8 px-4">
-          <p className="text-gray-500">No bestsellers available at the moment.</p>
-          <p className="text-sm text-gray-400 mt-2">Please check back later or contact admin.</p>
+          <p className="text-gray-500">No planters available at the moment.</p>
+          <p className="text-sm text-gray-400 mt-2">Please check back later or contact admin to add planter products.</p>
         </div>
       </motion.section>
-    )
+    );
   }
 
   return (
@@ -203,12 +228,12 @@ export default function BestsellerSection() {
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
       >
-        🌟 Bestsellers
+        🏺 Planters & Pots
       </motion.h2>
       <div className="relative flex items-center">
         {/* Slider */}
         <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 md:gap-5 px-2 md:px-10 scrollbar-none w-full">
-          {bestsellers.map((item, index) => (
+          {planterCategories.map((item, index) => (
             <motion.div
               key={item.title}
               initial={{ opacity: 0, y: 30 }}
@@ -260,11 +285,11 @@ export default function BestsellerSection() {
         <ProductModal
           isOpen={modalOpen}
           onClose={() => {
-            setModalOpen(false)
-            setSelectedProduct(null)
+            setModalOpen(false);
+            setSelectedProduct(null);
           }}
           title={selectedCategory || ''}
-          icon={selectedCategory ? getCategoryIcon(selectedCategory) : '🌟'}
+          icon={selectedCategory ? getSubcategoryIcon(selectedCategory) : '🏺'}
           items={getModalItems()}
           onProductClick={handleProductClick}
         />
@@ -282,6 +307,18 @@ export default function BestsellerSection() {
           />
         </div>
       )}
+
+      {/* Cart Success Message */}
+      {showCartSuccess && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className="fixed top-20 left-1/2 transform -translate-x-1/2 z-[70] bg-green-100 text-green-800 px-4 py-2 rounded-lg text-sm font-semibold shadow-lg border border-green-200"
+        >
+          ✓ Added "{showCartSuccess}" to cart!
+        </motion.div>
+      )}
     </motion.section>
-  )
+  );
 } 

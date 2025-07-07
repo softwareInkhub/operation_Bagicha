@@ -7,6 +7,7 @@ import { useCart } from '../context/CartContext'
 import { useWishlist } from '../context/WishlistContext'
 import WishlistButton from './WishlistButton'
 import ProductDetails from './ProductDetails'
+import PlaceholderImage from './PlaceholderImage'
 import { useRouter } from 'next/navigation'
 import { getProducts } from '@/lib/firebase'
 import ProductModal from './ProductModal'
@@ -202,12 +203,22 @@ export default function NewArrivals() {
                 {/* 2x2 image grid */}
                 <div className="grid grid-cols-2 grid-rows-2 gap-0.5 w-full h-24 md:h-28 mb-1.5">
                   {items.slice(0, 4).map((prod, idx) => (
-                    <img
-                      key={prod.id}
-                      src={prod.image || 'https://via.placeholder.com/40x40?text=No+Image'}
-                      alt={prod.name}
-                      className="w-full h-full aspect-square object-cover rounded bg-gray-50 border border-gray-100"
-                    />
+                    prod.image ? (
+                      <img
+                        key={prod.id}
+                        src={prod.image}
+                        alt={prod.name}
+                        className="w-full h-full aspect-square object-cover rounded bg-gray-50 border border-gray-100"
+                      />
+                    ) : (
+                      <PlaceholderImage
+                        key={prod.id}
+                        width={40}
+                        height={40}
+                        text="No Image"
+                        className="w-full h-full aspect-square object-cover rounded bg-gray-50 border border-gray-100"
+                      />
+                    )
                   ))}
                   {/* Fill empty slots if less than 4 products */}
                   {Array.from({ length: Math.max(0, 4 - items.length) }).map((_, idx) => (

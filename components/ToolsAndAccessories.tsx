@@ -5,12 +5,12 @@ import { motion } from 'framer-motion'
 import ProductModal from './ProductModal'
 import ProductDetails from './ProductDetails'
 import WishlistButton from './WishlistButton'
+import PlaceholderImage from './PlaceholderImage'
 import { useComponentConfig } from '@/lib/useComponentConfig'
 import { getProducts } from '@/lib/firebase'
 
 export default function ToolsAndAccessories() {
   const [tools, setTools] = useState<any[]>([])
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<any>(null)
   const [modalProductList, setModalProductList] = useState<any[]>([])
@@ -50,24 +50,17 @@ export default function ToolsAndAccessories() {
   // Filter tools based on maxItems setting
   const filteredTools = tools.slice(0, config.maxItems)
 
-  // Group tools by category
-  const groupedTools: { [category: string]: typeof filteredTools } = {}
-  filteredTools.forEach(tool => {
-    if (!groupedTools[tool.category]) groupedTools[tool.category] = []
-    groupedTools[tool.category].push(tool)
-  })
+  // Prepare cards for single product display
+  const cardsPerRow = 4 // Show 4 products per row
+  const rows = []
+  for (let i = 0; i < filteredTools.length; i += cardsPerRow) {
+    rows.push(filteredTools.slice(i, i + cardsPerRow))
+  }
 
-  // Prepare cards for two-row slider
-  const cardEntries = Object.entries(groupedTools)
-  const cardsPerRow = Math.ceil(cardEntries.length / 2)
-  const rows = [
-    cardEntries.slice(0, cardsPerRow),
-    cardEntries.slice(cardsPerRow)
-  ]
-
-  const handleCardClick = (category: string) => {
-    setSelectedCategory(category)
-    setModalOpen(true)
+  const handleCardClick = (product: any) => {
+    setSelectedProduct(product)
+    setModalProductList(filteredTools)
+    setModalProductIndex(filteredTools.findIndex(p => p.id === product.id))
   }
 
   const handleProductClick = (product: any, productList: any[]) => {
@@ -82,25 +75,10 @@ export default function ToolsAndAccessories() {
     setModalProductIndex(null)
   }
 
-  const getCategoryIcon = (category: string) => {
-    const icons: { [key: string]: string } = {
-      'Cutting Tools': '✂️',
-      'Digging Tools': '🛠️',
-      'Watering': '💧',
-      'Protection': '🧤',
-      'Raking Tools': '🛠️',
-      'Hoeing Tools': '🛠️',
-      'Blowing Tools': '🛠️',
-      'Tools': '🛠️',
-      'Accessories': '🎍'
-    }
-    return icons[category] || '🛠️'
-  }
+
 
   const getModalItems = () => {
-    if (!selectedCategory) return []
-    const categoryTools = groupedTools[selectedCategory] || []
-    return categoryTools.map((tool, index) => ({
+    return filteredTools.map((tool, index) => ({
       ...tool,
       wishlistButton: <WishlistButton product={{ 
         id: tool.id, 
@@ -127,46 +105,66 @@ export default function ToolsAndAccessories() {
         🛠️ Tools & Accessories
       </motion.h2>
       
-      {/* Two-row slider */}
+      {/* Single product cards */}
       <div className="space-y-4">
         {rows.map((row, rowIndex) => (
           <div key={rowIndex} className="relative flex items-center">
             <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 md:gap-5 px-2 md:px-10 scrollbar-none w-full">
-              {row.map(([category, categoryTools], index) => (
+              {row.map((product, index) => (
                 <motion.div
-                  key={category}
+                  key={product.id}
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: (rowIndex * 0.1) + (index * 0.1) }}
                   className={`bg-white shadow-lg border border-gray-100 rounded-xl p-2 md:p-3 flex flex-col items-center transition-all duration-300 cursor-pointer min-w-[120px] max-w-[140px] md:min-w-[140px] md:max-w-[160px] mx-auto snap-start ${
                     config.enableHover ? 'hover:scale-105 hover:shadow-2xl' : ''
                   }`}
-                  onClick={() => handleCardClick(category)}
+                  onClick={() => handleCardClick(product)}
                   whileHover={config.enableHover ? { scale: 1.05 } : {}}
                   whileTap={{ scale: 0.97 }}
                 >
-                  {/* 2x2 image grid */}
-                  <div className="grid grid-cols-2 grid-rows-2 gap-1 w-full mb-2">
-                    {categoryTools.slice(0, 4).map((tool, idx) => (
+                  {/* Single product image */}
+                  <div className="w-full mb-2">
+                    {product.image ? (
                       <img
-                        key={tool.id}
-                        src={tool.image}
-                        alt={tool.name}
-                        className="w-full h-full aspect-square object-cover rounded bg-gray-50 border border-gray-100"
+                        src={product.image}
+                        alt={product.name}
+                        className="w-full h-24 md:h-28 aspect-square object-cover rounded bg-gray-50 border border-gray-100"
                       />
-                    ))}
-                    {/* Fill empty slots if less than 4 products */}
-                    {Array.from({ length: Math.max(0, 4 - categoryTools.length) }).map((_, idx) => (
-                      <div key={`empty-${idx}`} className="w-full h-full aspect-square rounded bg-gray-100 border border-gray-200" />
-                    ))}
+                    ) : (
+                      <PlaceholderImage
+                        width={120}
+                        height={120}
+                        text="No Image"
+                        className="w-full h-24 md:h-28 aspect-square object-cover rounded bg-gray-50 border border-gray-100"
+                      />
+                    )}
                   </div>
-                  {/* +X more badge */}
-                  {config.showBadges && (
-                    <div className="text-[10px] md:text-xs text-green-600 font-semibold mb-0.5 bg-green-50 px-1.5 py-0.5 rounded-full shadow-sm">+{categoryTools.length} more</div>
+                  
+                  {/* Product name */}
+                  <div className="text-[10px] md:text-xs font-bold text-gray-800 text-center leading-tight mb-1 line-clamp-2">
+                    {product.name}
+                  </div>
+                  
+                  {/* Price */}
+                  {config.showPrices && (
+                    <div className="text-[10px] md:text-xs font-semibold text-green-600 mb-1">
+                      ₹{product.price}
+                    </div>
                   )}
-                  {/* Category name */}
+                  
+                  {/* Rating */}
+                  {config.showRatings && product.rating && (
+                    <div className="text-[10px] text-gray-600 mb-1">
+                      ⭐ {product.rating} ({product.reviews || 0})
+                    </div>
+                  )}
+                  
+                  {/* Category badge */}
                   {config.showCategories && (
-                    <div className="text-[10px] md:text-xs font-bold text-gray-800 text-center leading-tight mt-0.5">{category}</div>
+                    <div className="text-[10px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-full">
+                      {product.category}
+                    </div>
                   )}
                 </motion.div>
               ))}
@@ -183,13 +181,12 @@ export default function ToolsAndAccessories() {
             setModalOpen(false)
             setSelectedProduct(null)
           }}
-          title={selectedCategory || ''}
-          icon={selectedCategory ? getCategoryIcon(selectedCategory) : '🛠️'}
+          title="Tools & Accessories"
+          icon="🛠️"
           items={getModalItems()}
           onProductClick={(product) => {
-            const categoryTools = groupedTools[selectedCategory || ''] || [];
-            setModalProductList(categoryTools);
-            setModalProductIndex(categoryTools.findIndex(p => p.id === product.id));
+            setModalProductList(filteredTools);
+            setModalProductIndex(filteredTools.findIndex(p => p.id === product.id));
             setSelectedProduct(product);
             setModalOpen(false);
           }}
