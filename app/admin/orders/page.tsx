@@ -38,6 +38,7 @@ import {
   getOrdersByStatus,
   getOrdersByDateRange 
 } from '@/lib/firebase'
+import PlaceholderImage from '@/components/PlaceholderImage'
 
 interface Order {
   id: string
@@ -607,11 +608,20 @@ export default function OrdersManagement() {
                   <div className="space-y-3">
                     {selectedOrder.items.map((item, index) => (
                       <div key={index} className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
-                        <img 
-                          src={item.image || 'https://via.placeholder.com/60x60'} 
-                          alt={item.name}
-                          className="w-12 h-12 rounded object-cover bg-gray-100"
-                        />
+                        {item.image ? (
+                          <img 
+                            src={item.image} 
+                            alt={item.name}
+                            className="w-12 h-12 rounded object-cover bg-gray-100"
+                          />
+                        ) : (
+                          <PlaceholderImage
+                            width={60}
+                            height={60}
+                            text="No Image"
+                            className="w-12 h-12 rounded object-cover bg-gray-100"
+                          />
+                        )}
                         <div className="flex-1">
                           <h4 className="font-medium">{item.name}</h4>
                           <p className="text-sm text-gray-600">Quantity: {item.qty}</p>

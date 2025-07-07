@@ -27,13 +27,13 @@ export default function CategorySlider() {
       // Add default categories that are essential for navigation
       const defaultCategories: Category[] = [
         { name: 'All', icon: '🌱', sectionId: 'top' },
-        { name: 'Soil', icon: '🪨', sectionId: 'fertilizer-section' },
+        { name: 'Soil', icon: '🪨', sectionId: 'soils-section' },
         { name: 'Fertilizer', icon: '🧪', sectionId: 'fertilizer-section' },
-        { name: 'Seeds', icon: '🌾', sectionId: 'product-catalog' },
+        { name: 'Seeds', icon: '🌾', sectionId: 'seeds-section' },
+        { name: 'Planters', icon: '🏺', sectionId: 'planters-section' },
         { name: 'Tools', icon: '🛠️', sectionId: 'tools-and-accessories' },
         { name: 'Accessories', icon: '🎍', sectionId: 'tools-and-accessories' },
         { name: 'Offers', icon: '🎁', sectionId: 'offers-section' },
-        { name: 'Wishlist', icon: '❤️', sectionId: 'wishlist' },
       ]
 
       // Map Firebase categories to include navigation sections
@@ -42,8 +42,17 @@ export default function CategorySlider() {
         sectionId: getSectionId(cat.name)
       }))
 
-      // Combine categories
-      const allCategories = [...defaultCategories, ...firebaseCategories]
+      // Combine categories and remove duplicates by name
+      const allCategories = [...defaultCategories]
+      
+      // Add Firebase categories only if they don't already exist
+      firebaseCategories.forEach(firebaseCat => {
+        const exists = allCategories.some(cat => cat.name.toLowerCase() === firebaseCat.name.toLowerCase())
+        if (!exists) {
+          allCategories.push(firebaseCat)
+        }
+      })
+      
       setCategories(allCategories)
     } catch (error) {
       console.error('Error loading categories:', error)
@@ -51,14 +60,13 @@ export default function CategorySlider() {
       const defaultCategories: Category[] = [
         { name: 'All', icon: '🌱', sectionId: 'top' },
         { name: 'Plants', icon: '🪴', sectionId: 'trending-plants' },
-        { name: 'Planters', icon: '🏺', sectionId: 'product-catalog' },
-        { name: 'Soil', icon: '🪨', sectionId: 'fertilizer-section' },
+        { name: 'Planters', icon: '🏺', sectionId: 'planters-section' },
+        { name: 'Soil', icon: '🪨', sectionId: 'soils-section' },
         { name: 'Fertilizer', icon: '🧪', sectionId: 'fertilizer-section' },
-        { name: 'Seeds', icon: '🌾', sectionId: 'product-catalog' },
+        { name: 'Seeds', icon: '🌾', sectionId: 'seeds-section' },
         { name: 'Tools', icon: '🛠️', sectionId: 'tools-and-accessories' },
         { name: 'Accessories', icon: '🎍', sectionId: 'tools-and-accessories' },
         { name: 'Offers', icon: '🎁', sectionId: 'offers-section' },
-        { name: 'Wishlist', icon: '❤️', sectionId: 'wishlist' },
       ]
       setCategories(defaultCategories)
     } finally {
@@ -73,8 +81,10 @@ export default function CategorySlider() {
       'Outdoor Plants': 'new-arrivals',
       'Tools': 'tools-and-accessories',
       'Soil & Fertilizer': 'fertilizer-section',
-      'Pots & Planters': 'product-catalog',
-      'Seeds': 'product-catalog',
+      'Soil': 'soils-section',
+      'Pots & Planters': 'planters-section',
+      'Planters': 'planters-section',
+      'Seeds': 'seeds-section',
     }
     return sectionMap[categoryName] || 'product-catalog'
   }

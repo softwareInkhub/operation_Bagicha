@@ -17,6 +17,7 @@ import {
 } from 'react-icons/fi'
 import { getProducts, addProduct, updateProduct, deleteProduct, getCategories, createSampleProducts } from '@/lib/firebase'
 import ImageUpload from '@/components/ImageUpload'
+import PlaceholderImage from '@/components/PlaceholderImage'
 
 interface Product {
   id?: string
@@ -326,11 +327,20 @@ export default function ProductsManagement() {
             className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
           >
             <div className="relative mb-4">
-              <img
-                src={product.image || 'https://via.placeholder.com/200x200?text=No+Image'}
-                alt={product.name}
-                className="w-full h-32 object-cover rounded-lg bg-gray-100"
-              />
+              {product.image ? (
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  className="w-full h-32 object-cover rounded-lg bg-gray-100"
+                />
+              ) : (
+                <PlaceholderImage
+                  width={200}
+                  height={200}
+                  text="No Image"
+                  className="w-full h-32 object-cover rounded-lg bg-gray-100"
+                />
+              )}
               {product.badge && (
                 <span className={`absolute top-2 left-2 ${product.badgeColor} text-white text-xs px-2 py-1 rounded-full font-medium`}>
                   {product.badge}

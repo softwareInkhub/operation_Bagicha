@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import ProductModal from './ProductModal'
 import ProductDetails from './ProductDetails'
 import WishlistButton from './WishlistButton'
+import PlaceholderImage from './PlaceholderImage'
 import { getProducts } from '@/lib/firebase'
 
 interface Product {
@@ -235,12 +236,22 @@ export default function TrendingPlants() {
                   {/* 2x2 image grid */}
                   <div className="grid grid-cols-2 grid-rows-2 gap-1 w-full mb-2">
                     {categoryProducts.slice(0, 4).map((product, idx) => (
-                      <img
-                        key={product.id}
-                        src={product.image || 'https://via.placeholder.com/40x40?text=No+Image'}
-                        alt={product.name}
-                        className="w-full h-full aspect-square object-cover rounded bg-gray-50 border border-gray-100"
-                      />
+                      product.image ? (
+                        <img
+                          key={product.id}
+                          src={product.image}
+                          alt={product.name}
+                          className="w-full h-full aspect-square object-cover rounded bg-gray-50 border border-gray-100"
+                        />
+                      ) : (
+                        <PlaceholderImage
+                          key={product.id}
+                          width={40}
+                          height={40}
+                          text="No Image"
+                          className="w-full h-full aspect-square object-cover rounded bg-gray-50 border border-gray-100"
+                        />
+                      )
                     ))}
                     {/* Fill empty slots if less than 4 products */}
                     {Array.from({ length: Math.max(0, 4 - categoryProducts.length) }).map((_, idx) => (
