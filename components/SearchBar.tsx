@@ -28,7 +28,7 @@ export default function SearchBar() {
         .filter((suggestion: any) => suggestion.type === 'product' || suggestion.type === 'category')
         .slice(0, 6) // Show only 6 suggestions
       
-      setSuggestions(filteredSuggestions)
+      setSuggestions(filteredSuggestions as SearchSuggestion[])
     } catch (error) {
       console.error('Error loading search suggestions:', error)
       // Fallback suggestions

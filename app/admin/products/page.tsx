@@ -16,7 +16,6 @@ import {
   FiPackage,
   FiTruck,
   FiShield,
-  FiLeaf,
   FiCheck,
   FiAlertCircle
 } from 'react-icons/fi'
@@ -28,7 +27,7 @@ interface Product {
   id?: string
   name: string
   category: string
-  subcategory: string
+  subcategory?: string
   price: number
   originalPrice?: number
   rating: number

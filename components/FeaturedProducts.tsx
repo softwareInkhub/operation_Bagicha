@@ -237,6 +237,8 @@ export default function FeaturedProducts() {
                     />
                   ) : (
                     <PlaceholderImage 
+                      width={200}
+                      height={200}
                       text={product.name.charAt(0)}
                       className="w-full h-full"
                     />

@@ -104,8 +104,8 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
       // Sort trending searches by count (highest first)
       const sortedTrending = trendingData.sort((a: any, b: any) => b.count - a.count).slice(0, 5)
       
-      setRecentSearches(sortedRecent)
-      setTrendingSearches(sortedTrending)
+      setRecentSearches(sortedRecent as RecentSearch[])
+      setTrendingSearches(sortedTrending as TrendingSearch[])
     } catch (error) {
       console.error('Error loading search data:', error)
       // Fallback data
@@ -148,7 +148,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
     
     try {
       const results = await searchProducts(query)
-      setSearchResults(results)
+      setSearchResults(results as SearchResult[])
       
       // Add to recent searches
       if (query.trim()) {
@@ -283,6 +283,8 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                               />
                             ) : (
                               <PlaceholderImage 
+                                width={48}
+                                height={48}
                                 text={result.name.charAt(0)}
                                 className="w-full h-full"
                               />
