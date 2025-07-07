@@ -1351,4 +1351,143 @@ export const createCustomerAccount = async (customerData: any) => {
   }
 }
 
+// Search-related functions
+export const getSearchSuggestions = async () => {
+  try {
+    const querySnapshot = await getDocs(collection(db, 'searchSuggestions'))
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+  } catch (error) {
+    console.error('Error getting search suggestions:', error)
+    return []
+  }
+}
+
+export const getRecentSearches = async () => {
+  try {
+    const querySnapshot = await getDocs(collection(db, 'recentSearches'))
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+  } catch (error) {
+    console.error('Error getting recent searches:', error)
+    return []
+  }
+}
+
+export const getTrendingSearches = async () => {
+  try {
+    const querySnapshot = await getDocs(collection(db, 'trendingSearches'))
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+  } catch (error) {
+    console.error('Error getting trending searches:', error)
+    return []
+  }
+}
+
+export const searchProducts = async (query: string) => {
+  try {
+    const products = await getProducts()
+    const searchTerm = query.toLowerCase()
+    
+    return products.filter((product: any) => {
+      const name = product.name?.toLowerCase() || ''
+      const category = product.category?.toLowerCase() || ''
+      const subcategory = product.subcategory?.toLowerCase() || ''
+      const description = product.description?.toLowerCase() || ''
+      const features = product.features?.join(' ').toLowerCase() || ''
+      
+      return name.includes(searchTerm) || 
+             category.includes(searchTerm) || 
+             subcategory.includes(searchTerm) || 
+             description.includes(searchTerm) || 
+             features.includes(searchTerm)
+    })
+  } catch (error) {
+    console.error('Error searching products:', error)
+    return []
+  }
+}
+
+export const addRecentSearch = async (searchTerm: string) => {
+  try {
+    // Check if search term already exists
+    const existingSearches = await getRecentSearches()
+    const existing = existingSearches.find((search: any) => search.term === searchTerm)
+    
+    if (existing) {
+      // Update timestamp if exists
+      await updateDoc(doc(db, 'recentSearches', existing.id), {
+        timestamp: new Date()
+      })
+    } else {
+      // Add new search term
+      await addDoc(collection(db, 'recentSearches'), {
+        term: searchTerm,
+        timestamp: new Date()
+      })
+    }
+  } catch (error) {
+    console.error('Error adding recent search:', error)
+  }
+}
+
+export const createSampleSearchData = async () => {
+  try {
+    console.log('Creating sample search data...')
+    
+    // Sample search suggestions
+    const searchSuggestions = [
+      { term: 'monstera plant', type: 'product', category: 'Indoor Plants' },
+      { term: 'snake plant', type: 'product', category: 'Indoor Plants' },
+      { term: 'gardening tools', type: 'category', category: 'Tools' },
+      { term: 'organic soil', type: 'product', category: 'Soil & Fertilizer' },
+      { term: 'flower seeds', type: 'product', category: 'Seeds' },
+      { term: 'plant pots', type: 'product', category: 'Pots & Planters' },
+      { term: 'fertilizer', type: 'category', category: 'Soil & Fertilizer' },
+      { term: 'succulents', type: 'product', category: 'Indoor Plants' },
+      { term: 'air purifying plants', type: 'product', category: 'Indoor Plants' },
+      { term: 'herb garden', type: 'category', category: 'Seeds' },
+      { term: 'bonsai trees', type: 'product', category: 'Outdoor Plants' },
+      { term: 'vertical garden', type: 'category', category: 'Tools' }
+    ]
+
+    // Sample recent searches
+    const recentSearches = [
+      { term: 'monstera plant', timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000) }, // 2 hours ago
+      { term: 'gardening tools', timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000) }, // 1 day ago
+      { term: 'organic soil', timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) }, // 2 days ago
+      { term: 'flower seeds', timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) }, // 3 days ago
+      { term: 'plant pots', timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000) } // 5 days ago
+    ]
+
+    // Sample trending searches
+    const trendingSearches = [
+      { term: 'succulents', count: 156, trend: 'up' },
+      { term: 'air purifying plants', count: 134, trend: 'up' },
+      { term: 'herb garden', count: 98, trend: 'up' },
+      { term: 'bonsai trees', count: 87, trend: 'stable' },
+      { term: 'vertical garden', count: 76, trend: 'up' }
+    ]
+
+    // Add search suggestions
+    for (const suggestion of searchSuggestions) {
+      await addDoc(collection(db, 'searchSuggestions'), suggestion)
+    }
+
+    // Add recent searches
+    for (const search of recentSearches) {
+      await addDoc(collection(db, 'recentSearches'), search)
+    }
+
+    // Add trending searches
+    for (const trend of trendingSearches) {
+      await addDoc(collection(db, 'trendingSearches'), trend)
+    }
+    
+    console.log('Sample search data created successfully!')
+    return true
+  } catch (error) {
+    console.error('Error creating sample search data:', error)
+    return false
+  }
+}
+
 export default app 

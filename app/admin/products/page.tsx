@@ -13,9 +13,13 @@ import {
   FiSave,
   FiUpload,
   FiStar,
-  FiPackage
+  FiPackage,
+  FiTruck,
+  FiShield,
+  FiCheck,
+  FiAlertCircle
 } from 'react-icons/fi'
-import { getProducts, addProduct, updateProduct, deleteProduct, getCategories, createSampleProducts } from '@/lib/firebase'
+import { getProducts, addProduct, updateProduct, deleteProduct, getCategories, createSampleProducts, createSampleSearchData } from '@/lib/firebase'
 import ImageUpload from '@/components/ImageUpload'
 import PlaceholderImage from '@/components/PlaceholderImage'
 
@@ -23,7 +27,7 @@ interface Product {
   id?: string
   name: string
   category: string
-  subcategory: string
+  subcategory?: string
   price: number
   originalPrice?: number
   rating: number
@@ -238,6 +242,25 @@ export default function ProductsManagement() {
     }
   }
 
+  const handleCreateSampleSearchData = async () => {
+    if (confirm('This will create sample search suggestions, recent searches, and trending searches. Continue?')) {
+      try {
+        setLoading(true)
+        const success = await createSampleSearchData()
+        if (success) {
+          alert('Sample search data created successfully!')
+        } else {
+          alert('Failed to create sample search data.')
+        }
+      } catch (error) {
+        console.error('Error creating sample search data:', error)
+        alert('Error creating sample search data. Please try again.')
+      } finally {
+        setLoading(false)
+      }
+    }
+  }
+
   const badgeColors = [
     { label: 'Green', value: 'bg-green-500' },
     { label: 'Blue', value: 'bg-blue-500' },
@@ -270,6 +293,13 @@ export default function ProductsManagement() {
           >
             <FiPackage size={20} />
             <span>Create Sample Products</span>
+          </button>
+          <button
+            onClick={handleCreateSampleSearchData}
+            className="flex items-center justify-center space-x-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+          >
+            <FiSearch size={20} />
+            <span>Create Search Data</span>
           </button>
           <button
             onClick={handleAddProduct}

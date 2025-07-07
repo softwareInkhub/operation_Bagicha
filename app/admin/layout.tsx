@@ -15,7 +15,8 @@ import {
   FiX,
   FiLogOut,
   FiUser,
-  FiLayers
+  FiLayers,
+  FiSearch
 } from 'react-icons/fi'
 
 interface AdminLayoutProps {
@@ -63,6 +64,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { name: 'Orders', href: '/admin/orders', icon: FiShoppingCart },
     { name: 'Categories', href: '/admin/categories', icon: FiGrid },
     { name: 'Components', href: '/admin/components', icon: FiLayers },
+    { name: 'Search Management', href: '/admin/search-management', icon: FiSearch },
     { name: 'Customers', href: '/admin/customers', icon: FiUsers },
     { name: 'Analytics', href: '/admin/analytics', icon: FiBarChart },
     { name: 'Settings', href: '/admin/settings', icon: FiSettings },

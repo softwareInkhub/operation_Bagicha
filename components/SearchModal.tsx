@@ -2,11 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  Search, X, Clock, TrendingUp, Filter, Star, 
-  ShoppingCart, Heart, Eye, ArrowRight 
-} from 'lucide-react'
-import { getCategories } from '@/lib/firebase'
+import { Search, X, Clock, TrendingUp, Star, ShoppingCart } from 'lucide-react'
+import { getCategories, searchProducts, getRecentSearches, getTrendingSearches, addRecentSearch } from '@/lib/firebase'
+import PlaceholderImage from './PlaceholderImage'
 
 interface SearchModalProps {
   isOpen: boolean
@@ -14,7 +12,7 @@ interface SearchModalProps {
 }
 
 interface SearchResult {
-  id: number
+  id: string
   name: string
   category: string
   price: number
@@ -27,63 +25,18 @@ interface SearchResult {
   inStock: boolean
 }
 
-const searchResults: SearchResult[] = [
-  {
-    id: 1,
-    name: 'Monstera Deliciosa',
-    category: 'Indoor Plants',
-    price: 899,
-    originalPrice: 1299,
-    rating: 4.8,
-    reviews: 234,
-    image: 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=100&h=100&fit=crop',
-    badge: 'Trending',
-    badgeColor: 'bg-red-500',
-    inStock: true
-  },
-  {
-    id: 2,
-    name: 'Snake Plant',
-    category: 'Indoor Plants',
-    price: 399,
-    originalPrice: 599,
-    rating: 4.9,
-    reviews: 456,
-    image: 'https://images.unsplash.com/photo-1593691509543-c55fb32e5cee?w=100&h=100&fit=crop',
-    badge: 'Best Seller',
-    badgeColor: 'bg-green-500',
-    inStock: true
-  },
-  {
-    id: 3,
-    name: 'Professional Pruner',
-    category: 'Tools',
-    price: 599,
-    originalPrice: 799,
-    rating: 4.8,
-    reviews: 156,
-    image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=100&h=100&fit=crop',
-    badge: 'Premium',
-    badgeColor: 'bg-purple-500',
-    inStock: true
-  }
-]
+interface RecentSearch {
+  id: string
+  term: string
+  timestamp: any
+}
 
-const recentSearches = [
-  'monstera plant',
-  'gardening tools',
-  'organic soil',
-  'flower seeds',
-  'plant pots'
-]
-
-const trendingSearches = [
-  'succulents',
-  'air purifying plants',
-  'herb garden',
-  'bonsai trees',
-  'vertical garden'
-]
+interface TrendingSearch {
+  id: string
+  term: string
+  count: number
+  trend: 'up' | 'down' | 'stable'
+}
 
 export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const [searchQuery, setSearchQuery] = useState('')
@@ -93,6 +46,10 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const searchInputRef = useRef<HTMLInputElement>(null)
   const [categories, setCategories] = useState<any[]>([])
   const [categoriesLoading, setCategoriesLoading] = useState(true)
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([])
+  const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([])
+  const [trendingSearches, setTrendingSearches] = useState<TrendingSearch[]>([])
+  const [searchDataLoading, setSearchDataLoading] = useState(true)
 
   useEffect(() => {
     if (isOpen) {
@@ -101,6 +58,9 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
       setShowResults(false)
       if (categories.length === 0) {
         loadCategories()
+      }
+      if (recentSearches.length === 0) {
+        loadSearchData()
       }
     }
   }, [isOpen])
@@ -126,6 +86,44 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
     }
   }
 
+  const loadSearchData = async () => {
+    try {
+      setSearchDataLoading(true)
+      const [recentData, trendingData] = await Promise.all([
+        getRecentSearches(),
+        getTrendingSearches()
+      ])
+      
+      // Sort recent searches by timestamp (most recent first)
+      const sortedRecent = recentData.sort((a: any, b: any) => {
+        const aTime = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp)
+        const bTime = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp)
+        return bTime.getTime() - aTime.getTime()
+      }).slice(0, 5) // Show only 5 most recent
+      
+      // Sort trending searches by count (highest first)
+      const sortedTrending = trendingData.sort((a: any, b: any) => b.count - a.count).slice(0, 5)
+      
+      setRecentSearches(sortedRecent as RecentSearch[])
+      setTrendingSearches(sortedTrending as TrendingSearch[])
+    } catch (error) {
+      console.error('Error loading search data:', error)
+      // Fallback data
+      setRecentSearches([
+        { id: '1', term: 'monstera plant', timestamp: new Date() },
+        { id: '2', term: 'gardening tools', timestamp: new Date() },
+        { id: '3', term: 'organic soil', timestamp: new Date() }
+      ])
+      setTrendingSearches([
+        { id: '1', term: 'succulents', count: 156, trend: 'up' },
+        { id: '2', term: 'air purifying plants', count: 134, trend: 'up' },
+        { id: '3', term: 'herb garden', count: 98, trend: 'up' }
+      ])
+    } finally {
+      setSearchDataLoading(false)
+    }
+  }
+
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -144,15 +142,27 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
     }
   }, [isOpen, onClose])
 
-  const handleSearch = (query: string) => {
+  const handleSearch = async (query: string) => {
     setSearchQuery(query)
     setIsSearching(true)
     
-    // Simulate search delay
-    setTimeout(() => {
+    try {
+      const results = await searchProducts(query)
+      setSearchResults(results as SearchResult[])
+      
+      // Add to recent searches
+      if (query.trim()) {
+        await addRecentSearch(query.trim())
+        // Reload recent searches
+        await loadSearchData()
+      }
+    } catch (error) {
+      console.error('Error searching:', error)
+      setSearchResults([])
+    } finally {
       setIsSearching(false)
       setShowResults(true)
-    }, 500)
+    }
   }
 
   const handleResultClick = (result: SearchResult) => {
@@ -160,10 +170,23 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
     onClose()
   }
 
-  const filteredResults = searchResults.filter(result =>
-    result.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    result.category.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const handleSearchSuggestionClick = (term: string) => {
+    setSearchQuery(term)
+    handleSearch(term)
+  }
+
+  const formatTimeAgo = (timestamp: any) => {
+    if (!timestamp) return 'Just now'
+    
+    const time = timestamp.toDate ? timestamp.toDate() : new Date(timestamp)
+    const now = new Date()
+    const diffInHours = Math.floor((now.getTime() - time.getTime()) / (1000 * 60 * 60))
+    
+    if (diffInHours < 1) return 'Just now'
+    if (diffInHours < 24) return `${diffInHours}h ago`
+    const diffInDays = Math.floor(diffInHours / 24)
+    return `${diffInDays}d ago`
+  }
 
   return (
     <AnimatePresence>
@@ -227,198 +250,148 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
             {/* Search Content */}
             <div className="max-h-[70vh] overflow-y-auto">
-              {!showResults ? (
-                <div className="p-6">
-                  {/* Categories */}
-                  <div className="mb-8">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Browse Categories</h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                      {categoriesLoading ? (
-                        // Loading skeleton
-                        [...Array(8)].map((_, index) => (
-                          <div key={index} className="p-3 bg-gray-50 border border-gray-200 rounded-xl animate-pulse">
-                            <div className="w-20 h-4 bg-gray-200 rounded mb-2"></div>
-                            <div className="w-16 h-3 bg-gray-200 rounded"></div>
-                          </div>
-                        ))
-                      ) : (
-                        categories.map((category, index) => (
-                          <motion.button
-                            key={category.id || category.name}
-                            className="p-3 bg-gray-50 hover:bg-green-50 border border-gray-200 hover:border-green-200 rounded-xl text-left transition-all duration-200"
-                            onClick={() => handleSearch(category.name)}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3, delay: index * 0.05 }}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                          >
-                            <div className="flex items-center gap-2 mb-1">
-                              {(category as any).image ? (
-                                <div className="w-6 h-6 rounded-full overflow-hidden bg-green-100 flex items-center justify-center">
-                                  <img
-                                    src={(category as any).image}
-                                    alt={category.name}
-                                    className="w-full h-full object-cover rounded-full"
-                                  />
-                                </div>
-                              ) : (
-                                <span className="text-lg">{category.icon}</span>
-                              )}
-                              <div className="text-sm font-medium text-gray-900">{category.name}</div>
-                            </div>
-                            <div className="text-xs text-gray-500">Explore products</div>
-                          </motion.button>
-                        ))
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Recent Searches */}
-                  <div className="mb-8">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold text-gray-900">Recent Searches</h3>
-                      <button className="text-sm text-green-600 hover:text-green-700">Clear All</button>
-                    </div>
-                    <div className="space-y-2">
-                      {recentSearches.map((search, index) => (
-                        <motion.button
-                          key={search}
-                          className="flex items-center gap-3 w-full p-3 hover:bg-gray-50 rounded-lg transition-colors"
-                          onClick={() => handleSearch(search)}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ duration: 0.3, delay: index * 0.1 }}
-                        >
-                          <Clock className="w-4 h-4 text-gray-400" />
-                          <span className="text-gray-700">{search}</span>
-                        </motion.button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Trending Searches */}
-                  <div>
-                    <div className="flex items-center gap-2 mb-4">
-                      <TrendingUp className="w-5 h-5 text-green-600" />
-                      <h3 className="text-lg font-semibold text-gray-900">Trending Searches</h3>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {trendingSearches.map((search, index) => (
-                        <motion.button
-                          key={search}
-                          className="px-3 py-2 bg-green-50 hover:bg-green-100 text-green-700 rounded-full text-sm font-medium transition-colors"
-                          onClick={() => handleSearch(search)}
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ duration: 0.3, delay: index * 0.1 }}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          {search}
-                        </motion.button>
-                      ))}
-                    </div>
-                  </div>
+              {isSearching ? (
+                <div className="p-8 text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto mb-4"></div>
+                  <p className="text-gray-500">Searching...</p>
                 </div>
-              ) : (
-                <div className="p-6">
-                  {/* Search Results */}
-                  {isSearching ? (
-                    <div className="flex items-center justify-center py-12">
-                      <div className="flex items-center gap-3">
-                        <div className="w-6 h-6 border-2 border-green-500 border-t-transparent rounded-full animate-spin"></div>
-                        <span className="text-gray-600">Searching...</span>
-                      </div>
+              ) : showResults ? (
+                // Search Results
+                <div className="p-4">
+                  <div className="mb-4">
+                    <h3 className="text-sm font-medium text-gray-900 mb-2">
+                      Search Results ({searchResults.length})
+                    </h3>
+                  </div>
+                  
+                  {searchResults.length > 0 ? (
+                    <div className="space-y-3">
+                      {searchResults.map((result) => (
+                        <motion.div
+                          key={result.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                          onClick={() => handleResultClick(result)}
+                        >
+                          <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                            {result.image ? (
+                              <img 
+                                src={result.image} 
+                                alt={result.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <PlaceholderImage 
+                                width={48}
+                                height={48}
+                                text={result.name.charAt(0)}
+                                className="w-full h-full"
+                              />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-gray-900 text-sm truncate">{result.name}</h4>
+                            <p className="text-xs text-gray-500">{result.category}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <div className="flex items-center gap-1">
+                                <Star className="w-3 h-3 text-yellow-400 fill-current" />
+                                <span className="text-xs text-gray-600">{result.rating}</span>
+                              </div>
+                              <span className="text-xs text-gray-400">({result.reviews})</span>
+                              <span className="text-sm font-medium text-green-600">₹{result.price}</span>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
                     </div>
                   ) : (
-                    <div>
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          Search Results for "{searchQuery}"
-                        </h3>
-                        <span className="text-sm text-gray-500">
-                          {filteredResults.length} results found
-                        </span>
-                      </div>
-
-                      {filteredResults.length > 0 ? (
-                        <div className="space-y-4">
-                          {filteredResults.map((result, index) => (
-                            <motion.div
-                              key={result.id}
-                              className="flex items-center gap-4 p-4 bg-gray-50 hover:bg-gray-100 rounded-xl cursor-pointer transition-colors"
-                              onClick={() => handleResultClick(result)}
-                              initial={{ opacity: 0, y: 20 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ duration: 0.3, delay: index * 0.1 }}
-                              whileHover={{ scale: 1.02 }}
-                            >
-                              <div className="relative w-16 h-16 flex-shrink-0">
-                                <img 
-                                  src={result.image} 
-                                  alt={result.name}
-                                  className="w-full h-full object-cover rounded-lg"
-                                />
-                                {result.badge && (
-                                  <div className={`absolute -top-1 -left-1 ${result.badgeColor} text-white text-xs px-2 py-1 rounded-full`}>
-                                    {result.badge}
-                                  </div>
-                                )}
-                              </div>
-                              
-                              <div className="flex-1 min-w-0">
-                                <h4 className="font-semibold text-gray-900 truncate">{result.name}</h4>
-                                <p className="text-sm text-gray-500">{result.category}</p>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <div className="flex items-center gap-1">
-                                    <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                    <span className="text-xs text-gray-600">{result.rating}</span>
-                                    <span className="text-xs text-gray-400">({result.reviews})</span>
-                                  </div>
-                                  <span className="text-xs text-gray-400">•</span>
-                                  <span className="text-xs text-gray-600">
-                                    {result.inStock ? 'In Stock' : 'Out of Stock'}
-                                  </span>
-                                </div>
-                              </div>
-                              
-                              <div className="text-right">
-                                <div className="font-semibold text-green-600">₹{result.price}</div>
-                                {result.originalPrice && result.originalPrice > result.price && (
-                                  <div className="text-sm text-gray-400 line-through">₹{result.originalPrice}</div>
-                                )}
-                              </div>
-                              
-                              <div className="flex items-center gap-2">
-                                <button className="p-2 hover:bg-white rounded-lg transition-colors">
-                                  <Heart className="w-4 h-4 text-gray-400" />
-                                </button>
-                                <button className="p-2 hover:bg-white rounded-lg transition-colors">
-                                  <ShoppingCart className="w-4 h-4 text-gray-400" />
-                                </button>
-                                <button className="p-2 hover:bg-white rounded-lg transition-colors">
-                                  <Eye className="w-4 h-4 text-gray-400" />
-                                </button>
-                              </div>
-                            </motion.div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="text-center py-12">
-                          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Search className="w-8 h-8 text-gray-400" />
-                          </div>
-                          <h3 className="text-lg font-semibold text-gray-900 mb-2">No results found</h3>
-                          <p className="text-gray-600 mb-4">Try adjusting your search terms</p>
-                          <button
-                            onClick={() => setShowResults(false)}
-                            className="btn-outline"
+                    <div className="text-center py-8">
+                      <p className="text-gray-500">No results found for "{searchQuery}"</p>
+                      <p className="text-sm text-gray-400 mt-2">Try different keywords</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                // Default Search View
+                <div className="p-4">
+                  {/* Categories */}
+                  {!categoriesLoading && (
+                    <div className="mb-6">
+                      <h3 className="text-sm font-medium text-gray-900 mb-3">Browse Categories</h3>
+                      <div className="grid grid-cols-2 gap-2">
+                        {categories.slice(0, 6).map((category) => (
+                          <motion.button
+                            key={category.id || category.name}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="flex items-center gap-2 p-3 rounded-lg border border-gray-200 hover:border-green-300 hover:bg-green-50 transition-colors"
+                            onClick={() => handleSearchSuggestionClick(category.name)}
                           >
-                            Back to Search
-                          </button>
-                        </div>
-                      )}
+                            <span className="text-lg">{category.icon}</span>
+                            <span className="text-sm font-medium text-gray-700">{category.name}</span>
+                          </motion.button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Recent Searches */}
+                  {!searchDataLoading && recentSearches.length > 0 && (
+                    <div className="mb-6">
+                      <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center gap-2">
+                        <Clock className="w-4 h-4" />
+                        Recent Searches
+                      </h3>
+                      <div className="space-y-2">
+                        {recentSearches.map((search) => (
+                          <motion.button
+                            key={search.id}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="flex items-center justify-between w-full p-2 rounded-lg hover:bg-gray-50 transition-colors"
+                            onClick={() => handleSearchSuggestionClick(search.term)}
+                          >
+                            <span className="text-sm text-gray-700">{search.term}</span>
+                            <span className="text-xs text-gray-400">{formatTimeAgo(search.timestamp)}</span>
+                          </motion.button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Trending Searches */}
+                  {!searchDataLoading && trendingSearches.length > 0 && (
+                    <div className="mb-6">
+                      <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center gap-2">
+                        <TrendingUp className="w-4 h-4" />
+                        Trending Searches
+                      </h3>
+                      <div className="space-y-2">
+                        {trendingSearches.map((trend, index) => (
+                          <motion.button
+                            key={trend.id}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="flex items-center justify-between w-full p-2 rounded-lg hover:bg-gray-50 transition-colors"
+                            onClick={() => handleSearchSuggestionClick(trend.term)}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-medium text-gray-400 w-4">#{index + 1}</span>
+                              <span className="text-sm text-gray-700">{trend.term}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <span className="text-xs text-gray-400">{trend.count}</span>
+                              <span className={`text-xs ${
+                                trend.trend === 'up' ? 'text-green-500' : 
+                                trend.trend === 'down' ? 'text-red-500' : 'text-gray-400'
+                              }`}>
+                                {trend.trend === 'up' ? '↗' : trend.trend === 'down' ? '↘' : '→'}
+                              </span>
+                            </div>
+                          </motion.button>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
