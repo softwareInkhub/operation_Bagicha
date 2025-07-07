@@ -11,13 +11,15 @@ import {
   getRecentSearches, 
   getTrendingSearches,
   createSampleSearchData,
-  addDoc,
-  collection,
-  deleteDoc,
-  doc,
-  updateDoc,
   db
 } from '@/lib/firebase'
+import { 
+  addDoc, 
+  collection, 
+  deleteDoc, 
+  doc, 
+  updateDoc 
+} from 'firebase/firestore'
 
 interface SearchSuggestion {
   id: string
@@ -78,9 +80,9 @@ export default function SearchManagement() {
         getTrendingSearches()
       ])
       
-      setSuggestions(suggestionsData)
-      setRecentSearches(recentData)
-      setTrendingSearches(trendingData)
+      setSuggestions(suggestionsData as SearchSuggestion[])
+      setRecentSearches(recentData as RecentSearch[])
+      setTrendingSearches(trendingData as TrendingSearch[])
     } catch (error) {
       console.error('Error loading search data:', error)
     } finally {
