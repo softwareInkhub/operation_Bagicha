@@ -20,6 +20,7 @@ interface SeedProduct {
   badge?: string;
   badgeColor?: string;
   category: string;
+  subcategory?: string;
   features: string[];
 }
 
